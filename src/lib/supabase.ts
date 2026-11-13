@@ -108,7 +108,7 @@ const STORAGE_KEYS = {
   SYSTEM_CONFIG: 'kapla_system_config',
 };
 
-// Initial Seed Data with Two Core Branches
+// Initial Seed Data with Single Branch (KAPLA Phạm Hùng Only)
 const DEFAULT_BRANCHES: Branch[] = [
   {
     id: 'a0000000-0000-0000-0000-000000000001',
@@ -116,22 +116,6 @@ const DEFAULT_BRANCHES: Branch[] = [
     name: 'KAPLA Phạm Hùng',
     address: 'Tầng trệt & lửng, Topaz Elite, Phường 4, Quận 8, TP.HCM',
     phone: '028 7300 9088',
-    status: 'active',
-  },
-  {
-    id: 'a0000000-0000-0000-0000-000000000002',
-    code: 'BT',
-    name: 'KAPLA Bình Tân',
-    address: '35 Vành Đai Trong, P. Bình Trị Đông B, Q. Bình Tân, TP.HCM',
-    phone: '028 7300 9089',
-    status: 'active',
-  },
-  {
-    id: 'a0000000-0000-0000-0000-000000000003',
-    code: 'DA',
-    name: 'KAPLA Dĩ An',
-    address: '108 Võ Thị Sáu, P. Đông Hòa, TP. Dĩ An, Bình Dương',
-    phone: '028 7300 9090',
     status: 'active',
   },
 ];
