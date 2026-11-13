@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import WebSocket from 'ws';
 
-const FRONTEND_URL = 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const CHROME_PORT = 9228;
 
 function wait(ms: number) {

@@ -160,17 +160,23 @@ export const BranchesClassesView: React.FC = () => {
                         <span className="font-medium text-slate-800">
                           {cls.default_hrt_name || 'Võ Thị Tuyết Mai'}
                         </span>
-                        <span className="block text-[10px] text-slate-400">HRT mặc định của lớp</span>
+                        <span className="block text-[10px] text-slate-400">
+                          {language === 'en' ? 'Class Default HRT' : 'HRT mặc định của lớp'}
+                        </span>
                       </td>
                       <td className="py-3.5 px-4 text-slate-700">
-                        {cls.main_teacher_name || 'Teacher Alex (Bản ngữ)'}
+                        {cls.main_teacher_name
+                          ? (language === 'en' ? cls.main_teacher_name.replace('Bản ngữ', 'Native') : cls.main_teacher_name)
+                          : (language === 'en' ? 'Teacher Alex (Native)' : 'Teacher Alex (Bản ngữ)')}
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
-                        {cls.schedule || 'Thứ 2 & 4 (17:30 - 19:00)'}
+                        {cls.schedule
+                          ? (language === 'en' ? cls.schedule.replace('Thứ 2 & 4', 'Mon & Wed').replace('Thứ 3 & 5', 'Tue & Thu').replace('Thứ 7 & CN', 'Sat & Sun') : cls.schedule)
+                          : (language === 'en' ? 'Mon & Wed (17:30 - 19:00)' : 'Thứ 2 & 4 (17:30 - 19:00)')}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          Đang hoạt động
+                          {language === 'en' ? 'Active' : 'Đang hoạt động'}
                         </span>
                       </td>
                     </tr>

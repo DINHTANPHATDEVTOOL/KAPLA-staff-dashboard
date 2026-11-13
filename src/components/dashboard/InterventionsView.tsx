@@ -23,34 +23,70 @@ import { useLanguage } from '../../context/LanguageContext';
 import { InterventionTicket, InterventionStatus, Student, ClassRoom, UserProfile } from '../../types';
 import { InterventionService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
-const STATUS_LABELS: Record<
-  InterventionStatus,
-  { label: string; badge: string; color: string; desc: string }
-> = {
-  open: {
-    label: '1. Mở (Open)',
-    badge: 'bg-rose-100 text-rose-800 border-rose-300',
-    color: 'border-l-rose-500',
-    desc: 'Mới phát hiện nguy cơ học thuật, cần lập kế hoạch xử lý',
-  },
-  in_progress: {
-    label: '2. Đang xử lý (In Progress)',
-    badge: 'bg-amber-100 text-amber-800 border-amber-300',
-    color: 'border-l-amber-500',
-    desc: 'Đang triển khai các buổi kèm bổ trợ học thuật',
-  },
-  resolved: {
-    label: '3. Đã xử lý (Resolved)',
-    badge: 'bg-blue-100 text-blue-800 border-blue-300',
-    color: 'border-l-blue-500',
-    desc: 'Đã hoàn tất bổ trợ và có kết quả đánh giá lại, chờ xác minh',
-  },
-  verified: {
-    label: '4. Đã xác minh (Verified)',
-    badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    color: 'border-l-emerald-500',
-    desc: 'Đã được Head Teacher hoặc CM phê duyệt đạt chuẩn',
-  },
+const getStatusMeta = (status: InterventionStatus, lang: 'vi' | 'en') => {
+  if (lang === 'en') {
+    switch (status) {
+      case 'open':
+        return {
+          label: '1. Open',
+          badge: 'bg-rose-100 text-rose-800 border-rose-300',
+          color: 'border-l-rose-500',
+          desc: 'Newly flagged academic risk requiring action plan',
+        };
+      case 'in_progress':
+        return {
+          label: '2. In Progress',
+          badge: 'bg-amber-100 text-amber-800 border-amber-300',
+          color: 'border-l-amber-500',
+          desc: 'Tutoring sessions actively underway',
+        };
+      case 'resolved':
+        return {
+          label: '3. Pending Verification',
+          badge: 'bg-blue-100 text-blue-800 border-blue-300',
+          color: 'border-l-blue-500',
+          desc: 'Completed tutoring and re-assessment submitted, awaiting approval',
+        };
+      case 'verified':
+        return {
+          label: '4. Verified',
+          badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+          color: 'border-l-emerald-500',
+          desc: 'Academic recovery verified and signed off by HT / CM',
+        };
+    }
+  }
+
+  switch (status) {
+    case 'open':
+      return {
+        label: '1. Mở (Open)',
+        badge: 'bg-rose-100 text-rose-800 border-rose-300',
+        color: 'border-l-rose-500',
+        desc: 'Mới phát hiện nguy cơ học thuật, cần lập kế hoạch xử lý',
+      };
+    case 'in_progress':
+      return {
+        label: '2. Đang xử lý (In Progress)',
+        badge: 'bg-amber-100 text-amber-800 border-amber-300',
+        color: 'border-l-amber-500',
+        desc: 'Đang triển khai các buổi kèm bổ trợ học thuật',
+      };
+    case 'resolved':
+      return {
+        label: '3. Đã xử lý (Resolved)',
+        badge: 'bg-blue-100 text-blue-800 border-blue-300',
+        color: 'border-l-blue-500',
+        desc: 'Đã hoàn tất bổ trợ và có kết quả đánh giá lại, chờ xác minh',
+      };
+    case 'verified':
+      return {
+        label: '4. Đã xác minh (Verified)',
+        badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        color: 'border-l-emerald-500',
+        desc: 'Đã được Head Teacher hoặc CM phê duyệt đạt chuẩn',
+      };
+  }
 };
 
 export const InterventionsView: React.FC = () => {
@@ -305,9 +341,13 @@ export const InterventionsView: React.FC = () => {
             statusFilter === 'open' ? 'ring-2 ring-rose-500 bg-rose-50/50' : 'bg-white hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">1. Mở (Open)</span>
+          <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
+            {language === 'en' ? '1. Open' : '1. Mở (Open)'}
+          </span>
           <div className="text-2xl font-bold text-rose-800 mt-1">{stats.open}</div>
-          <span className="text-[10px] text-slate-400">Mới phát hiện rủi ro</span>
+          <span className="text-[10px] text-slate-400">
+            {language === 'en' ? 'Newly flagged risk' : 'Mới phát hiện rủi ro'}
+          </span>
         </div>
 
         <div
@@ -316,9 +356,13 @@ export const InterventionsView: React.FC = () => {
             statusFilter === 'in_progress' ? 'ring-2 ring-amber-500 bg-amber-50/50' : 'bg-white hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">2. Đang xử lý</span>
+          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
+            {language === 'en' ? '2. In Progress' : '2. Đang xử lý'}
+          </span>
           <div className="text-2xl font-bold text-amber-800 mt-1">{stats.inProgress}</div>
-          <span className="text-[10px] text-slate-400">Đang kèm bổ trợ</span>
+          <span className="text-[10px] text-slate-400">
+            {language === 'en' ? 'Tutoring underway' : 'Đang kèm bổ trợ'}
+          </span>
         </div>
 
         <div
@@ -327,9 +371,13 @@ export const InterventionsView: React.FC = () => {
             statusFilter === 'resolved' ? 'ring-2 ring-blue-500 bg-blue-50/50' : 'bg-white hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">3. Chờ xác minh</span>
+          <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">
+            {language === 'en' ? '3. Pending Verification' : '3. Chờ xác minh'}
+          </span>
           <div className="text-2xl font-bold text-blue-800 mt-1">{stats.resolved}</div>
-          <span className="text-[10px] text-slate-400">Đã nộp kết quả lại</span>
+          <span className="text-[10px] text-slate-400">
+            {language === 'en' ? 'Re-assessment submitted' : 'Đã nộp kết quả lại'}
+          </span>
         </div>
 
         <div
@@ -338,9 +386,13 @@ export const InterventionsView: React.FC = () => {
             statusFilter === 'verified' ? 'ring-2 ring-emerald-500 bg-emerald-50/50' : 'bg-white hover:border-slate-300'
           }`}
         >
-          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">4. Đã xác minh</span>
+          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
+            {language === 'en' ? '4. Verified' : '4. Đã xác minh'}
+          </span>
           <div className="text-2xl font-bold text-emerald-800 mt-1">{stats.verified}</div>
-          <span className="text-[10px] text-emerald-600">HT / CM đã duyệt</span>
+          <span className="text-[10px] text-emerald-600">
+            {language === 'en' ? 'HT / CM approved' : 'HT / CM đã duyệt'}
+          </span>
         </div>
       </div>
 
@@ -352,7 +404,11 @@ export const InterventionsView: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tên học sinh, mô tả vấn đề học tập..."
+            placeholder={
+              language === 'en'
+                ? 'Search by student name, issue description...'
+                : 'Tìm theo tên học sinh, mô tả vấn đề học tập...'
+            }
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           />
         </div>
@@ -363,11 +419,11 @@ export const InterventionsView: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">Tất cả giai đoạn</option>
-            <option value="open">1. Mở (Open)</option>
-            <option value="in_progress">2. Đang xử lý</option>
-            <option value="resolved">3. Đã xử lý (Chờ xác minh)</option>
-            <option value="verified">4. Đã xác minh</option>
+            <option value="all">{language === 'en' ? 'All Stages' : 'Tất cả giai đoạn'}</option>
+            <option value="open">{language === 'en' ? '1. Open' : '1. Mở (Open)'}</option>
+            <option value="in_progress">{language === 'en' ? '2. In Progress' : '2. Đang xử lý'}</option>
+            <option value="resolved">{language === 'en' ? '3. Pending Verification' : '3. Đã xử lý (Chờ xác minh)'}</option>
+            <option value="verified">{language === 'en' ? '4. Verified' : '4. Đã xác minh'}</option>
           </select>
         </div>
       </div>
@@ -376,17 +432,21 @@ export const InterventionsView: React.FC = () => {
       <div className="space-y-3">
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200">
-            Đang tải danh sách phiếu can thiệp...
+            {language === 'en' ? 'Loading intervention tickets...' : 'Đang tải danh sách phiếu can thiệp...'}
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center bg-white rounded-xl border border-slate-200">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-            <h4 className="text-sm font-semibold text-slate-800">Không có phiếu can thiệp nào phù hợp</h4>
-            <p className="text-xs text-slate-500 mt-1">Học viên đang duy trì tiến độ học tập tốt.</p>
+            <h4 className="text-sm font-semibold text-slate-800">
+              {language === 'en' ? 'No Matching Intervention Tickets' : 'Không có phiếu can thiệp nào phù hợp'}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1">
+              {language === 'en' ? 'All students are meeting academic expectations.' : 'Học viên đang duy trì tiến độ học tập tốt.'}
+            </p>
           </div>
         ) : (
           filtered.map((ticket) => {
-            const meta = STATUS_LABELS[ticket.status];
+            const meta = getStatusMeta(ticket.status, language);
 
             return (
               <div
@@ -395,36 +455,53 @@ export const InterventionsView: React.FC = () => {
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm">{ticket.student?.full_name || 'Học viên'}</span>
-                    <span className="text-[11px] text-slate-500 font-mono">({ticket.class?.name || 'Lớp'})</span>
+                    <span className="font-bold text-slate-900 text-sm">
+                      {ticket.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      ({ticket.class?.name || (language === 'en' ? 'Class' : 'Lớp')})
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${meta.badge}`}>
                       {meta.label}
                     </span>
-                    <span className="text-[11px] text-slate-400 font-mono">Hạn: {ticket.due_date}</span>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {language === 'en' ? 'Due: ' : 'Hạn: '}{ticket.due_date}
+                    </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="font-semibold text-rose-700 block mb-1">Vấn đề & Nguyên nhân:</span>
+                    <span className="font-semibold text-rose-700 block mb-1">
+                      {language === 'en' ? 'Issue & Root Cause:' : 'Vấn đề & Nguyên nhân:'}
+                    </span>
                     <p className="text-slate-800 font-medium">{ticket.issue_description}</p>
-                    {ticket.root_cause && <p className="text-slate-500 mt-1">Nguyên nhân: {ticket.root_cause}</p>}
+                    {ticket.root_cause && (
+                      <p className="text-slate-500 mt-1">
+                        {language === 'en' ? 'Root Cause: ' : 'Nguyên nhân: '}{ticket.root_cause}
+                      </p>
+                    )}
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="font-semibold text-blue-700 block mb-1">Kế hoạch can thiệp:</span>
+                    <span className="font-semibold text-blue-700 block mb-1">
+                      {language === 'en' ? 'Intervention Plan:' : 'Kế hoạch can thiệp:'}
+                    </span>
                     <p className="text-slate-800">{ticket.action_plan}</p>
                     <span className="text-[11px] text-slate-500 block mt-1">
-                      Phụ trách: <strong>{ticket.assigned_staff_name || 'Chưa gán'}</strong>
+                      {language === 'en' ? 'Assigned to: ' : 'Phụ trách: '}
+                      <strong>{ticket.assigned_staff_name || (language === 'en' ? 'Unassigned' : 'Chưa gán')}</strong>
                     </span>
                   </div>
                 </div>
 
                 {ticket.reassessment_result && (
                   <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-900">
-                    <span className="font-bold block mb-0.5">Kết quả đánh giá lại:</span>
+                    <span className="font-bold block mb-0.5">
+                      {language === 'en' ? 'Re-assessment Result:' : 'Kết quả đánh giá lại:'}
+                    </span>
                     <p>{ticket.reassessment_result}</p>
                   </div>
                 )}
@@ -433,7 +510,11 @@ export const InterventionsView: React.FC = () => {
                   <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-200 text-xs text-purple-900 flex items-start gap-2">
                     <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold">Đã xác minh bởi: {ticket.verified_by_name || 'Head Teacher / CM'}</span>
+                      <span className="font-bold">
+                        {language === 'en'
+                          ? `Verified by: ${ticket.verified_by_name || 'Head Teacher / CM'}`
+                          : `Đã xác minh bởi: ${ticket.verified_by_name || 'Head Teacher / CM'}`}
+                      </span>
                       {ticket.verification_notes && <p className="mt-0.5 italic">"{ticket.verification_notes}"</p>}
                     </div>
                   </div>
@@ -447,7 +528,7 @@ export const InterventionsView: React.FC = () => {
                       onClick={() => handleStartProgress(ticket.id)}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200"
                     >
-                      Bắt đầu xử lý (In Progress)
+                      {language === 'en' ? 'Start Tutoring (In Progress)' : 'Bắt đầu xử lý (In Progress)'}
                     </button>
                   )}
 
@@ -460,7 +541,7 @@ export const InterventionsView: React.FC = () => {
                       }}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200"
                     >
-                      Nộp kết quả đánh giá lại (Resolved)
+                      {language === 'en' ? 'Submit Re-assessment (Resolved)' : 'Nộp kết quả đánh giá lại (Resolved)'}
                     </button>
                   )}
 
@@ -493,7 +574,9 @@ export const InterventionsView: React.FC = () => {
                 <span className="p-1.5 rounded-lg bg-amber-50 text-amber-700">
                   <AlertTriangle className="w-5 h-5" />
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm">Lập phiếu can thiệp học thuật</h3>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {language === 'en' ? 'Create Academic Intervention Ticket' : 'Lập phiếu can thiệp học thuật'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -506,66 +589,90 @@ export const InterventionsView: React.FC = () => {
 
             <form onSubmit={handleCreate} className="space-y-3 pt-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Chọn học sinh *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Select Student *' : 'Chọn học sinh *'}
+                </label>
                 <select
                   required
                   value={newForm.student_id}
                   onChange={(e) => handleStudentSelect(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
-                  <option value="">-- Chọn học sinh cần can thiệp --</option>
+                  <option value="">
+                    {language === 'en' ? '-- Select student requiring intervention --' : '-- Chọn học sinh cần can thiệp --'}
+                  </option>
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.full_name} ({s.student_code}) - {s.current_class?.name || 'Chưa xếp lớp'}
+                      {s.full_name} ({s.student_code}) - {s.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Mô tả vấn đề học tập *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Academic Issue Description *' : 'Mô tả vấn đề học tập *'}
+                </label>
                 <textarea
                   required
                   rows={2}
                   value={newForm.issue_description}
                   onChange={(e) => setNewForm({ ...newForm, issue_description: e.target.value })}
-                  placeholder="VD: Kỹ năng Viết yếu (2.0 khiên), nhầm lẫn cấu trúc câu hiện tại đơn..."
+                  placeholder={
+                    language === 'en'
+                      ? 'e.g. Weak writing skills (2.0 shields), confused with present simple structure...'
+                      : 'VD: Kỹ năng Viết yếu (2.0 khiên), nhầm lẫn cấu trúc câu hiện tại đơn...'
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nguyên nhân cốt lõi</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Root Cause' : 'Nguyên nhân cốt lõi'}
+                </label>
                 <textarea
                   rows={2}
                   value={newForm.root_cause}
                   onChange={(e) => setNewForm({ ...newForm, root_cause: e.target.value })}
-                  placeholder="VD: Nghỉ học 2 buổi trước, chưa nắm từ vựng Unit 3..."
+                  placeholder={
+                    language === 'en'
+                      ? 'e.g. Missed past 2 sessions, has not reviewed Unit 3 vocabulary...'
+                      : 'VD: Nghỉ học 2 buổi trước, chưa nắm từ vựng Unit 3...'
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Kế hoạch can thiệp chi tiết *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Detailed Intervention Plan *' : 'Kế hoạch can thiệp chi tiết *'}
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={newForm.action_plan}
                   onChange={(e) => setNewForm({ ...newForm, action_plan: e.target.value })}
-                  placeholder="VD: Kèm 1-1 mỗi thứ 5 (30 phút), giao phiếu bài tập về nhà theo chuẩn Oxford..."
+                  placeholder={
+                    language === 'en'
+                      ? 'e.g. 1-on-1 tutoring every Thursday (30 min), Oxford-aligned home practice worksheets...'
+                      : 'VD: Kèm 1-1 mỗi thứ 5 (30 phút), giao phiếu bài tập về nhà theo chuẩn Oxford...'
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Người phụ trách xử lý</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Assigned Educator' : 'Người phụ trách xử lý'}
+                  </label>
                   <select
                     value={newForm.assigned_staff_id}
                     onChange={(e) => setNewForm({ ...newForm, assigned_staff_id: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">-- Chọn giáo viên --</option>
+                    <option value="">{language === 'en' ? '-- Select Teacher --' : '-- Chọn giáo viên --'}</option>
                     {teachers.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.full_name}
@@ -575,7 +682,9 @@ export const InterventionsView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Hạn xử lý (Due date) *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Due Date *' : 'Hạn xử lý (Due date) *'}
+                  </label>
                   <input
                     type="date"
                     required
@@ -592,14 +701,16 @@ export const InterventionsView: React.FC = () => {
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold disabled:opacity-50"
                 >
-                  {submitting ? 'Đang tạo...' : 'Tạo phiếu can thiệp'}
+                  {submitting
+                    ? (language === 'en' ? 'Creating...' : 'Đang tạo...')
+                    : (language === 'en' ? 'Create Intervention Ticket' : 'Tạo phiếu can thiệp')}
                 </button>
               </div>
             </form>
@@ -612,7 +723,9 @@ export const InterventionsView: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-sm">Nộp kết quả đánh giá lại</h3>
+              <h3 className="font-bold text-slate-900 text-sm">
+                {language === 'en' ? 'Submit Re-assessment Results' : 'Nộp kết quả đánh giá lại'}
+              </h3>
               <button
                 type="button"
                 onClick={() => setSelectedForResolve(null)}
@@ -629,13 +742,19 @@ export const InterventionsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Kết quả đánh giá lại sau can thiệp *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Post-Intervention Re-assessment Result *' : 'Kết quả đánh giá lại sau can thiệp *'}
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={reassessmentResult}
                   onChange={(e) => setReassessmentResult(e.target.value)}
-                  placeholder="VD: Học viên đã hoàn thành 4 buổi bổ trợ, bài kiểm tra lại đạt 3.5/5 khiên..."
+                  placeholder={
+                    language === 'en'
+                      ? 'e.g. Student completed 4 tutoring sessions, re-evaluation scored 3.5/5 shields...'
+                      : 'VD: Học viên đã hoàn thành 4 buổi bổ trợ, bài kiểm tra lại đạt 3.5/5 khiên...'
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -646,14 +765,16 @@ export const InterventionsView: React.FC = () => {
                   onClick={() => setSelectedForResolve(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-blue-700 hover:bg-blue-800 font-semibold disabled:opacity-50"
                 >
-                  {submitting ? 'Đang lưu...' : 'Hoàn tất và chờ xác minh'}
+                  {submitting
+                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
+                    : (language === 'en' ? 'Submit for Verification' : 'Hoàn tất và chờ xác minh')}
                 </button>
               </div>
             </form>
@@ -670,7 +791,9 @@ export const InterventionsView: React.FC = () => {
                 <span className="p-1.5 rounded-lg bg-purple-50 text-purple-700">
                   <ShieldCheck className="w-5 h-5" />
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm">Xác minh can thiệp học thuật</h3>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {language === 'en' ? 'Verify Academic Intervention' : 'Xác minh can thiệp học thuật'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -684,18 +807,28 @@ export const InterventionsView: React.FC = () => {
             <form onSubmit={handleVerify} className="space-y-3 pt-4 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                 <span className="font-semibold text-slate-800">{selectedForVerify.student?.full_name}</span>
-                <p className="text-[11px] text-slate-600">Vấn đề: {selectedForVerify.issue_description}</p>
-                <p className="text-[11px] text-emerald-700 font-medium">Kết quả: {selectedForVerify.reassessment_result}</p>
+                <p className="text-[11px] text-slate-600">
+                  {language === 'en' ? 'Issue: ' : 'Vấn đề: '}{selectedForVerify.issue_description}
+                </p>
+                <p className="text-[11px] text-emerald-700 font-medium">
+                  {language === 'en' ? 'Result: ' : 'Kết quả: '}{selectedForVerify.reassessment_result}
+                </p>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nhận xét xác minh của Head Teacher / CM *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Verification Feedback (Head Teacher / CM) *' : 'Nhận xét xác minh của Head Teacher / CM *'}
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={verificationNotes}
                   onChange={(e) => setVerificationNotes(e.target.value)}
-                  placeholder="VD: Đã kiểm tra lại bài kiểm tra và phiếu bổ trợ. Học viên đạt chuẩn yêu cầu..."
+                  placeholder={
+                    language === 'en'
+                      ? 'e.g. Re-tested assessment and tutoring worksheets. Student satisfies academic requirements...'
+                      : 'VD: Đã kiểm tra lại bài kiểm tra và phiếu bổ trợ. Học viên đạt chuẩn yêu cầu...'
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -706,14 +839,16 @@ export const InterventionsView: React.FC = () => {
                   onClick={() => setSelectedForVerify(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-purple-700 hover:bg-purple-800 font-semibold disabled:opacity-50"
                 >
-                  {submitting ? 'Đang xác minh...' : 'Duyệt đạt chuẩn (Verified)'}
+                  {submitting
+                    ? (language === 'en' ? 'Verifying...' : 'Đang xác minh...')
+                    : (language === 'en' ? 'Approve & Mark Verified' : 'Duyệt đạt chuẩn (Verified)')}
                 </button>
               </div>
             </form>

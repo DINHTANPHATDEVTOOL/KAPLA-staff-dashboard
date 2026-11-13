@@ -128,6 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
+              id={`nav-${item.id}`}
               type="button"
               onClick={() => {
                 onSelectSection(item.id);

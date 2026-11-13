@@ -259,12 +259,18 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
       {/* Assessment Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {loading ? (
-          <div className="col-span-2 p-12 text-center text-xs text-slate-500">Đang tải danh sách đánh giá...</div>
+          <div className="col-span-2 p-12 text-center text-xs text-slate-500">
+            {language === 'en' ? 'Loading assessments...' : 'Đang tải danh sách đánh giá...'}
+          </div>
         ) : filteredAssessments.length === 0 ? (
           <div className="col-span-2 p-12 text-center bg-white rounded-xl border border-slate-200">
             <ClipboardCheck className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-            <h4 className="text-sm font-semibold text-slate-800">Chưa có bài đánh giá nào</h4>
-            <p className="text-xs text-slate-500 mt-1">Hãy thêm bài đánh giá 4 kỹ năng đầu tiên cho lớp học.</p>
+            <h4 className="text-sm font-semibold text-slate-800">
+              {language === 'en' ? 'No Assessments Found' : 'Chưa có bài đánh giá nào'}
+            </h4>
+            <p className="text-xs text-slate-500 mt-1">
+              {language === 'en' ? 'Add the first 4-skill assessment for this class cohort.' : 'Hãy thêm bài đánh giá 4 kỹ năng đầu tiên cho lớp học.'}
+            </p>
           </div>
         ) : (
           filteredAssessments.map((a) => {
@@ -281,22 +287,22 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 text-sm">{a.student?.full_name || 'Học viên'}</span>
-                        <span className="text-[11px] text-slate-500 font-mono">({a.class?.name || 'Lớp'})</span>
+                        <span className="font-bold text-slate-900 text-sm">{a.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}</span>
+                        <span className="text-[11px] text-slate-500 font-mono">({a.class?.name || (language === 'en' ? 'Class' : 'Lớp')})</span>
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
-                        {a.period} • Ngày: {a.assessment_date}
+                        {a.period} • {language === 'en' ? 'Date: ' : 'Ngày: '}{a.assessment_date}
                       </div>
                     </div>
 
                     {a.has_academic_risk ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                         <AlertTriangle className="w-3 h-3 text-rose-600" />
-                        Nguy cơ học thuật
+                        {language === 'en' ? 'Academic Risk' : 'Nguy cơ học thuật'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
-                        Tiến độ đạt chuẩn
+                        {language === 'en' ? 'Standard Progress' : 'Tiến độ đạt chuẩn'}
                       </span>
                     )}
                   </div>
@@ -341,12 +347,12 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   <div className="space-y-1.5 text-xs text-slate-600">
                     {a.strengths && (
                       <p>
-                        <strong className="text-emerald-700">Điểm mạnh:</strong> {a.strengths}
+                        <strong className="text-emerald-700">{language === 'en' ? 'Strengths: ' : 'Điểm mạnh: '}</strong>{a.strengths}
                       </p>
                     )}
                     {a.weaknesses && (
                       <p>
-                        <strong className="text-rose-700">Cần cải thiện:</strong> {a.weaknesses}
+                        <strong className="text-rose-700">{language === 'en' ? 'Areas for Growth: ' : 'Cần cải thiện: '}</strong>{a.weaknesses}
                       </p>
                     )}
                     {a.progress_notes && (
@@ -356,7 +362,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">Đánh giá bởi: {a.assessed_by_name}</span>
+                  <span className="text-slate-400">{language === 'en' ? 'Assessed by: ' : 'Đánh giá bởi: '}{a.assessed_by_name}</span>
 
                   {a.has_academic_risk && onNavigateToIntervention && (
                     <button
@@ -365,13 +371,15 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                         onNavigateToIntervention(
                           a.student_id,
                           a.id,
-                          `Kỹ năng yếu: ${a.weaknesses || 'Cần can thiệp bổ trợ học vụ'}`
+                          language === 'en'
+                            ? `Weak skills: ${a.weaknesses || 'Academic intervention required'}`
+                            : `Kỹ năng yếu: ${a.weaknesses || 'Cần can thiệp bổ trợ học vụ'}`
                         )
                       }
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      Lập phiếu can thiệp
+                      {language === 'en' ? 'Open Intervention Ticket' : 'Lập phiếu can thiệp'}
                     </button>
                   )}
                 </div>
@@ -390,7 +398,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                 <span className="p-1.5 rounded-lg bg-blue-50 text-[#043264]">
                   <ClipboardCheck className="w-5 h-5" />
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm">Ghi nhận đánh giá năng lực 4 kỹ năng</h3>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {language === 'en' ? 'Record 4-Skill Competency Assessment' : 'Ghi nhận đánh giá năng lực 4 kỹ năng'}
+                </h3>
               </div>
               <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -399,17 +409,19 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
 
             <form onSubmit={handleCreate} className="space-y-4 pt-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Chọn học sinh *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Select Student *' : 'Chọn học sinh *'}
+                </label>
                 <select
                   required
                   value={form.student_id}
                   onChange={(e) => handleStudentSelect(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
-                  <option value="">-- Chọn học sinh trong danh sách --</option>
+                  <option value="">{language === 'en' ? '-- Select student from cohort --' : '-- Chọn học sinh trong danh sách --'}</option>
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.full_name} ({s.student_code}) - {s.current_class?.name || 'Chưa xếp lớp'}
+                      {s.full_name} ({s.student_code}) - {s.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')}
                     </option>
                   ))}
                 </select>
@@ -417,18 +429,22 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Kỳ đánh giá *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Assessment Period *' : 'Kỳ đánh giá *'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={form.period}
                     onChange={(e) => setForm({ ...form, period: e.target.value })}
-                    placeholder="VD: Kỳ 1 - Giữa kỳ"
+                    placeholder={language === 'en' ? 'e.g. Term 1 - Midterm' : 'VD: Kỳ 1 - Giữa kỳ'}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Ngày đánh giá *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Assessment Date *' : 'Ngày đánh giá *'}
+                  </label>
                   <input
                     type="date"
                     required
@@ -441,10 +457,14 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
 
               {/* 4 Skills Input (0 - 5 shields) */}
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <span className="font-bold text-slate-800 block">Thang điểm 4 kỹ năng chuẩn Cambridge (0 - 5 khiên)</span>
+                <span className="font-bold text-slate-800 block">
+                  {language === 'en' ? 'Cambridge 4-Skill Standard Rubrics (0 - 5 Shields)' : 'Thang điểm 4 kỹ năng chuẩn Cambridge (0 - 5 khiên)'}
+                </span>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-medium text-slate-600 mb-1">Nghe (Listening) [0 - 5]</label>
+                    <label className="block font-medium text-slate-600 mb-1">
+                      {language === 'en' ? 'Listening [0 - 5]' : 'Nghe (Listening) [0 - 5]'}
+                    </label>
                     <input
                       type="number"
                       step="0.5"
@@ -457,7 +477,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                     />
                   </div>
                   <div>
-                    <label className="block font-medium text-slate-600 mb-1">Nói (Speaking) [0 - 5]</label>
+                    <label className="block font-medium text-slate-600 mb-1">
+                      {language === 'en' ? 'Speaking [0 - 5]' : 'Nói (Speaking) [0 - 5]'}
+                    </label>
                     <input
                       type="number"
                       step="0.5"
@@ -470,7 +492,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                     />
                   </div>
                   <div>
-                    <label className="block font-medium text-slate-600 mb-1">Đọc (Reading) [0 - 5]</label>
+                    <label className="block font-medium text-slate-600 mb-1">
+                      {language === 'en' ? 'Reading [0 - 5]' : 'Đọc (Reading) [0 - 5]'}
+                    </label>
                     <input
                       type="number"
                       step="0.5"
@@ -483,7 +507,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                     />
                   </div>
                   <div>
-                    <label className="block font-medium text-slate-600 mb-1">Viết (Writing) [0 - 5]</label>
+                    <label className="block font-medium text-slate-600 mb-1">
+                      {language === 'en' ? 'Writing [0 - 5]' : 'Viết (Writing) [0 - 5]'}
+                    </label>
                     <input
                       type="number"
                       step="0.5"
@@ -496,30 +522,44 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                     />
                   </div>
                 </div>
-                <span className="text-[10px] text-slate-500 block">
-                  * Kỹ năng &lt; 3.0 khiên sẽ tự động phát hiện nguy cơ học thuật và kích hoạt đề xuất can thiệp.
-                </span>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Điểm mạnh của học viên</label>
-                <textarea
-                  rows={2}
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Student Strengths' : 'Điểm mạnh của học sinh'}
+                </label>
+                <input
+                  type="text"
                   value={form.strengths}
                   onChange={(e) => setForm({ ...form, strengths: e.target.value })}
-                  placeholder="Khả năng ghi nhớ từ vựng tốt, phản xạ nhanh..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                  placeholder={language === 'en' ? 'e.g. Confident communication, rich vocabulary...' : 'VD: Tự tin giao tiếp, phản xạ nhanh...'}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Điểm cần cải thiện</label>
-                <textarea
-                  rows={2}
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Areas Needing Growth' : 'Kỹ năng cần cải thiện'}
+                </label>
+                <input
+                  type="text"
                   value={form.weaknesses}
                   onChange={(e) => setForm({ ...form, weaknesses: e.target.value })}
-                  placeholder="Ngữ pháp câu đơn, thiếu tự tin khi phát âm..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                  placeholder={language === 'en' ? 'e.g. Oxford phonics intonation, sentence structure...' : 'VD: Phát âm âm đuôi, ngữ điệu câu hỏi...'}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Progress Notes & Feedback' : 'Nhận xét tổng quan'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={form.progress_notes}
+                  onChange={(e) => setForm({ ...form, progress_notes: e.target.value })}
+                  placeholder={language === 'en' ? 'Detailed observations for parents and HRT...' : 'Ghi chú cho giáo viên chủ nhiệm và phụ huynh...'}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200"
                 />
               </div>
 
@@ -527,16 +567,18 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50"
                 >
-                  {submitting ? 'Đang lưu...' : 'Lưu bài đánh giá'}
+                  {submitting
+                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
+                    : (language === 'en' ? 'Save Assessment' : 'Lưu đánh giá')}
                 </button>
               </div>
             </form>

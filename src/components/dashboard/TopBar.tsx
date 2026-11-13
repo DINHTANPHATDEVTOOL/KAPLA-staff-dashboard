@@ -145,56 +145,72 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Bilingual Switcher (🇻🇳 Tiếng Việt / 🇺🇸 English (US)) */}
         <LanguageToggle />
 
-        {/* Branch Selector Dropdown */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-[#043264] bg-blue-50/80 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition-all"
+        {/* Branch Selector (Admins or Multi-Branch staff can switch; Single-branch staff is fixed) */}
+        {isSystemAdmin || availableBranches.length > 1 ? (
+          <div className="relative">
+            <button
+              type="button"
+              id="branch-selector-btn"
+              onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-[#043264] bg-blue-50/80 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition-all"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
+              <span className="max-w-[130px] sm:max-w-[180px] truncate">
+                {currentBranch ? currentBranch.name : t('topbar.selectBranch', 'Chọn chi nhánh')}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {branchDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setBranchDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-3 py-1.5 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    {isSystemAdmin ? t('topbar.systemBranches', 'Chi nhánh toàn hệ thống') : t('topbar.assignedBranches', 'Chi nhánh phân bổ')}
+                  </div>
+                  {availableBranches.map((branch) => {
+                    const isSelected = currentBranch?.id === branch.id;
+                    return (
+                      <button
+                        key={branch.id}
+                        type="button"
+                        onClick={() => {
+                          switchBranch(branch.id);
+                          setBranchDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors ${
+                          isSelected ? 'font-bold text-[#026fd7] bg-blue-50/50' : 'text-slate-700'
+                        }`}
+                      >
+                        <div className="truncate">
+                          <span className="block font-medium">{branch.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {language === 'en' ? `Code: ${branch.code}` : `Mã: ${branch.code}`}
+                          </span>
+                        </div>
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-[#026fd7] shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div
+            id="branch-fixed-badge"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-[#043264] bg-blue-50/80 border border-blue-200/80 rounded-xl"
+            title={language === 'en' ? 'Assigned Operating Campus' : 'Cơ sở công tác được phân bổ'}
           >
             <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
             <span className="max-w-[130px] sm:max-w-[180px] truncate">
-              {currentBranch ? currentBranch.name : t('topbar.selectBranch', 'Chọn chi nhánh')}
+              {currentBranch ? currentBranch.name : (language === 'en' ? 'Campus' : 'Chi nhánh')}
             </span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
-
-          {branchDropdownOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-30"
-                onClick={() => setBranchDropdownOpen(false)}
-              />
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
-                <div className="px-3 py-1.5 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  {isSystemAdmin ? t('topbar.systemBranches', 'Chi nhánh toàn hệ thống') : t('topbar.assignedBranches', 'Chi nhánh phân bổ')}
-                </div>
-                {availableBranches.map((branch) => {
-                  const isSelected = currentBranch?.id === branch.id;
-                  return (
-                    <button
-                      key={branch.id}
-                      type="button"
-                      onClick={() => {
-                        switchBranch(branch.id);
-                        setBranchDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors ${
-                        isSelected ? 'font-bold text-[#026fd7] bg-blue-50/50' : 'text-slate-700'
-                      }`}
-                    >
-                      <div className="truncate">
-                        <span className="block font-medium">{branch.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">Mã: {branch.code}</span>
-                      </div>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-[#026fd7] shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Role Badge with Bespoke Role Icon */}
         <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200/90 text-slate-800 text-xs font-semibold shadow-2xs">

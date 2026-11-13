@@ -15,6 +15,7 @@ import { InterventionsView } from './InterventionsView';
 import { FeedbackView } from './FeedbackView';
 import { SupplementaryView } from './SupplementaryView';
 import { RenewalView } from './RenewalView';
+import { ActivityLogsView } from './ActivityLogsView';
 import { DashboardNavSection, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
@@ -160,12 +161,9 @@ export const AppLayout: React.FC = () => {
             <RenewalView />
           )}
 
-          {activeSection === 'logs' &&
-            renderPlaceholder(
-              'Nhật ký tác nghiệp chi tiết',
-              'Giai đoạn T04',
-              'Lịch sử theo dõi quá trình tương tác, thay đổi ngày hết hạn và kết quả xử lý của các phòng ban.'
-            )}
+          {activeSection === 'logs' && (
+            <ActivityLogsView />
+          )}
         </main>
       </div>
     </div>

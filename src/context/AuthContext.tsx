@@ -121,18 +121,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(userProfile);
     setMemberships(userMemberships);
 
-    // Compute active branch
+    // Compute active branch with strict branch isolation:
+    // Non-admin accounts ONLY have access to branches they actively belong to
     const branches = await loadBranches();
     if (userProfile?.system_role === 'system_admin') {
-      // Admin defaults to preferred branch or first branch
+      // Admin has full system visibility across all branches
+      setAvailableBranches(branches);
       const def = branches.find((b) => b.id === userProfile?.preferred_branch_id) || branches[0] || null;
       setCurrentBranch(def);
     } else if (userMemberships.length > 0) {
-      // Primary membership branch or first branch
+      // Non-admin staff: ONLY branches where user has active membership are available
+      const authorizedBranches = branches.filter((b) =>
+        userMemberships.some((m) => m.branch_id === b.id && m.status === 'active')
+      );
+      setAvailableBranches(authorizedBranches);
       const primary = userMemberships.find((m) => m.is_primary) || userMemberships[0];
-      const b = branches.find((br) => br.id === primary.branch_id) || null;
+      const b = authorizedBranches.find((br) => br.id === primary.branch_id) || authorizedBranches[0] || null;
       setCurrentBranch(b);
     } else {
+      setAvailableBranches([]);
       setCurrentBranch(null);
     }
 
@@ -444,8 +451,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Switch current branch
+  // Switch current branch (with strict RBAC enforcement)
   const switchBranch = (branchId: string) => {
+    // If not system admin, reject any attempt to switch to an unauthorized branch
+    if (profile?.system_role !== 'system_admin') {
+      const isAuthorized = memberships.some((m) => m.branch_id === branchId && m.status === 'active');
+      if (!isAuthorized) {
+        console.warn(`[KAPLA RBAC SECURITY] User ${profile?.id} denied switching to unauthorized branch ${branchId}`);
+        return;
+      }
+    }
     const found = availableBranches.find((b) => b.id === branchId);
     if (found) {
       setCurrentBranch(found);

@@ -132,7 +132,7 @@ export const StudentListView: React.FC = () => {
 
     if (diffDays < 0) {
       return {
-        label: `Đã hết hạn ${Math.abs(diffDays)} ngày`,
+        label: language === 'en' ? `Expired ${Math.abs(diffDays)}d ago` : `Đã hết hạn ${Math.abs(diffDays)} ngày`,
         status: 'expired' as const,
         color: 'bg-rose-50 text-rose-700 border-rose-200',
         badge: 'bg-rose-500',
@@ -140,14 +140,14 @@ export const StudentListView: React.FC = () => {
     }
     if (diffDays <= 14) {
       return {
-        label: `Sắp hết hạn (${diffDays} ngày)`,
+        label: language === 'en' ? `Due in ${diffDays}d` : `Sắp hết hạn (${diffDays} ngày)`,
         status: 'warning' as const,
         color: 'bg-amber-50 text-amber-700 border-amber-200',
         badge: 'bg-amber-500',
       };
     }
     return {
-      label: `Còn ${diffDays} ngày`,
+      label: language === 'en' ? `${diffDays}d remaining` : `Còn ${diffDays} ngày`,
       status: 'active' as const,
       color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       badge: 'bg-emerald-500',
@@ -333,24 +333,40 @@ export const StudentListView: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng học viên phụ trách</span>
+          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            {language === 'en' ? 'Total Managed Students' : 'Tổng học viên phụ trách'}
+          </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</div>
-          <span className="text-[10px] text-slate-400">Thuộc phạm vi phân quyền</span>
+          <span className="text-[10px] text-slate-400">
+            {language === 'en' ? 'Within authorized scope' : 'Thuộc phạm vi phân quyền'}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">Học phí an toàn</span>
+          <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">
+            {language === 'en' ? 'Safe Tuition' : 'Học phí an toàn'}
+          </span>
           <div className="text-2xl font-bold text-emerald-700 mt-1">{stats.active}</div>
-          <span className="text-[10px] text-emerald-600">Hạn &gt; 14 ngày</span>
+          <span className="text-[10px] text-emerald-600">
+            {language === 'en' ? 'Expiry > 14 days' : 'Hạn > 14 ngày'}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/40">
-          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Sắp hết hạn (&le; 14 ngày)</span>
+          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
+            {language === 'en' ? 'Due Soon (≤ 14 days)' : 'Sắp hết hạn (≤ 14 ngày)'}
+          </span>
           <div className="text-2xl font-bold text-amber-800 mt-1">{stats.warning}</div>
-          <span className="text-[10px] text-amber-700">Cần liên hệ nhắc tái tục</span>
+          <span className="text-[10px] text-amber-700">
+            {language === 'en' ? 'Retention outreach needed' : 'Cần liên hệ nhắc tái tục'}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/40">
-          <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">Đã quá hạn học phí</span>
+          <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
+            {language === 'en' ? 'Overdue Tuition' : 'Đã quá hạn học phí'}
+          </span>
           <div className="text-2xl font-bold text-rose-800 mt-1">{stats.expired}</div>
-          <span className="text-[10px] text-rose-700">Cần xử lý khẩn cấp</span>
+          <span className="text-[10px] text-rose-700">
+            {language === 'en' ? 'Urgent action required' : 'Cần xử lý khẩn cấp'}
+          </span>
         </div>
       </div>
 
@@ -362,7 +378,7 @@ export const StudentListView: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tên học viên, mã học sinh, tên phụ huynh, SĐT..."
+            placeholder={language === 'en' ? 'Search by student name, code, parent, phone...' : 'Tìm theo tên học viên, mã học sinh, tên phụ huynh, SĐT...'}
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
           />
         </div>
@@ -373,7 +389,7 @@ export const StudentListView: React.FC = () => {
             onChange={(e) => setClassFilter(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">Tất cả lớp học</option>
+            <option value="all">{language === 'en' ? 'All Classes' : 'Tất cả lớp học'}</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.level})
@@ -439,7 +455,8 @@ export const StudentListView: React.FC = () => {
                           <div>
                             <div className="font-semibold text-slate-900">{student.full_name}</div>
                             <div className="text-[11px] text-slate-500">
-                              Mã: <span className="font-mono text-slate-700">{student.student_code}</span>
+                              {language === 'en' ? 'ID: ' : 'Mã: '}
+                              <span className="font-mono text-slate-700">{student.student_code}</span>
                               {student.date_of_birth && ` • ${student.date_of_birth}`}
                             </div>
                           </div>
@@ -471,7 +488,9 @@ export const StudentListView: React.FC = () => {
                             <div className="text-[11px] text-slate-500">{student.current_class.level}</div>
                           </div>
                         ) : (
-                          <span className="text-slate-400 italic">Chưa xếp lớp</span>
+                          <span className="text-slate-400 italic">
+                            {language === 'en' ? 'Unassigned' : 'Chưa xếp lớp'}
+                          </span>
                         )}
                       </td>
 
@@ -489,16 +508,18 @@ export const StudentListView: React.FC = () => {
                       {/* Assigned HRT */}
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-900">
-                          {student.assigned_hrt?.full_name || student.effective_hrt_name || 'Chưa phân công'}
+                          {student.assigned_hrt?.full_name ||
+                            student.effective_hrt_name ||
+                            (language === 'en' ? 'Unassigned' : 'Chưa phân công')}
                         </div>
                         {isSpecificHrt ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200 mt-0.5">
                             <Sparkles className="w-2.5 h-2.5" />
-                            HRT riêng
+                            {language === 'en' ? 'Designated HRT' : 'HRT riêng'}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md mt-0.5">
-                            Mặc định theo lớp
+                            {language === 'en' ? 'Class Default' : 'Mặc định theo lớp'}
                           </span>
                         )}
                       </td>
@@ -566,7 +587,9 @@ export const StudentListView: React.FC = () => {
                 <span className="p-1.5 rounded-lg bg-blue-50 text-[#043264]">
                   <GraduationCap className="w-5 h-5" />
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm sm:text-base">Nhập tay hồ sơ học viên mới</h3>
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                  {language === 'en' ? 'Add New Student Record' : 'Nhập tay hồ sơ học viên mới'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -580,7 +603,9 @@ export const StudentListView: React.FC = () => {
             <form onSubmit={handleCreateStudent} className="space-y-4 pt-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Mã học viên *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Student Code *' : 'Mã học viên *'}
+                  </label>
                   <input
                     type="text"
                     required
@@ -591,7 +616,9 @@ export const StudentListView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Họ và tên học viên *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Full Name *' : 'Họ và tên học viên *'}
+                  </label>
                   <input
                     type="text"
                     required
@@ -605,7 +632,9 @@ export const StudentListView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Ngày sinh</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Date of Birth' : 'Ngày sinh'}
+                  </label>
                   <input
                     type="date"
                     value={newStudent.date_of_birth}
@@ -614,32 +643,38 @@ export const StudentListView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Giới tính</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Gender' : 'Giới tính'}
+                  </label>
                   <select
                     value={newStudent.gender}
                     onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="male">Nam</option>
-                    <option value="female">Nữ</option>
+                    <option value="male">{language === 'en' ? 'Male' : 'Nam'}</option>
+                    <option value="female">{language === 'en' ? 'Female' : 'Nữ'}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Họ tên phụ huynh *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Parent Name *' : 'Họ tên phụ huynh *'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={newStudent.parent_name}
                     onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
-                    placeholder="VD: Nguyễn Thị Lan (Mẹ)"
+                    placeholder={language === 'en' ? 'Parent Name' : 'VD: Nguyễn Thị Lan (Mẹ)'}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Số điện thoại phụ huynh *</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Parent Phone *' : 'Số điện thoại phụ huynh *'}
+                  </label>
                   <input
                     type="tel"
                     required
@@ -652,7 +687,9 @@ export const StudentListView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Ngày hết hạn học phí *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Tuition Expiry Date *' : 'Ngày hết hạn học phí *'}
+                </label>
                 <input
                   type="date"
                   required
@@ -660,18 +697,22 @@ export const StudentListView: React.FC = () => {
                   onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
-                <span className="text-[10px] text-slate-500">Dùng để tự động tính cảnh báo tái tục và hạn bảo lưu.</span>
+                <span className="text-[10px] text-slate-500">
+                  {language === 'en' ? 'Used for automatic retention alerts and tuition tracking.' : 'Dùng để tự động tính cảnh báo tái tục và hạn bảo lưu.'}
+                </span>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Lớp học ghi danh</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Class Cohort' : 'Lớp học ghi danh'}
+                  </label>
                   <select
                     value={newStudent.current_class_id}
                     onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">-- Chưa xếp lớp --</option>
+                    <option value="">{language === 'en' ? '-- Unassigned --' : '-- Chưa xếp lớp --'}</option>
                     {classes.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.level})
@@ -680,13 +721,15 @@ export const StudentListView: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Phân công HRT riêng</label>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Designated HRT' : 'Phân công HRT riêng'}
+                  </label>
                   <select
                     value={newStudent.assigned_hrt_id}
                     onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">Mặc định theo lớp</option>
+                    <option value="">{language === 'en' ? 'Class Default' : 'Mặc định theo lớp'}</option>
                     {hrtStaffs.map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.full_name} (HRT)
@@ -697,12 +740,14 @@ export const StudentListView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Ghi chú học vụ</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Academic Notes' : 'Ghi chú học vụ'}
+                </label>
                 <textarea
                   rows={2}
                   value={newStudent.notes}
                   onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
-                  placeholder="Đặc điểm học viên, kỳ vọng phụ huynh..."
+                  placeholder={language === 'en' ? 'Student characteristics, parent expectations...' : 'Đặc điểm học viên, kỳ vọng phụ huynh...'}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -713,14 +758,16 @@ export const StudentListView: React.FC = () => {
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50"
                 >
-                  {submitting ? 'Đang lưu...' : 'Lưu hồ sơ học viên'}
+                  {submitting
+                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
+                    : (language === 'en' ? 'Save Student Record' : 'Lưu hồ sơ học viên')}
                 </button>
               </div>
             </form>
@@ -739,7 +786,9 @@ export const StudentListView: React.FC = () => {
                 <span className="p-1.5 rounded-lg bg-blue-50 text-[#043264]">
                   <ArrowRightLeft className="w-5 h-5" />
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm">Chuyển lớp học viên</h3>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {language === 'en' ? 'Transfer Student Class Cohort' : 'Chuyển lớp học viên'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -754,37 +803,44 @@ export const StudentListView: React.FC = () => {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="font-semibold text-slate-900">{selectedStudentForTransfer.full_name}</div>
                 <div className="text-[11px] text-slate-500">
-                  Lớp hiện tại: <span className="font-medium text-slate-800">{selectedStudentForTransfer.current_class?.name || 'Chưa xếp lớp'}</span>
+                  {language === 'en' ? 'Current Class: ' : 'Lớp hiện tại: '}
+                  <span className="font-medium text-slate-800">
+                    {selectedStudentForTransfer.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Chọn lớp học đích *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Target Class Cohort *' : 'Chọn lớp học đích *'}
+                </label>
                 <select
                   required
                   value={transferClassId}
                   onChange={(e) => setTransferClassId(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
-                  <option value="">-- Chọn lớp học --</option>
+                  <option value="">{language === 'en' ? '-- Select Target Class --' : '-- Chọn lớp học --'}</option>
                   {classes
                     .filter((c) => c.id !== selectedStudentForTransfer.current_class_id)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.level}) - HRT: {c.default_hrt_name || 'Theo lớp'}
+                        {c.name} ({c.level}) - HRT: {c.default_hrt_name || (language === 'en' ? 'Default' : 'Theo lớp')}
                       </option>
                     ))}
                 </select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Lý do chuyển lớp *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Reason for Transfer *' : 'Lý do chuyển lớp *'}
+                </label>
                 <textarea
                   required
                   rows={3}
                   value={transferReason}
                   onChange={(e) => setTransferReason(e.target.value)}
-                  placeholder="VD: Học viên tiến bộ chuyển lên lớp Movers, đổi lịch học theo nguyện vọng phụ huynh..."
+                  placeholder={language === 'en' ? 'e.g. Student promoted to Movers, schedule adjustment...' : 'VD: Học viên tiến bộ chuyển lên lớp Movers, đổi lịch học theo nguyện vọng phụ huynh...'}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -795,14 +851,16 @@ export const StudentListView: React.FC = () => {
                   onClick={() => setSelectedStudentForTransfer(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold disabled:opacity-50"
                 >
-                  {submitting ? 'Đang chuyển...' : 'Xác nhận chuyển lớp'}
+                  {submitting
+                    ? (language === 'en' ? 'Transferring...' : 'Đang chuyển...')
+                    : (language === 'en' ? 'Confirm Transfer' : 'Xác nhận chuyển lớp')}
                 </button>
               </div>
             </form>
@@ -821,7 +879,9 @@ export const StudentListView: React.FC = () => {
                 <span className="p-1.5 rounded-lg bg-purple-50 text-purple-700">
                   <UserCheck className="w-5 h-5" />
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm">Phân công Giáo viên chủ nhiệm (HRT)</h3>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {language === 'en' ? 'Assign Designated HRT' : 'Phân công Giáo viên chủ nhiệm (HRT)'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -836,19 +896,25 @@ export const StudentListView: React.FC = () => {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="font-semibold text-slate-900">{selectedStudentForHrt.full_name}</div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  Lớp: {selectedStudentForHrt.current_class?.name || 'Chưa xếp lớp'} • Phụ trách hiện tại:{' '}
+                  {language === 'en' ? 'Class: ' : 'Lớp: '}
+                  {selectedStudentForHrt.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')} •{' '}
+                  {language === 'en' ? 'Current HRT: ' : 'Phụ trách hiện tại: '}
                   <span className="font-semibold text-slate-800">{selectedStudentForHrt.effective_hrt_name}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Chỉ định HRT *</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Designated HRT *' : 'Chỉ định HRT *'}
+                </label>
                 <select
                   value={newHrtId}
                   onChange={(e) => setNewHrtId(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
-                  <option value="">-- Mặc định theo lớp (Hủy phân công riêng) --</option>
+                  <option value="">
+                    {language === 'en' ? '-- Class Default (Reset individual assignment) --' : '-- Mặc định theo lớp (Hủy phân công riêng) --'}
+                  </option>
                   {hrtStaffs.map((h) => (
                     <option key={h.id} value={h.id}>
                       {h.full_name} ({h.email})
@@ -856,17 +922,21 @@ export const StudentListView: React.FC = () => {
                   ))}
                 </select>
                 <p className="text-[10px] text-slate-500 mt-1">
-                  * Theo quy tắc ưu tiên: Nếu chọn HRT riêng, chỉ HRT này mới có quyền xem học viên và nhận danh sách công việc liên quan.
+                  {language === 'en'
+                    ? '* Precedence rule: If designated HRT is set, this HRT has sole care responsibility and task routing.'
+                    : '* Theo quy tắc ưu tiên: Nếu chọn HRT riêng, chỉ HRT này mới có quyền xem học viên và nhận danh sách công việc liên quan.'}
                 </p>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Lý do phân công</label>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Reason for Assignment' : 'Lý do phân công'}
+                </label>
                 <textarea
                   rows={2}
                   value={hrtReason}
                   onChange={(e) => setHrtReason(e.target.value)}
-                  placeholder="VD: Cần giáo viên giàu kinh nghiệm đồng hành học viên đặc biệt..."
+                  placeholder={language === 'en' ? 'e.g. Special student needs dedicated experienced educator...' : 'VD: Cần giáo viên giàu kinh nghiệm đồng hành học viên đặc biệt...'}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -877,14 +947,16 @@ export const StudentListView: React.FC = () => {
                   onClick={() => setSelectedStudentForHrt(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  Hủy
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 rounded-xl text-white bg-purple-700 hover:bg-purple-800 font-semibold disabled:opacity-50"
                 >
-                  {submitting ? 'Đang lưu...' : 'Xác nhận phân công'}
+                  {submitting
+                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
+                    : (language === 'en' ? 'Confirm Assignment' : 'Xác nhận phân công')}
                 </button>
               </div>
             </form>
@@ -900,13 +972,12 @@ export const StudentListView: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-slate-100 text-slate-700">
+                <span className="p-1.5 rounded-lg bg-blue-50 text-[#043264]">
                   <History className="w-5 h-5" />
                 </span>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm">Lịch sử chuyển lớp</h3>
-                  <span className="text-[11px] text-slate-500">{selectedStudentForHistory.full_name}</span>
-                </div>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {language === 'en' ? 'Class Transfer History' : 'Lịch sử chuyển lớp học viên'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -917,39 +988,27 @@ export const StudentListView: React.FC = () => {
               </button>
             </div>
 
-            <div className="pt-4 max-h-72 overflow-y-auto space-y-3">
+            <div className="pt-4 text-xs space-y-3 max-h-[60vh] overflow-y-auto">
               {transferHistory.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-500 italic">
-                  Chưa có lần chuyển lớp nào được ghi nhận cho học viên này.
+                <div className="p-8 text-center text-slate-400">
+                  {language === 'en' ? 'No transfer records for this student.' : 'Chưa có lịch sử chuyển lớp nào cho học viên này.'}
                 </div>
               ) : (
-                transferHistory.map((t) => (
-                  <div key={t.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                        <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">{t.from_class_name || 'Lớp cũ'}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="px-1.5 py-0.5 rounded bg-blue-100 text-[#043264]">{t.to_class_name || 'Lớp mới'}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400">{new Date(t.transfer_date).toLocaleDateString('vi-VN')}</span>
+                transferHistory.map((th) => (
+                  <div key={th.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                    <div className="flex items-center justify-between text-slate-500 text-[11px]">
+                      <span>{th.transfer_date}</span>
+                      <span>{language === 'en' ? 'By: ' : 'Người thực hiện: '}{th.transferred_by_name || 'Admin'}</span>
                     </div>
-                    <p className="text-slate-600 italic">"{t.reason}"</p>
-                    {t.transferred_by_name && (
-                      <span className="text-[10px] text-slate-400 block">Thực hiện bởi: {t.transferred_by_name}</span>
-                    )}
+                    <div className="font-semibold text-slate-800">
+                      {th.from_class_name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')} → {th.to_class_name}
+                    </div>
+                    <div className="text-slate-600 text-[11px]">
+                      {language === 'en' ? 'Reason: ' : 'Lý do: '}{th.reason}
+                    </div>
                   </div>
                 ))
               )}
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setSelectedStudentForHistory(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
-              >
-                Đóng
-              </button>
             </div>
           </div>
         </div>

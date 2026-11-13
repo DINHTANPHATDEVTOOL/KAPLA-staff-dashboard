@@ -173,9 +173,13 @@ export const CareTasksView: React.FC = () => {
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-800">Không có công việc nào</h3>
+            <h3 className="text-sm font-semibold text-slate-800">
+              {language === 'en' ? 'No Care Tasks Found' : 'Không có công việc nào'}
+            </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Tất cả các nhiệm vụ chăm sóc thuộc trách nhiệm của bạn đã hoàn tất hoặc không có phát sinh.
+              {language === 'en'
+                ? 'All student care duties within your responsibility have been completed or none pending.'
+                : 'Tất cả các nhiệm vụ chăm sóc thuộc trách nhiệm của bạn đã hoàn tất hoặc không có phát sinh.'}
             </p>
           </div>
         ) : (
@@ -215,9 +219,9 @@ export const CareTasksView: React.FC = () => {
                         </span>
 
                         <span className="text-[11px] text-slate-500 font-medium">
-                          Học viên:{' '}
+                          {language === 'en' ? 'Student: ' : 'Học viên: '}
                           <span className="text-slate-900 font-semibold">
-                            {task.student?.full_name || 'Học viên'}
+                            {task.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
                           </span>
                           {task.student?.current_class && ` (${task.student.current_class.name})`}
                         </span>
@@ -238,7 +242,7 @@ export const CareTasksView: React.FC = () => {
                   <div className="text-right shrink-0">
                     <div className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-600">
                       <Clock className="w-3 h-3 text-slate-400" />
-                      Hạn: {task.due_date}
+                      {language === 'en' ? 'Due: ' : 'Hạn: '}{task.due_date}
                     </div>
                   </div>
                 </div>
