@@ -114,25 +114,30 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       );
     case 'center_manager':
     case 'branch_manager':
+    case 'CM':
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-[#026fd7] to-[#012147] text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Center Manager / Quản lý cơ sở"
+          title="Center Manager / Giám đốc cơ sở"
         >
           <Building2 className={iconSizes} />
         </div>
       );
+    case 'head_teacher':
     case 'academic_director':
+    case 'academic_lead':
+    case 'Head Teacher':
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-amber-500 via-orange-500 to-amber-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Academic Director / Giám đốc học thuật"
+          title="Head Teacher / Trưởng bộ môn & Học thuật"
         >
           <Award className={iconSizes} />
         </div>
       );
     case 'lead_teacher':
     case 'teacher':
+    case 'Main Teacher':
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
@@ -142,20 +147,44 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
         </div>
       );
     case 'hrt':
+    case 'HRT':
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-rose-500 via-pink-600 to-rose-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="HRT / Giáo viên chủ nhiệm"
+          title="HRT / Giáo viên chủ nhiệm & Chăm sóc"
         >
           <HeartHandshake className={iconSizes} />
         </div>
       );
+    case 'ta':
+    case 'TA':
+      return (
+        <div
+          className={`rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
+          title="TA / Trợ giảng lớp học"
+        >
+          <Sparkles className={iconSizes} />
+        </div>
+      );
+    case 'supplementary_teacher':
+    case 'Supplementary Teacher':
+      return (
+        <div
+          className={`rounded-lg bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
+          title="Supplementary Teacher / Giáo viên bổ trợ"
+        >
+          <GraduationCap className={iconSizes} />
+        </div>
+      );
+    case 'cskh':
     case 'customer_service':
+    case 'support_specialist':
+    case 'CSKH':
     default:
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Chăm sóc học vụ"
+          title="CSKH & Tái tục học phí"
         >
           <UserCheck className={iconSizes} />
         </div>
