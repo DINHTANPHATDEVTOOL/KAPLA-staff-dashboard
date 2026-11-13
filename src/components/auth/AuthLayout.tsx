@@ -4,7 +4,7 @@
 // ==============================================================================
 
 import React from 'react';
-import { ShieldCheck, Award, GraduationCap, Building2 } from 'lucide-react';
+import { ShieldCheck, Award, GraduationCap, Building2, BookOpen, Cpu, Sparkles } from 'lucide-react';
 import { useLanguage, LanguageToggle } from '../../context/LanguageContext';
 
 interface AuthLayoutProps {
@@ -19,22 +19,22 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-100/80 selection:bg-blue-100 selection:text-blue-900">
       {/* ---------------------------------------------------------------------- */}
-      {/* Left Column: Full-Bleed Atmospheric Campus Showcase (Desktop only) */}
+      {/* Left Column: Authentic Oxford Quality Showcase (Desktop only) */}
       {/* ---------------------------------------------------------------------- */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#012147] text-white flex-col justify-between p-10 xl:p-14 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#012147] text-white flex-col justify-between p-8 xl:p-12 overflow-hidden">
         {/* Full-bleed Architectural Campus Background Photo */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-30 scale-105 transition-transform duration-1000 ease-out"
+          className="absolute inset-0 bg-cover bg-center opacity-25 scale-105 transition-transform duration-1000 ease-out"
           style={{ backgroundImage: "url('/assets/kapla-pham-hung.png')" }}
         />
         {/* Deep Brand Gradient Overlay for Pristine Legibility */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#012147]/95 via-[#012147]/85 to-[#043264]/92 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#012147]/95 via-[#012147]/88 to-[#043264]/92 backdrop-blur-[1px]" />
 
         {/* Ambient Subtle Glow Orbs */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#026fd7]/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Brand Header — Clean Logo Placement on Dark Navy (No White Box) */}
+        {/* Brand Header — Clean Logo Placement on Dark Navy */}
         <div className="relative z-10 flex items-center gap-3.5">
           <img
             src="/assets/kapla-logo-color.png"
@@ -47,89 +47,187 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
               Staff Portal
             </span>
             <span className="text-[11px] text-sky-200 font-medium tracking-wide">
-              {t('brand.portalSubtitle', 'Hệ Thống Quản Trị Học Vụ & Chăm Sóc Học Viên')}
+              {t('brand.portalSubtitle', 'Cổng Thông Tin Học Vụ & Quản Trị Trung Tâm')}
             </span>
           </div>
         </div>
 
-        {/* Core Value Pillars & Visual Campus Showcase */}
-        <div className="relative z-10 my-auto py-8 space-y-6 max-w-lg">
-          {/* Oxford Quality Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-semibold uppercase tracking-wider backdrop-blur-md shadow-xs">
-            <Award className="w-4 h-4 text-amber-300" />
-            <span>{t('brand.oxfordBadge', 'Độc quyền chuẩn Oxford Quality')}</span>
+        {/* Core Value Pillars & Authentic Educational Credentials */}
+        <div className="relative z-10 my-auto py-6 space-y-4 max-w-lg">
+          {/* Oxford Quality Accreditation Pill */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-semibold tracking-wide backdrop-blur-md shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>{t('brand.oxfordBadge', 'Chứng nhận Oxford Quality 2025–2028 • Oxford University Press')}</span>
           </div>
 
-          <h1 className="font-display text-2xl xl:text-4xl font-extrabold leading-tight text-white tracking-tight">
-            {t('brand.heroHeadline', 'Đồng hành cùng học viên bứt phá tiềm năng Anh ngữ.')}
-          </h1>
-
-          <p className="text-slate-300 text-xs xl:text-sm leading-relaxed font-light">
-            {t('brand.heroDesc', 'Nền tảng tác nghiệp nội bộ dành riêng cho đội ngũ Quản lý cơ sở (CM), Giám đốc học thuật, Giáo viên chính, HRT và Chăm sóc khách hàng trong việc theo dõi học tập, can thiệp kịp thời và gắn kết phụ huynh.')}
-          </p>
-
-          {/* Glassmorphism Key Academic Credentials */}
-          <div className="space-y-3 pt-2">
-            {/* Campus Highlight */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-300">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-[#026fd7] text-white flex items-center justify-center shrink-0 shadow-xs ring-1 ring-white/20">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-white">
-                    {language === 'en' ? 'Flagship Campuses • HCMC' : 'Hệ Thống 02 Cơ Sở Đào Tạo Quốc Tế'}
-                  </p>
-                  <span className="text-[10px] text-emerald-300 font-medium flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {language === 'en' ? 'Active' : 'Hoạt động'}
+          <div>
+            <h1 className="font-display text-2xl xl:text-3.5xl font-extrabold leading-tight text-white tracking-tight">
+              {language === 'en' ? (
+                <>
+                  KAPLA — American Creative English{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-amber-200 to-amber-400 block mt-0.5">
+                    with Oxford Quality Standards
                   </span>
-                </div>
-                <p className="text-[11px] text-slate-300 leading-tight mt-1">
-                  {language === 'en'
-                    ? 'Pham Hung (Dist. 8) & Nguyen Thi Thap (Dist. 7) — Oxford Interactive Classrooms & STEAM Labs.'
-                    : 'Phạm Hùng (Q.8) & Nguyễn Thị Thập (Q.7) — Phòng học tương tác thông minh, Thư viện Oxford và Xưởng Robotics.'}
+                </>
+              ) : (
+                <>
+                  KAPLA — Tiếng Anh Sáng Tạo Mỹ{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-amber-200 to-amber-400 block mt-0.5">
+                    chuẩn Oxford Quality
+                  </span>
+                </>
+              )}
+            </h1>
+            <p className="text-slate-300 text-xs xl:text-sm leading-relaxed font-light mt-2.5">
+              {t(
+                'brand.heroDesc',
+                'Hệ thống tiếng Anh duy nhất tại Việt Nam đạt 03 chứng nhận uy tín toàn cầu: Oxford Quality, Emerging Excellence và Cambridge English Qualifications. Chương trình phát triển toàn diện chuẩn CCSS & NGSS của Mỹ kết hợp Lập trình Robotics.'
+              )}
+            </p>
+          </div>
+
+          {/* Authentic Global Accreditation Strip */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-900/40 via-indigo-950/40 to-slate-900/60 border border-white/15 backdrop-blur-md shadow-lg">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+              <span className="text-[11px] font-bold tracking-wider text-amber-300 uppercase flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5 text-amber-400" />
+                {language === 'en' ? '03 Prestigious Global Accreditations' : '03 Chứng Nhận Học Thuật Toàn Cầu'}
+              </span>
+              <span className="text-[10px] text-emerald-300 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                {language === 'en' ? 'Official Partner' : 'Đối tác chính thức'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              {/* Oxford Quality */}
+              <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center hover:bg-white/10 transition-all">
+                <img
+                  src="/assets/oxford-quality-certificate.png"
+                  alt="Oxford Quality"
+                  className="h-8 w-auto object-contain rounded drop-shadow"
+                />
+                <span className="text-[11px] font-bold text-white mt-1.5">Oxford Quality</span>
+                <span className="text-[9px] text-slate-300 leading-tight">2025 – 2028</span>
+              </div>
+
+              {/* Cambridge English */}
+              <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center hover:bg-white/10 transition-all">
+                <img
+                  src="/assets/cambridge-qualification.png"
+                  alt="Cambridge English"
+                  className="h-8 w-auto object-contain rounded drop-shadow"
+                />
+                <span className="text-[11px] font-bold text-white mt-1.5">Cambridge</span>
+                <span className="text-[9px] text-slate-300 leading-tight">Bronze Centre</span>
+              </div>
+
+              {/* NatGeo / Emerging Excellence */}
+              <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col items-center hover:bg-white/10 transition-all">
+                <img
+                  src="/assets/partner-emerging-excellence.png"
+                  alt="Emerging Excellence"
+                  className="h-8 w-auto object-contain rounded drop-shadow"
+                />
+                <span className="text-[11px] font-bold text-white mt-1.5">NatGeo Learning</span>
+                <span className="text-[9px] text-slate-300 leading-tight">Excellence Partner</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Impact Stats Bento Grid */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <div className="font-display text-2xl font-black text-amber-300 tracking-tight">03</div>
+              <div className="text-xs font-semibold text-white mt-0.5">
+                {t('brand.statAccreditationLabel', 'Chứng nhận Toàn cầu')}
+              </div>
+              <div className="text-[10px] text-slate-300 mt-0.5">
+                {t('brand.statAccreditationSub', 'Oxford • Cambridge • NatGeo')}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <div className="font-display text-2xl font-black text-sky-300 tracking-tight">15/15</div>
+              <div className="text-xs font-semibold text-white mt-0.5">
+                {t('brand.statCambridgeLabel', 'Khiên Cambridge')}
+              </div>
+              <div className="text-[10px] text-slate-300 mt-0.5">
+                {t('brand.statCambridgeSub', 'Starters • Movers • Flyers')}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <div className="font-display text-2xl font-black text-emerald-300 tracking-tight">11</div>
+              <div className="text-xs font-semibold text-white mt-0.5">
+                {t('brand.statCentresLabel', 'Trung tâm Hoạt động')}
+              </div>
+              <div className="text-[10px] text-slate-300 mt-0.5">
+                {t('brand.statCentresSub', 'TP.HCM & Bình Dương')}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <div className="font-display text-2xl font-black text-indigo-300 tracking-tight">100%</div>
+              <div className="text-xs font-semibold text-white mt-0.5">
+                {t('brand.statSteamLabel', 'Chuẩn CCSS & NGSS Mỹ')}
+              </div>
+              <div className="text-[10px] text-slate-300 mt-0.5">
+                {t('brand.statSteamSub', 'Tích hợp Lập trình Robotics')}
+              </div>
+            </div>
+          </div>
+
+          {/* Authentic Curriculum Highlights */}
+          <div className="space-y-2 pt-0.5">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-sky-300 flex items-center justify-center shrink-0 border border-sky-400/20">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-white truncate">
+                  {t('brand.featureOxfordTitle', 'Lớp học không bàn ghế chuẩn Oxford Quality')}
+                </p>
+                <p className="text-[11px] text-slate-300 truncate">
+                  {t(
+                    'brand.featureOxfordDesc',
+                    'Phương pháp Big Question Learning — kích hoạt tư duy chủ động và rèn luyện kỹ năng 4C.'
+                  )}
                 </p>
               </div>
             </div>
 
-            {/* Academic Quality */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-300">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs ring-1 ring-white/20">
-                <GraduationCap className="w-4 h-4" />
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-400/20">
+                <Cpu className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-white">
-                  {language === 'en' ? '100% Oxford Quality Certified Academic Staff' : '100% Giảng Viên & Quản Lý Học Thuật Chuẩn Oxford'}
+                <p className="font-semibold text-white truncate">
+                  {t('brand.featureSteamTitle', 'Hệ sinh thái STEAM & Robotics chuẩn Mỹ')}
                 </p>
-                <p className="text-[11px] text-slate-300 leading-tight mt-1">
-                  {language === 'en'
-                    ? 'Standardized 4-skill rubrics, 1-on-1 personalized interventions, and periodic progress monitoring.'
-                    : 'Khung đánh giá 4 kỹ năng chuẩn hóa, lộ trình phụ đạo cá nhân hóa và báo cáo học tập định kỳ.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Enterprise Security */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-lg hover:bg-white/10 transition-all duration-300">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs ring-1 ring-white/20">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-white">
-                  {language === 'en' ? 'Enterprise Multi-Branch Row-Level Security' : 'Bảo Mật Phân Quyền Đa Cơ Sở & Vai Trò (RLS)'}
-                </p>
-                <p className="text-[11px] text-slate-300 leading-tight mt-1">
-                  {language === 'en'
-                    ? 'Student profiles, tuition records, and audit logs strictly isolated by campus assignment.'
-                    : 'Hồ sơ học viên, thông tin học phí và nhật ký tác nghiệp được phân quyền độc lập theo từng chi nhánh.'}
+                <p className="text-[11px] text-slate-300 truncate">
+                  {t(
+                    'brand.featureSteamDesc',
+                    'Phòng Lab lập trình hiện đại, tích hợp Khoa học máy tính & Toán Kangaroo (IKMC).'
+                  )}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Campus Network Ticker */}
+          <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 pt-0.5">
+            <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="truncate">
+              {t(
+                'brand.campusTicker',
+                'Mạng lưới 11 trung tâm: KAPLA Phạm Hùng • Bình Tân • Tân Kỳ Tân Quý • Bàu Cát • Nguyễn Văn Lượng • Dĩ An...'
+              )}
+            </span>
+          </p>
         </div>
 
-        {/* Footer Credit & Facility Info */}
+        {/* Footer Credit */}
         <div className="relative z-10 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/80 pt-4">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-blue-400" />

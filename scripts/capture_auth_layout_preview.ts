@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import WebSocket from 'ws';
 
-const FRONTEND_URL = 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const CHROME_PORT = 9226;
 
 function wait(ms: number) {
@@ -128,12 +128,12 @@ async function main() {
     // Wait 1s for all images to settle
     await wait(1200);
 
-    const screenshotPath = path.resolve('docs/screenshots/05_fixed_auth_layout_visuals.png');
+    const screenshotPath = path.resolve('docs/screenshots/17_redesigned_official_auth_layout.png');
     await client.captureScreenshot(screenshotPath);
     console.log('SAVED_SCREENSHOT:', screenshotPath);
 
     // Also copy to artifact directory for presentation
-    const artifactPath = '/home/rd/.gemini/antigravity/brain/9996d84d-1d5c-4614-9f39-19af09d3d17b/screenshots/05_fixed_auth_layout_visuals.png';
+    const artifactPath = '/home/rd/.gemini/antigravity/brain/9996d84d-1d5c-4614-9f39-19af09d3d17b/screenshots/17_redesigned_official_auth_layout.png';
     fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
     fs.copyFileSync(screenshotPath, artifactPath);
     console.log('COPIED_TO_ARTIFACT:', artifactPath);
