@@ -172,16 +172,14 @@ export const LoginForm: React.FC = () => {
               PW: Kapla@2026
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[
-              { role: 'system_admin', labelVi: 'Admin Quản Trị', labelEn: 'System Admin', email: 'admin@kapla.edu.vn' },
-              { role: 'center_manager', labelVi: 'CM Phạm Hùng', labelEn: 'CM Pham Hung', email: 'cm.phamhung@kapla.edu.vn' },
-              { role: 'center_manager', labelVi: 'CM Bình Tân', labelEn: 'CM Binh Tan', email: 'cm.binhtan@kapla.edu.vn' },
-              { role: 'academic_lead', labelVi: 'Head Teacher Sơn', labelEn: 'Head Teacher Son', email: 'ht.phamhung@kapla.edu.vn' },
-              { role: 'lead_teacher', labelVi: 'GV Chính Alex', labelEn: 'Teacher Alex', email: 'teacher.ph@kapla.edu.vn' },
-              { role: 'hrt', labelVi: 'HRT Mai (Starters)', labelEn: 'HRT Mai (Starters)', email: 'hrt.mai@kapla.edu.vn' },
-              { role: 'hrt', labelVi: 'HRT Linh (Movers)', labelEn: 'HRT Linh (Movers)', email: 'hrt.linh@kapla.edu.vn' },
-              { role: 'support_specialist', labelVi: 'CSKH Thảo Vy', labelEn: 'Customer Care Vy', email: 'cskh.ph@kapla.edu.vn' },
+              { role: 'system_admin', labelVi: 'Admin', labelEn: 'Admin', email: 'admin@kapla.edu.vn' },
+              { role: 'center_manager', labelVi: 'CM Phương Nhi', labelEn: 'CM Phuong Nhi', email: 'cm.nhi@kapla.edu.vn' },
+              { role: 'academic_lead', labelVi: 'Head Teacher Jamie', labelEn: 'Head Teacher Jamie', email: 'ht.jamie@kapla.edu.vn' },
+              { role: 'hrt', labelVi: 'HRT Minh', labelEn: 'HRT Minh', email: 'hrt.minh@kapla.edu.vn' },
+              { role: 'hrt', labelVi: 'HRT Trâm', labelEn: 'HRT Tram', email: 'hrt.tram@kapla.edu.vn' },
+              { role: 'hrt', labelVi: 'HRT Vy', labelEn: 'HRT Vy', email: 'hrt.vy@kapla.edu.vn' },
             ].map((acc) => (
               <button
                 key={acc.email}

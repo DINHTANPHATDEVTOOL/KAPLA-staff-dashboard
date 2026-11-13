@@ -19,6 +19,9 @@ import {
   UserPlus,
   Loader2,
   ChevronRight,
+  Plus,
+  Trash2,
+  Edit,
 } from 'lucide-react';
 import {
   ALL_STAFF_ROLES,
@@ -34,7 +37,7 @@ import {
 } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { isDevMockMode, MockStorageService, realSupabase } from '../../lib/supabase';
+import { isDevMockMode, MockStorageService, realSupabase, StaffService } from '../../lib/supabase';
 
 export const StaffApprovalView: React.FC = () => {
   const { profile, activeRole, currentBranch, availableBranches } = useAuth();
@@ -62,6 +65,30 @@ export const StaffApprovalView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterBranch, setFilterBranch] = useState<string>('all');
+
+  // Staff CRUD Modal States
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<(UserProfile & { userMemberships: BranchMembership[] }) | null>(null);
+  const [deletingStaff, setDeletingStaff] = useState<UserProfile | null>(null);
+
+  const [addForm, setAddForm] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    branch_id: '',
+    role: 'HRT' as StaffRole,
+    system_role: 'staff' as SystemRole,
+    password: 'Kapla@2026',
+  });
+
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    phone: '',
+    branch_id: '',
+    role: 'HRT' as StaffRole,
+    system_role: 'staff' as SystemRole,
+    status: 'active' as any,
+  });
 
   // Fetch data
   const loadData = useCallback(async () => {
@@ -219,6 +246,109 @@ export const StaffApprovalView: React.FC = () => {
       setActionNotice({ type: 'error', text: msg });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Staff CRUD Handlers
+  const handleOpenAddModal = () => {
+    setAddForm({
+      full_name: '',
+      email: '',
+      phone: '',
+      branch_id: currentBranch?.id || availableBranches[0]?.id || '',
+      role: 'HRT',
+      system_role: 'staff',
+      password: 'Kapla@2026',
+    });
+    setShowAddModal(true);
+  };
+
+  const handleCreateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addForm.full_name.trim() || !addForm.email.trim()) return;
+    setSubmittingAction(true);
+    setActionNotice(null);
+    try {
+      await StaffService.createStaff(addForm);
+      setActionNotice({
+        type: 'success',
+        text: language === 'en' ? 'Staff account created successfully.' : 'Đã tạo tài khoản nhân sự thành công.',
+      });
+      setShowAddModal(false);
+      await loadData();
+    } catch (err: any) {
+      setActionNotice({
+        type: 'error',
+        text: err?.message || 'Lỗi khi tạo nhân sự mới.',
+      });
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const handleOpenEditModal = (staff: UserProfile & { userMemberships: BranchMembership[] }) => {
+    const primaryMem = staff.userMemberships[0];
+    setEditingStaff(staff);
+    setEditForm({
+      full_name: staff.full_name,
+      phone: staff.phone || '',
+      branch_id: primaryMem?.branch_id || staff.preferred_branch_id || currentBranch?.id || availableBranches[0]?.id || '',
+      role: primaryMem?.role || 'HRT',
+      system_role: staff.system_role || 'staff',
+      status: staff.status,
+    });
+  };
+
+  const handleUpdateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStaff) return;
+    setSubmittingAction(true);
+    setActionNotice(null);
+    try {
+      await StaffService.updateStaff(editingStaff.id, editForm);
+      setActionNotice({
+        type: 'success',
+        text: language === 'en' ? 'Staff profile updated successfully.' : 'Đã cập nhật thông tin nhân sự thành công.',
+      });
+      setEditingStaff(null);
+      await loadData();
+    } catch (err: any) {
+      setActionNotice({
+        type: 'error',
+        text: err?.message || 'Lỗi khi cập nhật nhân sự.',
+      });
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const handleDeleteStaff = async () => {
+    if (!deletingStaff) return;
+    if (deletingStaff.id === profile?.id) {
+      setActionNotice({
+        type: 'error',
+        text: language === 'en' ? 'Cannot delete your own active account.' : 'Không thể xóa tài khoản của chính bạn.',
+      });
+      setDeletingStaff(null);
+      return;
+    }
+    setSubmittingAction(true);
+    setActionNotice(null);
+    try {
+      await StaffService.deleteStaff(deletingStaff.id);
+      setActionNotice({
+        type: 'success',
+        text: language === 'en' ? 'Staff account deleted permanently.' : 'Đã xóa tài khoản nhân sự thành công.',
+      });
+      setDeletingStaff(null);
+      await loadData();
+    } catch (err: any) {
+      setActionNotice({
+        type: 'error',
+        text: err?.message || 'Lỗi khi xóa nhân sự.',
+      });
+    } finally {
+      setSubmittingAction(false);
     }
   };
 
@@ -539,6 +669,17 @@ export const StaffApprovalView: React.FC = () => {
                   </option>
                 ))}
               </select>
+
+              {isSystemAdmin && (
+                <button
+                  type="button"
+                  onClick={handleOpenAddModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-2xs shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{language === 'en' ? 'Add Staff' : 'Thêm nhân sự'}</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -616,13 +757,45 @@ export const StaffApprovalView: React.FC = () => {
                       </td>
                       {canApprove && (
                         <td className="py-3.5 px-5 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenApproveModal(staff)}
-                            className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors"
-                          >
-                            {language === 'en' ? 'Update Role' : 'Đổi vai trò'}
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenApproveModal(staff)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors"
+                              title={language === 'en' ? 'Update Role' : 'Cấp/Đổi quyền'}
+                            >
+                              {language === 'en' ? 'Role' : 'Đổi quyền'}
+                            </button>
+                            {isSystemAdmin && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenEditModal(staff)}
+                                  className="p-1 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                  title={language === 'en' ? 'Edit Profile' : 'Sửa thông tin'}
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={staff.id === profile?.id}
+                                  onClick={() => setDeletingStaff(staff)}
+                                  className="p-1 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                                  title={
+                                    staff.id === profile?.id
+                                      ? language === 'en'
+                                        ? 'Cannot delete yourself'
+                                        : 'Không thể tự xóa tài khoản'
+                                      : language === 'en'
+                                      ? 'Delete Account'
+                                      : 'Xóa tài khoản'
+                                  }
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -816,6 +989,350 @@ export const StaffApprovalView: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: THÊM NHÂN SỰ MỚI (ADD STAFF MEMBER)
+      ========================================================================= */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#043264] flex items-center justify-center font-bold">
+                  <UserPlus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                    {language === 'en' ? 'Add Staff Account' : 'Thêm tài khoản nhân sự'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {language === 'en' ? 'Create new employee with designated role' : 'Cấp tài khoản mới và phân quyền làm việc'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStaff} className="mt-4 space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Full Name *' : 'Họ và tên *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={language === 'en' ? 'e.g. Nguyen Van An' : 'VD: Nguyễn Văn An'}
+                  value={addForm.full_name}
+                  onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Work Email *' : 'Email công việc *'}
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="an.nguyen@kapla.edu.vn"
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Phone Number' : 'Số điện thoại'}
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="0901234567"
+                    value={addForm.phone}
+                    onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Initial Password' : 'Mật khẩu ban đầu'}
+                  </label>
+                  <input
+                    type="text"
+                    value={addForm.password}
+                    onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Branch / Campus *' : 'Chi nhánh trực thuộc *'}
+                  </label>
+                  <select
+                    required
+                    value={addForm.branch_id}
+                    onChange={(e) => setAddForm({ ...addForm, branch_id: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    {availableBranches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Operational Role *' : 'Vai trò nghiệp vụ *'}
+                  </label>
+                  <select
+                    required
+                    value={addForm.role}
+                    onChange={(e) => setAddForm({ ...addForm, role: e.target.value as StaffRole })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    {ALL_STAFF_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {isSystemAdmin && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'System Access' : 'Phân quyền hệ thống'}
+                  </label>
+                  <select
+                    value={addForm.system_role}
+                    onChange={(e) => setAddForm({ ...addForm, system_role: e.target.value as SystemRole })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    <option value="staff">{language === 'en' ? 'Branch Staff' : 'Nhân viên cơ sở'}</option>
+                    <option value="system_admin">{language === 'en' ? 'System Administrator' : 'Quản trị hệ thống'}</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
+                >
+                  {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{language === 'en' ? 'Create Account' : 'Tạo tài khoản'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CHỈNH SỬA THÔNG TIN NHÂN SỰ (EDIT STAFF MEMBER)
+      ========================================================================= */}
+      {editingStaff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#043264] flex items-center justify-center font-bold">
+                  <Edit className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                    {language === 'en' ? 'Edit Staff Profile' : 'Chỉnh sửa nhân sự'}
+                  </h3>
+                  <p className="text-[11px] font-mono text-slate-500">{editingStaff.email}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingStaff(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateStaff} className="mt-4 space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Full Name *' : 'Họ và tên *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Phone Number' : 'Số điện thoại'}
+                </label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Campus' : 'Chi nhánh'}
+                  </label>
+                  <select
+                    value={editForm.branch_id}
+                    onChange={(e) => setEditForm({ ...editForm, branch_id: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    {availableBranches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Role' : 'Vai trò'}
+                  </label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value as StaffRole })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    {ALL_STAFF_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {isSystemAdmin && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      {language === 'en' ? 'System Role' : 'Quyền hệ thống'}
+                    </label>
+                    <select
+                      value={editForm.system_role}
+                      onChange={(e) => setEditForm({ ...editForm, system_role: e.target.value as SystemRole })}
+                      className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                    >
+                      <option value="staff">{language === 'en' ? 'Staff' : 'Nhân viên'}</option>
+                      <option value="system_admin">{language === 'en' ? 'System Admin' : 'Quản trị hệ thống'}</option>
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Status' : 'Trạng thái'}
+                  </label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    <option value="active">{language === 'en' ? 'Active' : 'Hoạt động'}</option>
+                    <option value="inactive">{language === 'en' ? 'Inactive' : 'Tạm khóa'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStaff(null)}
+                  className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
+                >
+                  {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{language === 'en' ? 'Save Changes' : 'Lưu thay đổi'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: XÁC NHẬN XÓA TÀI KHOẢN (CONFIRM DELETE STAFF)
+      ========================================================================= */}
+      {deletingStaff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
+            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+              {language === 'en' ? 'Delete Staff Account?' : 'Xóa tài khoản nhân sự?'}
+            </h3>
+            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+              {language === 'en'
+                ? `Are you sure you want to delete ${deletingStaff.full_name} (${deletingStaff.email})? All branch assignments will be removed.`
+                : `Bạn có chắc chắn muốn xóa nhân sự ${deletingStaff.full_name} (${deletingStaff.email}) không? Toàn bộ phân quyền chi nhánh sẽ bị gỡ bỏ.`}
+            </p>
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeletingStaff(null)}
+                className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                {language === 'en' ? 'Cancel' : 'Hủy'}
+              </button>
+              <button
+                type="button"
+                disabled={submittingAction}
+                onClick={handleDeleteStaff}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
+              >
+                {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{language === 'en' ? 'Delete' : 'Xóa vĩnh viễn'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

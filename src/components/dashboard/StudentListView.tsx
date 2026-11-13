@@ -22,10 +22,12 @@ import {
   ChevronRight,
   Shield,
   Sparkles,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Student, ClassRoom, UserProfile, ClassTransfer } from '../../types';
+import { Student, StudentStatus, ClassRoom, UserProfile, ClassTransfer } from '../../types';
 import { StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
 export const StudentListView: React.FC = () => {
@@ -49,6 +51,24 @@ export const StudentListView: React.FC = () => {
   const [selectedStudentForHrt, setSelectedStudentForHrt] = useState<Student | null>(null);
   const [selectedStudentForHistory, setSelectedStudentForHistory] = useState<Student | null>(null);
   const [transferHistory, setTransferHistory] = useState<ClassTransfer[]>([]);
+
+  // Student CRUD Modals state
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [editStudentForm, setEditStudentForm] = useState({
+    student_code: '',
+    full_name: '',
+    date_of_birth: '',
+    gender: 'male' as 'male' | 'female',
+    parent_name: '',
+    parent_phone: '',
+    parent_email: '',
+    tuition_expiry_date: '',
+    current_class_id: '',
+    assigned_hrt_id: '',
+    status: 'active' as StudentStatus,
+    notes: '',
+  });
 
   // Form states
   const [newStudent, setNewStudent] = useState({
@@ -281,6 +301,82 @@ export const StudentListView: React.FC = () => {
     setSelectedStudentForHistory(student);
     const hist = await StudentService.getTransfers(student.id);
     setTransferHistory(hist);
+  };
+
+  const handleOpenEditStudent = (student: Student) => {
+    setEditingStudent(student);
+    setEditStudentForm({
+      student_code: student.student_code,
+      full_name: student.full_name,
+      date_of_birth: student.date_of_birth || '',
+      gender: (student.gender as any) || 'male',
+      parent_name: student.parent_name,
+      parent_phone: student.parent_phone,
+      parent_email: student.parent_email || '',
+      tuition_expiry_date: student.tuition_expiry_date,
+      current_class_id: student.current_class_id || '',
+      assigned_hrt_id: student.assigned_hrt_id || '',
+      status: student.status,
+      notes: student.notes || '',
+    });
+  };
+
+  const handleUpdateStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setSubmitting(true);
+    setActionMessage(null);
+    try {
+      await StudentService.updateStudent(editingStudent.id, {
+        student_code: editStudentForm.student_code.trim(),
+        full_name: editStudentForm.full_name.trim(),
+        date_of_birth: editStudentForm.date_of_birth,
+        gender: editStudentForm.gender,
+        parent_name: editStudentForm.parent_name.trim(),
+        parent_phone: editStudentForm.parent_phone.trim(),
+        parent_email: editStudentForm.parent_email.trim() || undefined,
+        tuition_expiry_date: editStudentForm.tuition_expiry_date,
+        current_class_id: editStudentForm.current_class_id || undefined,
+        assigned_hrt_id: editStudentForm.assigned_hrt_id || undefined,
+        status: editStudentForm.status,
+        notes: editStudentForm.notes.trim() || undefined,
+      });
+      setActionMessage({
+        type: 'success',
+        text: language === 'en' ? 'Student profile updated successfully.' : 'Cập nhật thông tin học viên thành công.',
+      });
+      setEditingStudent(null);
+      await loadData();
+    } catch (err: any) {
+      setActionMessage({
+        type: 'error',
+        text: err?.message || 'Lỗi khi cập nhật học viên.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteStudentSubmit = async () => {
+    if (!deletingStudent) return;
+    setSubmitting(true);
+    setActionMessage(null);
+    try {
+      await StudentService.deleteStudent(deletingStudent.id);
+      setActionMessage({
+        type: 'success',
+        text: language === 'en' ? 'Student removed successfully.' : 'Đã xóa học viên thành công.',
+      });
+      setDeletingStudent(null);
+      await loadData();
+    } catch (err: any) {
+      setActionMessage({
+        type: 'error',
+        text: err?.message || 'Lỗi khi xóa học viên.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -553,6 +649,24 @@ export const StudentListView: React.FC = () => {
                                 className="p-1.5 rounded-lg text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors"
                               >
                                 <UserCheck className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                title={language === 'en' ? 'Edit student' : 'Sửa thông tin học viên'}
+                                onClick={() => handleOpenEditStudent(student)}
+                                className="p-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                title={language === 'en' ? 'Delete student' : 'Xóa học viên'}
+                                onClick={() => setDeletingStudent(student)}
+                                className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </>
                           )}
@@ -1009,6 +1123,273 @@ export const StudentListView: React.FC = () => {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CHỈNH SỬA THÔNG TIN HỌC VIÊN (EDIT STUDENT)
+      ========================================================================= */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#043264] flex items-center justify-center font-bold">
+                  <Edit className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                    {language === 'en' ? 'Edit Student Profile' : 'Chỉnh sửa hồ sơ học viên'}
+                  </h3>
+                  <p className="text-[11px] font-mono text-slate-500">{editingStudent.student_code}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateStudentSubmit} className="mt-4 space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Student Full Name *' : 'Họ và tên học viên *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editStudentForm.full_name}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, full_name: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Student Code *' : 'Mã học viên *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editStudentForm.student_code}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, student_code: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Date of Birth' : 'Ngày sinh'}
+                  </label>
+                  <input
+                    type="date"
+                    value={editStudentForm.date_of_birth}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, date_of_birth: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Gender' : 'Giới tính'}
+                  </label>
+                  <select
+                    value={editStudentForm.gender}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, gender: e.target.value as any })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    <option value="male">{language === 'en' ? 'Male' : 'Nam'}</option>
+                    <option value="female">{language === 'en' ? 'Female' : 'Nữ'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Parent Name *' : 'Họ tên phụ huynh *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editStudentForm.parent_name}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, parent_name: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Parent Phone *' : 'Số điện thoại phụ huynh *'}
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={editStudentForm.parent_phone}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, parent_phone: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Parent Email' : 'Email phụ huynh'}
+                </label>
+                <input
+                  type="email"
+                  value={editStudentForm.parent_email}
+                  onChange={(e) => setEditStudentForm({ ...editStudentForm, parent_email: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Class' : 'Lớp học'}
+                  </label>
+                  <select
+                    value={editStudentForm.current_class_id}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, current_class_id: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    <option value="">{language === 'en' ? '— No Class Assigned —' : '— Chưa xếp lớp —'}</option>
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.level})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Assigned HRT' : 'HRT Phụ trách'}
+                  </label>
+                  <select
+                    value={editStudentForm.assigned_hrt_id}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, assigned_hrt_id: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    <option value="">{language === 'en' ? '— Class Default HRT —' : '— Mặc định theo lớp —'}</option>
+                    {hrtStaffs.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.full_name} ({h.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Tuition Expiry Date *' : 'Hạn đóng học phí *'}
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={editStudentForm.tuition_expiry_date}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, tuition_expiry_date: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    {language === 'en' ? 'Student Status' : 'Trạng thái học vụ'}
+                  </label>
+                  <select
+                    value={editStudentForm.status}
+                    onChange={(e) => setEditStudentForm({ ...editStudentForm, status: e.target.value as StudentStatus })}
+                    className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
+                  >
+                    <option value="active">{language === 'en' ? 'Active' : 'Đang học'}</option>
+                    <option value="warning">{language === 'en' ? 'Tuition Due Soon' : 'Cần chú ý phí'}</option>
+                    <option value="expired">{language === 'en' ? 'Expired' : 'Đã hết hạn'}</option>
+                    <option value="reserved">{language === 'en' ? 'Reserved' : 'Bảo lưu'}</option>
+                    <option value="dropped">{language === 'en' ? 'Dropped' : 'Thôi học'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Academic & Care Notes' : 'Ghi chú học vụ / Chăm sóc'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={editStudentForm.notes}
+                  onChange={(e) => setEditStudentForm({ ...editStudentForm, notes: e.target.value })}
+                  placeholder={language === 'en' ? 'Learning strengths, weaknesses, special care instructions...' : 'Điểm mạnh, điểm yếu, lưu ý chăm sóc đặc biệt...'}
+                  className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
+                >
+                  <span>{language === 'en' ? 'Save Changes' : 'Lưu thay đổi'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: XÁC NHẬN XÓA HỌC VIÊN (CONFIRM DELETE STUDENT)
+      ========================================================================= */}
+      {deletingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95">
+            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+              {language === 'en' ? 'Delete Student Record?' : 'Xác nhận xóa học viên?'}
+            </h3>
+            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+              {language === 'en'
+                ? `Are you sure you want to delete ${deletingStudent.full_name} (${deletingStudent.student_code})? All associated tasks, assessments, and attendance records will be permanently removed.`
+                : `Bạn có chắc chắn muốn xóa học viên ${deletingStudent.full_name} (${deletingStudent.student_code}) không? Toàn bộ nhật ký chăm sóc, đánh giá và phụ đạo liên quan sẽ bị xóa vĩnh viễn.`}
+            </p>
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeletingStudent(null)}
+                className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                {language === 'en' ? 'Cancel' : 'Hủy'}
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleDeleteStudentSubmit}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
+              >
+                <span>{language === 'en' ? 'Delete Permanently' : 'Xóa vĩnh viễn'}</span>
+              </button>
             </div>
           </div>
         </div>

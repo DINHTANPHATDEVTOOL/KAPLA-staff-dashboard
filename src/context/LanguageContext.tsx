@@ -87,6 +87,50 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'auth.logout': 'Đăng xuất',
     'auth.contactSupport': 'Liên hệ bộ phận Học vụ / IT',
 
+    // Missing Auth & Registration Keys (VI)
+    'auth.emailError': 'Vui lòng nhập địa chỉ email cơ quan.',
+    'auth.passwordError': 'Vui lòng nhập mật khẩu.',
+    'auth.nameError': 'Vui lòng nhập họ và tên nhân sự.',
+    'auth.emailInvalidError': 'Email công vụ phải có định dạng @kapla.edu.vn hoặc email hợp lệ.',
+    'auth.passwordLengthError': 'Mật khẩu phải có độ dài từ 6 ký tự trở lên.',
+    'auth.passwordMismatchError': 'Mật khẩu xác nhận không khớp.',
+    'auth.confirmPasswordLabel': 'Xác nhận lại mật khẩu',
+    'auth.confirmPasswordPlaceholder': 'Nhập lại mật khẩu',
+    'auth.workflowLabel': 'Quy trình phê duyệt nội bộ:',
+    'auth.workflowDesc': 'Tài khoản đăng ký mới sẽ ở trạng thái chờ duyệt. Quản trị viên hệ thống hoặc Giám đốc cơ sở (CM) sẽ kiểm tra hồ sơ và cấp quyền trong 24 giờ làm việc.',
+    'auth.branchHint': 'Chọn chi nhánh bạn trực tiếp công tác để CM tiếp nhận hồ sơ',
+    'auth.pendingStatusLabel': 'Chờ xét duyệt phân quyền',
+    'auth.pendingSecurityNotice': 'Tài khoản đã được đăng ký thành công trên cổng nội bộ KAPLA. Để đảm bảo an ninh dữ liệu học viên theo chuẩn Enterprise RLS, Quản trị viên (Admin) hoặc Giám đốc cơ sở (CM) cần kiểm tra danh tính và gán vai trò nghiệp vụ phù hợp trước khi bạn có thể truy cập dashboard.',
+    'auth.accountSummaryTitle': 'Thông tin tài khoản đăng ký',
+    'auth.pendingBadge': 'Chờ phân quyền',
+    'auth.registeredBranch': 'Cơ sở đăng ký',
+    'auth.adminRole': 'Quản trị hệ thống',
+    'auth.staffRole': 'Nhân viên cơ sở',
+
+    // Staff & Student CRUD Keys (VI)
+    'staff.addNew': 'Thêm nhân sự mới',
+    'staff.editStaff': 'Chỉnh sửa thông tin nhân sự',
+    'staff.deleteStaff': 'Xóa tài khoản nhân sự',
+    'staff.deleteConfirm': 'Bạn có chắc chắn muốn xóa nhân sự này khỏi hệ thống? Thao tác này sẽ gỡ bỏ tài khoản và phân quyền chi nhánh.',
+    'staff.addSuccess': 'Đã tạo tài khoản nhân sự thành công.',
+    'staff.updateSuccess': 'Đã cập nhật thông tin nhân sự thành công.',
+    'staff.deleteSuccess': 'Đã xóa tài khoản nhân sự thành công.',
+    'staff.nameLabel': 'Họ và tên nhân sự',
+    'staff.emailLabel': 'Email công vụ',
+    'staff.phoneLabel': 'Số điện thoại',
+    'staff.branchLabel': 'Chi nhánh phân bổ',
+    'staff.roleLabel': 'Vai trò nghiệp vụ',
+    'staff.systemRoleLabel': 'Phân quyền hệ thống',
+    'staff.statusLabel': 'Trạng thái hoạt động',
+
+    'student.addNew': 'Thêm học viên mới',
+    'student.editStudent': 'Chỉnh sửa hồ sơ học viên',
+    'student.deleteStudent': 'Xóa hồ sơ học viên',
+    'student.deleteConfirm': 'Bạn có chắc chắn muốn xóa học viên này? Toàn bộ dữ liệu học tập, điểm danh và chăm sóc liên quan sẽ bị xóa.',
+    'student.addSuccess': 'Đã thêm học viên mới thành công.',
+    'student.updateSuccess': 'Đã cập nhật thông tin học viên thành công.',
+    'student.deleteSuccess': 'Đã xóa học viên thành công.',
+
     // Sidebar & Navigation
     'nav.overview': 'Tổng quan học vụ',
     'nav.students': 'Hồ sơ học viên',
@@ -165,6 +209,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'common.overdue': 'Đã quá hạn',
     'common.warning': 'Cảnh báo',
     'common.days': 'ngày',
+    'common.none': 'Chưa cập nhật',
 
     // Overview View
     'overview.greeting': 'Xin chào, {name}!',
@@ -468,6 +513,50 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'auth.logout': 'Sign Out',
     'auth.contactSupport': 'Contact Academic Office / IT',
 
+    // Missing Auth & Registration Keys (EN)
+    'auth.emailError': 'Please enter your work email address.',
+    'auth.passwordError': 'Please enter your password.',
+    'auth.nameError': 'Please enter your full name.',
+    'auth.emailInvalidError': 'Work email must have @kapla.edu.vn domain or be a valid email.',
+    'auth.passwordLengthError': 'Password must be at least 6 characters long.',
+    'auth.passwordMismatchError': 'Passwords do not match.',
+    'auth.confirmPasswordLabel': 'Confirm Password',
+    'auth.confirmPasswordPlaceholder': 'Re-enter your password',
+    'auth.workflowLabel': 'Internal Approval Workflow:',
+    'auth.workflowDesc': 'Newly registered accounts will remain pending. A System Admin or Center Manager (CM) will review and assign role permissions within 24 working hours.',
+    'auth.branchHint': 'Select the primary campus you report to so the CM can review your profile',
+    'auth.pendingStatusLabel': 'Awaiting Role Approval',
+    'auth.pendingSecurityNotice': 'Your account has been registered on the KAPLA Staff Portal. To protect student privacy under Enterprise RLS standards, a System Admin or Center Manager (CM) must verify your identity and assign your academic role before dashboard access is granted.',
+    'auth.accountSummaryTitle': 'Registered Account Summary',
+    'auth.pendingBadge': 'Pending Assignment',
+    'auth.registeredBranch': 'Target Campus',
+    'auth.adminRole': 'System Administrator',
+    'auth.staffRole': 'Campus Staff',
+
+    // Staff & Student CRUD Keys (EN)
+    'staff.addNew': 'Add New Staff',
+    'staff.editStaff': 'Edit Staff Profile',
+    'staff.deleteStaff': 'Delete Staff Account',
+    'staff.deleteConfirm': 'Are you sure you want to delete this staff member? This will remove their account and campus permissions.',
+    'staff.addSuccess': 'Staff account created successfully.',
+    'staff.updateSuccess': 'Staff profile updated successfully.',
+    'staff.deleteSuccess': 'Staff account deleted successfully.',
+    'staff.nameLabel': 'Staff Full Name',
+    'staff.emailLabel': 'Work Email',
+    'staff.phoneLabel': 'Phone Number',
+    'staff.branchLabel': 'Assigned Campus',
+    'staff.roleLabel': 'Staff Academic Role',
+    'staff.systemRoleLabel': 'System Access Level',
+    'staff.statusLabel': 'Account Status',
+
+    'student.addNew': 'Add New Student',
+    'student.editStudent': 'Edit Student Profile',
+    'student.deleteStudent': 'Delete Student',
+    'student.deleteConfirm': 'Are you sure you want to delete this student? All related assessments, attendance, and care tasks will be removed.',
+    'student.addSuccess': 'Student added successfully.',
+    'student.updateSuccess': 'Student profile updated successfully.',
+    'student.deleteSuccess': 'Student deleted successfully.',
+
     // Sidebar & Navigation
     'nav.overview': 'Academic Overview',
     'nav.students': 'Student Records',
@@ -546,6 +635,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'common.overdue': 'Overdue',
     'common.warning': 'Warning',
     'common.days': 'days',
+    'common.none': 'None',
 
     // Overview View
     'overview.greeting': 'Welcome back, {name}!',
@@ -818,7 +908,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const translated = TRANSLATIONS[language]?.[key];
       if (translated) return translated;
       if (language === 'vi' && fallbackVi) return fallbackVi;
-      return TRANSLATIONS.en?.[key] || TRANSLATIONS.vi?.[key] || fallbackVi || key;
+      if (language === 'en') {
+        return TRANSLATIONS.en?.[key] || key;
+      }
+      return fallbackVi || key;
     };
   }, [language]);
 
