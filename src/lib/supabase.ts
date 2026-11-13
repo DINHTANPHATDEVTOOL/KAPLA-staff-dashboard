@@ -5,9 +5,10 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Branch, UserProfile, BranchMembership, AuditLog, ClassRoom } from '../types';
 
+const isDev = Boolean(import.meta.env.DEV);
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const forceDevMock = import.meta.env.VITE_ENABLE_DEV_MOCK === 'true' || !supabaseUrl || supabaseUrl.includes('dummy');
+const forceDevMock = isDev && (import.meta.env.VITE_ENABLE_DEV_MOCK === 'true' || !supabaseUrl || supabaseUrl.includes('dummy'));
 
 // Real Supabase client instance (used when configured)
 export const realSupabase: SupabaseClient | null =
@@ -21,7 +22,13 @@ export const realSupabase: SupabaseClient | null =
       })
     : null;
 
-export const isDevMockMode = forceDevMock || realSupabase === null;
+// Mock mode is strictly restricted to development environment (import.meta.env.DEV).
+// In production, mock fallback is permanently forbidden to prevent unauthorized bypass.
+export const isDevMockMode = Boolean(isDev && (forceDevMock || realSupabase === null));
+
+if (!isDev && (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.includes('dummy'))) {
+  console.error('[KAPLA CRITICAL SECURITY WARNING] Missing production Supabase credentials. Mock fallback is disabled.');
+}
 
 // ==============================================================================
 // Mock Storage Service with Enforced RBAC & Security Validation
@@ -224,7 +231,14 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
 ];
 
 export class MockStorageService {
+  private static ensureDevOnly(): void {
+    if (typeof window !== 'undefined' && !import.meta.env.DEV) {
+      throw new Error('Chính sách bảo mật KAPLA: Chế độ Mock bị nghiêm cấm trên môi trường Production.');
+    }
+  }
+
   static getBranches(): Branch[] {
+    this.ensureDevOnly();
     const raw = localStorage.getItem(STORAGE_KEYS.BRANCHES);
     if (!raw) {
       localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(DEFAULT_BRANCHES));

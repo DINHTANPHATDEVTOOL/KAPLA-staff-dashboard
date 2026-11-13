@@ -272,11 +272,22 @@ async function runLiveSupabaseTests() {
   );
 
   // ---------------------------------------------------------------------------
-  // TEST 8: Kiểm tra tính bất biến của Nhật ký kiểm toán (Audit Logs)
+  // TEST 8: Kiểm tra tính bất biến và khóa quyền chèn trực tiếp của Nhật ký kiểm toán
   // ---------------------------------------------------------------------------
-  console.log('\n--- 8. KIỂM TRA TÍNH BẤT BIẾN CỦA NHẬT KÝ KIỂM TOÁN (AUDIT LOGS) ---');
+  console.log('\n--- 8. KIỂM TRA BẢO MẬT VÀ TÍNH BẤT BIẾN CỦA NHẬT KÝ KIỂM TOÁN (AUDIT LOGS) ---');
 
-  // Thử xóa nhật ký
+  // Thử chèn trực tiếp nhật ký từ tài khoản nhân viên (bị cấm)
+  const { error: staffInsertLogErr } = await candidateClient.from('audit_logs').insert({
+    action: 'UNAUTHORIZED_DIRECT_LOG',
+    details: { exploit: true },
+  });
+  assert(
+    'Chặn nhân viên chèn trực tiếp nhật ký kiểm toán vào bảng audit_logs (Bỏ quyền INSERT client)',
+    Boolean(staffInsertLogErr),
+    `Phản hồi từ Supabase API: ${staffInsertLogErr?.message || staffInsertLogErr?.code}`
+  );
+
+  // Thử xóa nhật ký từ admin (bị cấm do tính chất Append-Only)
   const { error: deleteLogErr } = await adminClient.from('audit_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   assert(
     'Trigger prevent_audit_log_tampering chặn hoàn toàn hành vi xóa nhật ký (Append-Only)',

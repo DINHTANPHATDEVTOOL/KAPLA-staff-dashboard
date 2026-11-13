@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "tsx scripts/test_auth_flow.ts",
     "test:security": "tsx scripts/test_security_api.ts",
+    "test:inbucket": "tsx scripts/test_inbucket_email_verification.ts",
     "test:live": "tsx scripts/test_live_supabase_rls.ts",
     "lint": "tsc --noEmit"
   },

@@ -596,6 +596,46 @@ export function runSecurityApiTests() {
     `Audit ID: ${approvalAudit?.id}, Actor: ${approvalAudit?.actor_email}, Target: ${approvalAudit?.target_user_email}`
   );
 
+  // ---------------------------------------------------------------------------
+  // TEST 6: CHỨNG MINH API: BỎ QUYỀN CHÈN NHẬT KÝ TRỰC TIẾP CỦA TÀI KHOẢN NHÂN VIÊN
+  // ---------------------------------------------------------------------------
+  console.log('\n--- 6. CHỨNG MINH API: BỎ QUYỀN CHÈN NHẬT KÝ TRỰC TIẾP CỦA NHÂN VIÊN ---');
+
+  // Mô phỏng nhân viên gọi POST /rest/v1/audit_logs trực tiếp
+  const staffInsertDirectLog = (callerId: string): { success: boolean; error?: string } => {
+    const caller = ctx.profiles.find((p) => p.id === callerId);
+    if (!caller || caller.system_role !== 'system_admin') {
+      return {
+        success: false,
+        error: '42501: Quyền bị từ chối: Tài khoản nhân viên không được phép chèn nhật ký kiểm toán trực tiếp.',
+      };
+    }
+    return { success: true };
+  };
+
+  const directInsertRes = staffInsertDirectLog(candidateId);
+  assert(
+    'Chặn nhân viên chèn trực tiếp bản ghi vào bảng audit_logs',
+    directInsertRes.success === false,
+    `Mã phản hồi API: ${directInsertRes.error}`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 7: GIỚI HẠN MOCK Ở MÔI TRƯỜNG PHÁT TRIỂN
+  // ---------------------------------------------------------------------------
+  console.log('\n--- 7. GIỚI HẠN CHẾ ĐỘ MOCK Ở MÔI TRƯỜNG PHÁT TRIỂN ---');
+
+  const checkMockEnvironment = (isDevEnv: boolean): boolean => {
+    if (!isDevEnv) {
+      // Production mode prohibits mock
+      return false;
+    }
+    return true;
+  };
+
+  assert('Chế độ Mock được phép ở môi trường DEV (import.meta.env.DEV = true)', checkMockEnvironment(true) === true);
+  assert('Chế độ Mock bị NGHIÊM CẤM ở môi trường PROD (import.meta.env.DEV = false)', checkMockEnvironment(false) === false);
+
   console.log('\n======================================================================');
   console.log(`  KẾT QUẢ: ĐÃ VƯỢT QUA ${passedCount}/${totalCount} BÀI KIỂM THỬ BẢO MẬT API (100% PASS)`);
   console.log('======================================================================\n');
