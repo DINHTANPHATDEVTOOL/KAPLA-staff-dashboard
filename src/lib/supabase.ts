@@ -14,6 +14,9 @@ import {
   ClassTransfer,
   StudentTask,
   CareTaskStatus,
+  StudentAssessment,
+  InterventionTicket,
+  InterventionStatus,
 } from '../types';
 
 const isDev = Boolean(import.meta.env.DEV);
@@ -56,6 +59,8 @@ const STORAGE_KEYS = {
   ENROLLMENTS: 'kapla_mock_enrollments',
   TRANSFERS: 'kapla_mock_transfers',
   CARE_TASKS: 'kapla_mock_care_tasks',
+  ASSESSMENTS: 'kapla_mock_assessments',
+  INTERVENTIONS: 'kapla_mock_interventions',
 };
 
 // Initial Seed Data with Two Core Branches
@@ -377,6 +382,63 @@ const DEFAULT_CARE_TASKS: StudentTask[] = [
     task_type: 'attendance_check',
     due_date: '2026-11-19',
     status: 'pending',
+  },
+];
+
+const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
+  {
+    id: 'as000000-0000-0000-0000-000000000001',
+    student_id: 's0000000-0000-0000-0000-000000000001',
+    class_id: 'c0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    period: 'Kỳ 1 - Giữa kỳ',
+    assessment_date: '2026-11-05',
+    listening_score: 4.5,
+    speaking_score: 4.0,
+    reading_score: 3.5,
+    writing_score: 2.5,
+    strengths: 'Phát âm tự nhiên, phản xạ nói nhanh và tự tin khi giao tiếp với giáo viên bản ngữ.',
+    weaknesses: 'Ngữ pháp viết câu đơn, hay nhầm thì hiện tại đơn và chia ngôi thứ 3 số ít.',
+    progress_notes: 'Cần can thiệp bổ trợ kỹ năng Viết để chuẩn bị thi chứng chỉ Starters.',
+    has_academic_risk: true,
+    assessed_by: 'u0000000-0000-0000-0000-000000000004',
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+  {
+    id: 'as000000-0000-0000-0000-000000000002',
+    student_id: 's0000000-0000-0000-0000-000000000002',
+    class_id: 'c0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    period: 'Kỳ 1 - Giữa kỳ',
+    assessment_date: '2026-11-06',
+    listening_score: 4.0,
+    speaking_score: 4.5,
+    reading_score: 4.0,
+    writing_score: 4.0,
+    strengths: 'Học tập đều 4 kỹ năng, tiếp thu nhanh.',
+    weaknesses: 'Thỉnh thoảng mất tập trung ở cuối buổi học.',
+    has_academic_risk: false,
+    assessed_by: 'u0000000-0000-0000-0000-000000000004',
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+];
+
+const DEFAULT_INTERVENTIONS: InterventionTicket[] = [
+  {
+    id: 'iv000000-0000-0000-0000-000000000001',
+    student_id: 's0000000-0000-0000-0000-000000000001',
+    assessment_id: 'as000000-0000-0000-0000-000000000001',
+    class_id: 'c0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    issue_description: 'Kỹ năng Viết đạt 2.5/5 khiên, gặp khó khăn cấu trúc câu hiện tại đơn',
+    root_cause: 'Chưa nắm vững quy tắc chia động từ thêm s/es và trật tự từ trong câu',
+    action_plan: 'Kèm bổ trợ ngữ pháp 1-1 30 phút mỗi thứ 4, giao 4 phiếu bài tập viết theo mẫu Oxford',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000005',
+    due_date: '2026-11-25',
+    reassessment_result: 'Học viên đã hoàn thành 4 phiếu bài tập bổ trợ, bài kiểm tra lại đạt 3.5/5 khiên.',
+    status: 'resolved',
+    created_by: 'u0000000-0000-0000-0000-000000000004',
+    created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
   },
 ];
 
@@ -830,6 +892,141 @@ export class MockStorageService {
     }
   }
 
+  static getAssessments(branchId?: string, classId?: string): StudentAssessment[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.ASSESSMENTS);
+    const assessments: StudentAssessment[] = raw ? JSON.parse(raw) : DEFAULT_ASSESSMENTS;
+    const students = this.getStudents();
+    const classes = this.getClasses();
+    const profiles = this.getProfiles();
+
+    let filtered = assessments;
+    if (branchId) filtered = filtered.filter((a) => a.branch_id === branchId);
+    if (classId) filtered = filtered.filter((a) => a.class_id === classId);
+
+    return filtered.map((a) => {
+      const student = students.find((s) => s.id === a.student_id);
+      const cls = classes.find((c) => c.id === a.class_id);
+      const assessor = profiles.find((p) => p.id === a.assessed_by);
+      return {
+        ...a,
+        student,
+        class: cls,
+        assessed_by_name: assessor?.full_name || 'Giáo viên',
+      };
+    });
+  }
+
+  static addAssessment(payload: Omit<StudentAssessment, 'id' | 'has_academic_risk' | 'created_at' | 'updated_at'>): StudentAssessment {
+    this.ensureDevOnly();
+    const assessments = this.getAssessments();
+    const hasRisk =
+      payload.listening_score < 3.0 ||
+      payload.speaking_score < 3.0 ||
+      payload.reading_score < 3.0 ||
+      payload.writing_score < 3.0;
+
+    const newAssessment: StudentAssessment = {
+      ...payload,
+      id: 'as' + Math.random().toString(36).substring(2, 9),
+      has_academic_risk: hasRisk,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    assessments.unshift(newAssessment);
+    localStorage.setItem(STORAGE_KEYS.ASSESSMENTS, JSON.stringify(assessments));
+    return newAssessment;
+  }
+
+  static getInterventions(branchId?: string, classId?: string, status?: InterventionStatus): InterventionTicket[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.INTERVENTIONS);
+    const interventions: InterventionTicket[] = raw ? JSON.parse(raw) : DEFAULT_INTERVENTIONS;
+    const students = this.getStudents();
+    const classes = this.getClasses();
+    const profiles = this.getProfiles();
+
+    let filtered = interventions;
+    if (branchId) filtered = filtered.filter((i) => i.branch_id === branchId);
+    if (classId) filtered = filtered.filter((i) => i.class_id === classId);
+    if (status) filtered = filtered.filter((i) => i.status === status);
+
+    return filtered.map((i) => {
+      const student = students.find((s) => s.id === i.student_id);
+      const cls = classes.find((c) => c.id === i.class_id);
+      const staff = profiles.find((p) => p.id === i.assigned_staff_id);
+      const verifier = profiles.find((p) => p.id === i.verified_by);
+      return {
+        ...i,
+        student,
+        class: cls,
+        assigned_staff_name: staff?.full_name || 'Chưa gán',
+        verified_by_name: verifier?.full_name,
+      };
+    });
+  }
+
+  static addIntervention(payload: Omit<InterventionTicket, 'id' | 'status' | 'verified_by' | 'verified_at' | 'verification_notes' | 'created_at' | 'updated_at'>): InterventionTicket {
+    this.ensureDevOnly();
+    const interventions = this.getInterventions();
+    const newIntervention: InterventionTicket = {
+      ...payload,
+      id: 'iv' + Math.random().toString(36).substring(2, 9),
+      status: 'open',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    interventions.unshift(newIntervention);
+    localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
+    return newIntervention;
+  }
+
+  static updateInterventionStatus(
+    id: string,
+    status: InterventionStatus,
+    reassessmentResult?: string
+  ): void {
+    this.ensureDevOnly();
+    const interventions = this.getInterventions();
+    const idx = interventions.findIndex((i) => i.id === id);
+    if (idx === -1) throw new Error('Không tìm thấy phiếu can thiệp.');
+
+    if (status === 'verified') {
+      throw new Error('Chỉ Head Teacher hoặc CM mới có quyền xác minh phiếu can thiệp!');
+    }
+
+    interventions[idx].status = status;
+    if (reassessmentResult !== undefined) {
+      interventions[idx].reassessment_result = reassessmentResult;
+    }
+    interventions[idx].updated_at = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
+  }
+
+  static verifyInterventionMock(
+    callerId: string,
+    id: string,
+    verificationNotes: string,
+    isSysAdmin = false,
+    isHtOrCm = false
+  ): void {
+    this.ensureDevOnly();
+    if (!isSysAdmin && !isHtOrCm) {
+      throw new Error('Quyền bị từ chối: Chỉ Head Teacher hoặc CM chi nhánh mới có quyền xác minh phiếu can thiệp.');
+    }
+
+    const interventions = this.getInterventions();
+    const idx = interventions.findIndex((i) => i.id === id);
+    if (idx === -1) throw new Error('Không tìm thấy phiếu can thiệp.');
+
+    interventions[idx].status = 'verified';
+    interventions[idx].verified_by = callerId;
+    interventions[idx].verified_at = new Date().toISOString();
+    interventions[idx].verification_notes = verificationNotes;
+    interventions[idx].updated_at = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
+  }
+
   static resetToDefault(): void {
     localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(DEFAULT_BRANCHES));
     localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(DEFAULT_PROFILES));
@@ -840,6 +1037,8 @@ export class MockStorageService {
     localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(DEFAULT_ENROLLMENTS));
     localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(DEFAULT_TRANSFERS));
     localStorage.setItem(STORAGE_KEYS.CARE_TASKS, JSON.stringify(DEFAULT_CARE_TASKS));
+    localStorage.setItem(STORAGE_KEYS.ASSESSMENTS, JSON.stringify(DEFAULT_ASSESSMENTS));
+    localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(DEFAULT_INTERVENTIONS));
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
   }
 }
@@ -1004,5 +1203,169 @@ export const StudentService = {
       return;
     }
     MockStorageService.updateTaskStatus(taskId, status);
+  },
+};
+
+// ==============================================================================
+// Phase T04: AssessmentService & InterventionService
+// ==============================================================================
+
+export const AssessmentService = {
+  async getAssessments(branchId?: string, classId?: string): Promise<StudentAssessment[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('student_assessments')
+        .select(`
+          *,
+          student:students(*),
+          class:classes(*),
+          assessor:profiles!student_assessments_assessed_by_fkey(*)
+        `)
+        .order('assessment_date', { ascending: false });
+
+      if (branchId) query = query.eq('branch_id', branchId);
+      if (classId) query = query.eq('class_id', classId);
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map((a: any) => ({
+          ...a,
+          assessed_by_name: a.assessor?.full_name || 'Giáo viên',
+        }));
+      }
+    }
+    return MockStorageService.getAssessments(branchId, classId);
+  },
+
+  async createAssessment(
+    payload: Omit<StudentAssessment, 'id' | 'has_academic_risk' | 'created_at' | 'updated_at'>
+  ): Promise<StudentAssessment> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('student_assessments')
+        .insert({
+          student_id: payload.student_id,
+          class_id: payload.class_id,
+          branch_id: payload.branch_id,
+          period: payload.period,
+          assessment_date: payload.assessment_date,
+          listening_score: payload.listening_score,
+          speaking_score: payload.speaking_score,
+          reading_score: payload.reading_score,
+          writing_score: payload.writing_score,
+          strengths: payload.strengths,
+          weaknesses: payload.weaknesses,
+          progress_notes: payload.progress_notes,
+          assessed_by: payload.assessed_by,
+        })
+        .select('*, student:students(*), class:classes(*)')
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return MockStorageService.addAssessment(payload);
+  },
+};
+
+export const InterventionService = {
+  async getInterventions(
+    branchId?: string,
+    classId?: string,
+    status?: InterventionStatus
+  ): Promise<InterventionTicket[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('interventions')
+        .select(`
+          *,
+          student:students(*),
+          class:classes(*),
+          assigned_staff:profiles!interventions_assigned_staff_id_fkey(*),
+          verifier:profiles!interventions_verified_by_fkey(*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (branchId) query = query.eq('branch_id', branchId);
+      if (classId) query = query.eq('class_id', classId);
+      if (status) query = query.eq('status', status);
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map((i: any) => ({
+          ...i,
+          assigned_staff_name: i.assigned_staff?.full_name || 'Chưa gán',
+          verified_by_name: i.verifier?.full_name,
+        }));
+      }
+    }
+    return MockStorageService.getInterventions(branchId, classId, status);
+  },
+
+  async createIntervention(
+    payload: Omit<
+      InterventionTicket,
+      'id' | 'status' | 'verified_by' | 'verified_at' | 'verification_notes' | 'created_at' | 'updated_at'
+    >
+  ): Promise<InterventionTicket> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('interventions')
+        .insert({
+          student_id: payload.student_id,
+          assessment_id: payload.assessment_id,
+          class_id: payload.class_id,
+          branch_id: payload.branch_id,
+          issue_description: payload.issue_description,
+          root_cause: payload.root_cause,
+          action_plan: payload.action_plan,
+          assigned_staff_id: payload.assigned_staff_id,
+          due_date: payload.due_date,
+          status: 'open',
+          created_by: payload.created_by,
+        })
+        .select('*, student:students(*), class:classes(*)')
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return MockStorageService.addIntervention(payload);
+  },
+
+  async updateStatus(
+    id: string,
+    status: InterventionStatus,
+    reassessmentResult?: string
+  ): Promise<void> {
+    if (realSupabase) {
+      const updates: any = { status, updated_at: new Date().toISOString() };
+      if (reassessmentResult !== undefined) {
+        updates.reassessment_result = reassessmentResult;
+      }
+      const { error } = await realSupabase
+        .from('interventions')
+        .update(updates)
+        .eq('id', id);
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.updateInterventionStatus(id, status, reassessmentResult);
+  },
+
+  async verifyIntervention(
+    id: string,
+    verificationNotes: string,
+    callerId?: string,
+    isSysAdmin = false,
+    isHtOrCm = false
+  ): Promise<void> {
+    if (realSupabase) {
+      const { error } = await realSupabase.rpc('verify_intervention', {
+        p_intervention_id: id,
+        p_verification_notes: verificationNotes,
+      });
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.verifyInterventionMock(callerId || '', id, verificationNotes, isSysAdmin, isHtOrCm);
   },
 };

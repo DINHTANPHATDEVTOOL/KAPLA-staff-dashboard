@@ -12,6 +12,7 @@
     "test:inbucket": "tsx scripts/test_inbucket_email_verification.ts",
     "test:live": "tsx scripts/test_live_supabase_rls.ts",
     "test:t03": "tsx scripts/test_t03_hrt_precedence.ts",
+    "test:t04": "tsx scripts/test_t04_assessments_and_interventions.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

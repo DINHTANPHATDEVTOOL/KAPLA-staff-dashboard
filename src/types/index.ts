@@ -192,6 +192,60 @@ export interface StudentTask {
 }
 
 // -----------------------------------------------------------------------------
+// Phase T04: 4-Skill Assessments & Intervention Flow
+// -----------------------------------------------------------------------------
+
+export interface StudentAssessment {
+  id: string;
+  student_id: string;
+  class_id?: string;
+  branch_id: string;
+  period: string;
+  assessment_date: string;
+  listening_score: number;
+  speaking_score: number;
+  reading_score: number;
+  writing_score: number;
+  strengths?: string;
+  weaknesses?: string;
+  progress_notes?: string;
+  has_academic_risk: boolean;
+  assessed_by?: string;
+  assessed_by_name?: string;
+  student?: Student;
+  class?: ClassRoom;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type InterventionStatus = 'open' | 'in_progress' | 'resolved' | 'verified';
+
+export interface InterventionTicket {
+  id: string;
+  student_id: string;
+  assessment_id?: string;
+  class_id?: string;
+  branch_id: string;
+  issue_description: string;
+  root_cause?: string;
+  action_plan: string;
+  assigned_staff_id?: string;
+  assigned_staff_name?: string;
+  due_date: string;
+  reassessment_result?: string;
+  status: InterventionStatus;
+  verified_by?: string;
+  verified_by_name?: string;
+  verified_at?: string;
+  verification_notes?: string;
+  created_by?: string;
+  student?: Student;
+  class?: ClassRoom;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// -----------------------------------------------------------------------------
 // Role Labels & Metadata in Vietnamese
 // -----------------------------------------------------------------------------
 

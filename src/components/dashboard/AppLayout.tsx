@@ -10,6 +10,8 @@ import { StaffApprovalView } from './StaffApprovalView';
 import { BranchesClassesView } from './BranchesClassesView';
 import { StudentListView } from './StudentListView';
 import { CareTasksView } from './CareTasksView';
+import { AssessmentsView } from './AssessmentsView';
+import { InterventionsView } from './InterventionsView';
 import { DashboardNavSection, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
@@ -126,19 +128,13 @@ export const AppLayout: React.FC = () => {
             <CareTasksView />
           )}
 
-          {activeSection === 'assessments' &&
-            renderPlaceholder(
-              'Đánh giá năng lực học vụ 4 kỹ năng',
-              'Giai đoạn T04',
-              'Ghi nhận kết quả Nghe, Nói, Đọc, Viết theo chuẩn Cambridge và tự động phát hiện nguy cơ học tập để lập phiếu can thiệp.'
-            )}
+          {activeSection === 'assessments' && (
+            <AssessmentsView onNavigateToIntervention={() => setActiveSection('interventions')} />
+          )}
 
-          {activeSection === 'interventions' &&
-            renderPlaceholder(
-              'Phiếu can thiệp học thuật',
-              'Giai đoạn T04',
-              'Luồng can thiệp 4 bước: Mở → Đang xử lý → Đã xử lý → Đã xác minh (chỉ CM hoặc Head Teacher có quyền xác minh).'
-            )}
+          {activeSection === 'interventions' && (
+            <InterventionsView />
+          )}
 
           {activeSection === 'feedback' &&
             renderPlaceholder(
