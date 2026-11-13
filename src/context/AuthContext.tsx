@@ -64,19 +64,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load branches
   const loadBranches = useCallback(async () => {
     if (realSupabase) {
-      const { data, error: err } = await realSupabase
-        .from('branches')
-        .select('*')
-        .eq('status', 'active')
-        .order('name');
-      if (!err && data) {
-        setAvailableBranches(data);
-        return data;
+      try {
+        const { data, error: err } = await realSupabase
+          .from('branches')
+          .select('*')
+          .eq('status', 'active')
+          .order('name');
+        if (!err && data && data.length > 0) {
+          setAvailableBranches(data);
+          return data;
+        }
+      } catch (e) {
+        console.warn('[KAPLA Branches] Không thể tải chi nhánh từ Supabase Cloud:', e);
       }
     }
-    const mock = MockStorageService.getBranches();
-    setAvailableBranches(mock);
-    return mock;
+    try {
+      const mock = MockStorageService.getBranches();
+      setAvailableBranches(mock);
+      return mock;
+    } catch {
+      setAvailableBranches([]);
+      return [];
+    }
   }, []);
 
   // Sync profile & memberships from user id
@@ -86,35 +95,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let userMemberships: BranchMembership[] = [];
 
     if (realSupabase) {
-      // 1. Fetch Profile
-      const { data: pData } = await realSupabase
-        .from('profiles')
-        .select('*')
-        .eq('id', uid)
-        .single();
-      userProfile = pData;
+      try {
+        // 1. Fetch Profile
+        const { data: pData } = await realSupabase
+          .from('profiles')
+          .select('*')
+          .eq('id', uid)
+          .single();
+        userProfile = pData;
 
-      // 2. Fetch Memberships
-      const { data: mData } = await realSupabase
-        .from('branch_memberships')
-        .select('*, branch:branches(*)')
-        .eq('user_id', uid)
-        .eq('status', 'active');
-      userMemberships = mData || [];
-    } else {
+        // 2. Fetch Memberships
+        const { data: mData } = await realSupabase
+          .from('branch_memberships')
+          .select('*, branch:branches(*)')
+          .eq('user_id', uid)
+          .eq('status', 'active');
+        userMemberships = mData || [];
+      } catch (e) {
+        console.warn('[KAPLA Sync] Lỗi đồng bộ tài khoản từ Supabase Cloud:', e);
+      }
+    }
+
+    if (!userProfile) {
       // Mock Storage Fallback
-      const profiles = MockStorageService.getProfiles();
-      userProfile = profiles.find((p) => p.id === uid || p.email.toLowerCase() === userEmail.toLowerCase()) || null;
+      try {
+        const profiles = MockStorageService.getProfiles();
+        userProfile = profiles.find((p) => p.id === uid || p.email.toLowerCase() === userEmail.toLowerCase()) || null;
 
-      const allMemberships = MockStorageService.getMemberships();
-      const allBranches = MockStorageService.getBranches();
-      if (userProfile) {
-        userMemberships = allMemberships
-          .filter((m) => m.user_id === userProfile!.id && m.status === 'active')
-          .map((m) => ({
-            ...m,
-            branch: allBranches.find((b) => b.id === m.branch_id),
-          }));
+        const allMemberships = MockStorageService.getMemberships();
+        const allBranches = MockStorageService.getBranches();
+        if (userProfile) {
+          userMemberships = allMemberships
+            .filter((m) => m.user_id === userProfile!.id && m.status === 'active')
+            .map((m) => ({
+              ...m,
+              branch: allBranches.find((b) => b.id === m.branch_id),
+            }));
+        }
+      } catch (e) {
+        console.warn('[KAPLA Sync] Lỗi nạp mock profile:', e);
       }
     }
 
@@ -159,68 +178,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initial session check
   useEffect(() => {
     let mounted = true;
-    const initAuth = async () => {
-      setLoading(true);
-      await loadBranches();
+    let unsubAuth: (() => void) | undefined;
 
-      if (realSupabase) {
-        const { data: { session } } = await realSupabase.auth.getSession();
-        if (session?.user && mounted) {
-          const authUser: AuthUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            emailConfirmed: Boolean(session.user.email_confirmed_at),
-          };
+    const checkStoredMockSession = async () => {
+      const stored = localStorage.getItem('kapla_mock_auth_user');
+      if (stored) {
+        try {
+          const authUser: AuthUser = JSON.parse(stored);
           setUser(authUser);
           await syncUserData(authUser.id, authUser.email, authUser.emailConfirmed);
-        } else {
-          setUser(null);
-          setProfile(null);
-          setMemberships([]);
+        } catch {
+          localStorage.removeItem('kapla_mock_auth_user');
         }
+      }
+    };
 
-        // Listen for auth changes
-        const { data: { subscription } } = realSupabase.auth.onAuthStateChange(
-          async (event, newSession) => {
-            if (!mounted) return;
-            if (newSession?.user) {
-              const u: AuthUser = {
-                id: newSession.user.id,
-                email: newSession.user.email || '',
-                emailConfirmed: Boolean(newSession.user.email_confirmed_at),
+    const initAuth = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await loadBranches();
+
+        if (realSupabase) {
+          try {
+            const { data: { session } } = await realSupabase.auth.getSession();
+            if (session?.user && mounted) {
+              const authUser: AuthUser = {
+                id: session.user.id,
+                email: session.user.email || '',
+                emailConfirmed: Boolean(session.user.email_confirmed_at),
               };
-              setUser(u);
-              await syncUserData(u.id, u.email, u.emailConfirmed);
-            } else {
+              setUser(authUser);
+              await syncUserData(authUser.id, authUser.email, authUser.emailConfirmed);
+            } else if (mounted) {
               setUser(null);
               setProfile(null);
               setMemberships([]);
               setAuthScreen('login');
             }
-          }
-        );
 
-        setLoading(false);
-        return () => subscription.unsubscribe();
-      } else {
-        // Mock session check
-        const stored = localStorage.getItem('kapla_mock_auth_user');
-        if (stored) {
-          try {
-            const authUser: AuthUser = JSON.parse(stored);
-            setUser(authUser);
-            await syncUserData(authUser.id, authUser.email, authUser.emailConfirmed);
-          } catch {
-            localStorage.removeItem('kapla_mock_auth_user');
+            // Listen for auth changes
+            const { data: { subscription } } = realSupabase.auth.onAuthStateChange(
+              async (event, newSession) => {
+                if (!mounted) return;
+                if (newSession?.user) {
+                  const u: AuthUser = {
+                    id: newSession.user.id,
+                    email: newSession.user.email || '',
+                    emailConfirmed: Boolean(newSession.user.email_confirmed_at),
+                  };
+                  setUser(u);
+                  await syncUserData(u.id, u.email, u.emailConfirmed);
+                } else {
+                  setUser(null);
+                  setProfile(null);
+                  setMemberships([]);
+                  setAuthScreen('login');
+                }
+              }
+            );
+
+            unsubAuth = () => subscription.unsubscribe();
+          } catch (supaErr) {
+            console.warn('[KAPLA Auth] Không thể kết nối session từ Supabase Cloud, chuyển sang kiểm tra Local Session:', supaErr);
+            await checkStoredMockSession();
           }
+        } else {
+          // Mock session check
+          await checkStoredMockSession();
         }
-        setLoading(false);
+      } catch (err) {
+        console.error('[KAPLA Init] Lỗi trong quá trình khởi tạo:', err);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     initAuth();
     return () => {
       mounted = false;
+      if (unsubAuth) unsubAuth();
     };
   }, [loadBranches, syncUserData]);
 

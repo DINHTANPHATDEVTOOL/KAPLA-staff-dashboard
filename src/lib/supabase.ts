@@ -32,28 +32,54 @@ import {
 } from '../types';
 
 const isDev = Boolean(import.meta.env.DEV);
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const forceDevMock = isDev && (import.meta.env.VITE_ENABLE_DEV_MOCK === 'true' || !supabaseUrl || supabaseUrl.includes('dummy'));
+const rawSupabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const rawSupabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-// Real Supabase client instance (used when configured)
-export const realSupabase: SupabaseClient | null =
-  supabaseUrl && supabaseAnonKey && !supabaseAnonKey.includes('dummy')
-    ? createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      })
-    : null;
+// Check if credentials are placeholders or dummy values
+export const isPlaceholderUrl =
+  !rawSupabaseUrl ||
+  rawSupabaseUrl.includes('PROJECT_REF') ||
+  rawSupabaseUrl.includes('your-project') ||
+  rawSupabaseUrl.includes('dummy');
 
-// Mock mode is strictly restricted to development environment (import.meta.env.DEV).
-// In production, mock fallback is permanently forbidden to prevent unauthorized bypass.
-export const isDevMockMode = Boolean(isDev && (forceDevMock || realSupabase === null));
+export const isPlaceholderKey =
+  !rawSupabaseAnonKey ||
+  rawSupabaseAnonKey.includes('KHOA_PUBLISHABLE_HOAC_ANON') ||
+  rawSupabaseAnonKey.includes('dummy') ||
+  rawSupabaseAnonKey.includes('your_actual_anon_public_key');
 
-if (!isDev && (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.includes('dummy'))) {
-  console.error('[KAPLA CRITICAL SECURITY WARNING] Missing production Supabase credentials. Mock fallback is disabled.');
+// In production hosted over HTTPS (e.g. Netlify), http://127.0.0.1 or localhost is blocked as Mixed Content
+const isRemoteHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+const isLocalhostUrl = rawSupabaseUrl.includes('127.0.0.1') || rawSupabaseUrl.includes('localhost');
+const isBlockedLocalhostOnHttps = isRemoteHttps && isLocalhostUrl;
+
+export const hasValidSupabaseConfig =
+  !isPlaceholderUrl && !isPlaceholderKey && !isBlockedLocalhostOnHttps;
+
+// Real Supabase client instance (used when properly configured with reachable backend)
+export const realSupabase: SupabaseClient | null = hasValidSupabaseConfig
+  ? createClient(rawSupabaseUrl, rawSupabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
+  : null;
+
+// Mock mode is enabled if explicitly requested via VITE_ENABLE_DEV_MOCK=true
+// OR automatically when real Supabase is not configured (e.g. Netlify preview without cloud backend)
+const forceDevMock = import.meta.env.VITE_ENABLE_DEV_MOCK === 'true';
+export const isDevMockMode = Boolean(forceDevMock || realSupabase === null);
+
+if (!isDev) {
+  if (hasValidSupabaseConfig) {
+    console.info('[KAPLA Production] Kết nối cơ sở dữ liệu Supabase Cloud:', rawSupabaseUrl);
+  } else {
+    console.warn(
+      '[KAPLA Demo Preview] Chưa cấu hình Supabase Cloud hoặc URL cục bộ không hỗ trợ trên HTTPS. Hệ thống kích hoạt chế độ Demo Standalone với đầy đủ 8 vai trò và học viên thực tế.'
+    );
+  }
 }
 
 // ==============================================================================
@@ -992,7 +1018,9 @@ if (typeof window !== 'undefined') {
 export class MockStorageService {
   private static ensureDevOnly(): void {
     if (typeof window !== 'undefined' && !import.meta.env.DEV) {
-      throw new Error('Chính sách bảo mật KAPLA: Chế độ Mock bị nghiêm cấm trên môi trường Production.');
+      if (hasValidSupabaseConfig && import.meta.env.VITE_ENABLE_DEV_MOCK === 'false') {
+        throw new Error('Chính sách bảo mật KAPLA: Chế độ Mock bị từ chối vì hệ thống đang kết nối Supabase Cloud chính thức.');
+      }
     }
   }
 
