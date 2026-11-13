@@ -29,7 +29,7 @@ interface AssessmentsViewProps {
 
 export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIntervention }) => {
   const { currentBranch, profile } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
   const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
@@ -291,7 +291,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                         <span className="text-[11px] text-slate-500 font-mono">({a.class?.name || (language === 'en' ? 'Class' : 'Lớp')})</span>
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
-                        {a.period} • {language === 'en' ? 'Date: ' : 'Ngày: '}{a.assessment_date}
+                        {tDb(a.period)} • {language === 'en' ? 'Date: ' : 'Ngày: '}{a.assessment_date}
                       </div>
                     </div>
 
@@ -347,16 +347,16 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   <div className="space-y-1.5 text-xs text-slate-600">
                     {a.strengths && (
                       <p>
-                        <strong className="text-emerald-700">{language === 'en' ? 'Strengths: ' : 'Điểm mạnh: '}</strong>{a.strengths}
+                        <strong className="text-emerald-700">{language === 'en' ? 'Strengths: ' : 'Điểm mạnh: '}</strong>{tDb(a.strengths)}
                       </p>
                     )}
                     {a.weaknesses && (
                       <p>
-                        <strong className="text-rose-700">{language === 'en' ? 'Areas for Growth: ' : 'Cần cải thiện: '}</strong>{a.weaknesses}
+                        <strong className="text-rose-700">{language === 'en' ? 'Areas for Growth: ' : 'Cần cải thiện: '}</strong>{tDb(a.weaknesses)}
                       </p>
                     )}
                     {a.progress_notes && (
-                      <p className="text-[11px] text-slate-500 italic">"{a.progress_notes}"</p>
+                      <p className="text-[11px] text-slate-500 italic">"{tDb(a.progress_notes)}"</p>
                     )}
                   </div>
                 </div>

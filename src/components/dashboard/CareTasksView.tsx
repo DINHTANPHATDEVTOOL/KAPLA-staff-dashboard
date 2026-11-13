@@ -23,7 +23,7 @@ import { StudentService } from '../../lib/supabase';
 
 export const CareTasksView: React.FC = () => {
   const { profile, activeRole, currentBranch } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isCM = activeRole === 'CM';
 
@@ -105,8 +105,8 @@ export const CareTasksView: React.FC = () => {
           </div>
           <p className="text-xs text-slate-500 mt-1">
             {language === 'en'
-              ? `Student care and progress tracking tasks within authorized scope (${currentBranch?.name || 'KAPLA'})`
-              : `Nhiệm vụ chăm sóc và theo dõi tiến độ của các học viên thuộc phạm vi trách nhiệm (${currentBranch?.name || 'KAPLA'})`}
+              ? `Student care and progress tracking tasks within authorized scope (${currentBranch?.name ? tDb(currentBranch.name) : 'KAPLA'})`
+              : `Nhiệm vụ chăm sóc và theo dõi tiến độ của các học viên thuộc phạm vi trách nhiệm (${currentBranch?.name ? tDb(currentBranch.name) : 'KAPLA'})`}
           </p>
         </div>
 
@@ -232,10 +232,10 @@ export const CareTasksView: React.FC = () => {
                           isDone ? 'line-through text-slate-400' : ''
                         }`}
                       >
-                        {task.title}
+                        {tDb(task.title)}
                       </h4>
 
-                      {task.notes && <p className="text-[11px] text-slate-500 mt-0.5">{task.notes}</p>}
+                      {task.notes && <p className="text-[11px] text-slate-500 mt-0.5">{tDb(task.notes)}</p>}
                     </div>
                   </div>
 

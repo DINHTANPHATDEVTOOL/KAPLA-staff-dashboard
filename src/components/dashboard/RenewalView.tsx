@@ -64,7 +64,7 @@ const getRiskConfig = (lang: 'vi' | 'en'): Record<RenewalRisk, { label: string; 
 
 export const RenewalView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
 
   const [records, setRecords] = useState<RenewalRecord[]>([]);
@@ -562,10 +562,10 @@ export const RenewalView: React.FC = () => {
 
                       <td className="px-4 py-3 text-xs max-w-[200px] truncate">
                         <div className="text-slate-800 font-medium truncate">
-                          {r.tuition_package || (language === 'en' ? 'No package selected' : 'Chưa chọn gói')}
+                          {r.tuition_package ? tDb(r.tuition_package) : (language === 'en' ? 'No package selected' : 'Chưa chọn gói')}
                         </div>
                         <div className="text-slate-500 truncate">
-                          {r.notes || (language === 'en' ? 'No notes' : 'Chưa có ghi chú')}
+                          {r.notes ? tDb(r.notes) : (language === 'en' ? 'No notes' : 'Chưa có ghi chú')}
                         </div>
                       </td>
 

@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingCount = 0,
 }) => {
   const { profile, activeRole, currentBranch, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, tDb } = useLanguage();
   const isCMOrAdmin = profile?.system_role === 'system_admin' || activeRole === 'CM';
 
   const navItems: NavItem[] = useMemo(
@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Staff Portal
             </span>
             <span className="text-[10px] text-sky-300 font-medium tracking-wide truncate block max-w-[130px]">
-              {currentBranch?.name || 'Hệ Thống KAPLA'}
+              {currentBranch?.name ? tDb(currentBranch.name) : tDb('Hệ Thống KAPLA')}
             </span>
           </div>
         </div>

@@ -11,7 +11,7 @@ import { MockStorageService, realSupabase } from '../../lib/supabase';
 
 export const BranchesClassesView: React.FC = () => {
   const { currentBranch, availableBranches, profile } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,7 +83,7 @@ export const BranchesClassesView: React.FC = () => {
                       {branch.code}
                     </span>
                     <h4 className="font-display text-sm font-bold text-slate-900">
-                      {branch.name}
+                      {tDb(branch.name)}
                     </h4>
                   </div>
                   {isCurrent && (
@@ -96,7 +96,7 @@ export const BranchesClassesView: React.FC = () => {
                 <div className="mt-3 space-y-1.5 text-xs text-slate-600">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="text-[11px] leading-relaxed">{branch.address || (language === 'en' ? 'Address pending update' : 'Đang cập nhật địa chỉ')}</span>
+                    <span className="text-[11px] leading-relaxed">{branch.address ? tDb(branch.address) : (language === 'en' ? 'Address pending update' : 'Đang cập nhật địa chỉ')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -118,8 +118,8 @@ export const BranchesClassesView: React.FC = () => {
             <h3 className="font-display text-sm font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-[#026fd7]" />
               {language === 'en'
-                ? `Classroom Cohorts at ${currentBranch?.name || 'Active Campus'} (${filteredClasses.length})`
-                : `Danh sách lớp học tại ${currentBranch?.name || 'Chi nhánh hiện tại'} (${filteredClasses.length})`}
+                ? `Classroom Cohorts at ${currentBranch?.name ? tDb(currentBranch.name) : 'Active Campus'} (${filteredClasses.length})`
+                : `Danh sách lớp học tại ${currentBranch?.name ? tDb(currentBranch.name) : 'Chi nhánh hiện tại'} (${filteredClasses.length})`}
             </h3>
             <p className="text-xs text-slate-500">
               {language === 'en'
@@ -170,9 +170,7 @@ export const BranchesClassesView: React.FC = () => {
                           : (language === 'en' ? 'Teacher Alex (Native)' : 'Teacher Alex (Bản ngữ)')}
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
-                        {cls.schedule
-                          ? (language === 'en' ? cls.schedule.replace('Thứ 2 & 4', 'Mon & Wed').replace('Thứ 3 & 5', 'Tue & Thu').replace('Thứ 7 & CN', 'Sat & Sun') : cls.schedule)
-                          : (language === 'en' ? 'Mon & Wed (17:30 - 19:00)' : 'Thứ 2 & 4 (17:30 - 19:00)')}
+                        {cls.schedule ? tDb(cls.schedule) : '—'}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">

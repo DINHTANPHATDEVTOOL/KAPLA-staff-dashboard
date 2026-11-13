@@ -35,7 +35,7 @@ interface OverviewViewProps {
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
   const { currentBranch, profile, activeRole } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
 
   const [demoState, setDemoState] = useState<'normal' | 'loading' | 'error' | 'empty'>('normal');
 
@@ -203,7 +203,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-sky-200 text-xs font-medium border border-white/10">
                 <Building2 className="w-3.5 h-3.5" />
-                <span>{currentBranch?.name || (language === 'en' ? 'All Campuses' : 'Hệ Thống Toàn Cơ Sở')}</span>
+                <span>{currentBranch?.name ? tDb(currentBranch.name) : (language === 'en' ? 'All Campuses' : 'Hệ Thống Toàn Cơ Sở')}</span>
               </span>
             </div>
 

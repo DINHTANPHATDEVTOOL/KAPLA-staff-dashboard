@@ -4,7 +4,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { VietnamFlag, USFlag } from '../components/common/CustomIcons';
+import { translateDbText } from '../utils/dataTranslator';
 
+export { translateDbText };
 export type Language = 'vi' | 'en';
 
 const STORAGE_KEY = 'kapla_language';
@@ -868,6 +870,7 @@ interface LanguageContextType {
   setLanguage: (lang: Language) => void;
   toggleLanguage: () => void;
   t: (key: string, fallbackVi?: string) => string;
+  tDb: (text: string | null | undefined) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -915,8 +918,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [language]);
 
+  const tDb = useMemo(() => {
+    return (text: string | null | undefined): string => {
+      return translateDbText(text, language);
+    };
+  }, [language]);
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, tDb }}>
       {children}
     </LanguageContext.Provider>
   );

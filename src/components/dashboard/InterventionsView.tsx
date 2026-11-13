@@ -91,7 +91,7 @@ const getStatusMeta = (status: InterventionStatus, lang: 'vi' | 'en') => {
 
 export const InterventionsView: React.FC = () => {
   const { currentBranch, profile, activeRole } = useAuth();
-  const { language } = useLanguage();
+  const { language, tDb } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isHeadTeacher = activeRole === 'Head Teacher';
   const isCM = activeRole === 'CM';
@@ -477,10 +477,10 @@ export const InterventionsView: React.FC = () => {
                     <span className="font-semibold text-rose-700 block mb-1">
                       {language === 'en' ? 'Issue & Root Cause:' : 'Vấn đề & Nguyên nhân:'}
                     </span>
-                    <p className="text-slate-800 font-medium">{ticket.issue_description}</p>
+                    <p className="text-slate-800 font-medium">{tDb(ticket.issue_description)}</p>
                     {ticket.root_cause && (
                       <p className="text-slate-500 mt-1">
-                        {language === 'en' ? 'Root Cause: ' : 'Nguyên nhân: '}{ticket.root_cause}
+                        {language === 'en' ? 'Root Cause: ' : 'Nguyên nhân: '}{tDb(ticket.root_cause)}
                       </p>
                     )}
                   </div>
@@ -489,7 +489,7 @@ export const InterventionsView: React.FC = () => {
                     <span className="font-semibold text-blue-700 block mb-1">
                       {language === 'en' ? 'Intervention Plan:' : 'Kế hoạch can thiệp:'}
                     </span>
-                    <p className="text-slate-800">{ticket.action_plan}</p>
+                    <p className="text-slate-800">{tDb(ticket.action_plan)}</p>
                     <span className="text-[11px] text-slate-500 block mt-1">
                       {language === 'en' ? 'Assigned to: ' : 'Phụ trách: '}
                       <strong>{ticket.assigned_staff_name || (language === 'en' ? 'Unassigned' : 'Chưa gán')}</strong>
@@ -502,7 +502,7 @@ export const InterventionsView: React.FC = () => {
                     <span className="font-bold block mb-0.5">
                       {language === 'en' ? 'Re-assessment Result:' : 'Kết quả đánh giá lại:'}
                     </span>
-                    <p>{ticket.reassessment_result}</p>
+                    <p>{tDb(ticket.reassessment_result)}</p>
                   </div>
                 )}
 
@@ -515,7 +515,7 @@ export const InterventionsView: React.FC = () => {
                           ? `Verified by: ${ticket.verified_by_name || 'Head Teacher / CM'}`
                           : `Đã xác minh bởi: ${ticket.verified_by_name || 'Head Teacher / CM'}`}
                       </span>
-                      {ticket.verification_notes && <p className="mt-0.5 italic">"{ticket.verification_notes}"</p>}
+                      {ticket.verification_notes && <p className="mt-0.5 italic">"{tDb(ticket.verification_notes)}"</p>}
                     </div>
                   </div>
                 )}
@@ -738,7 +738,7 @@ export const InterventionsView: React.FC = () => {
             <form onSubmit={handleResolve} className="space-y-3 pt-4 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <span className="font-semibold text-slate-800">{selectedForResolve.student?.full_name}</span>
-                <p className="text-slate-500 text-[11px] mt-0.5">{selectedForResolve.issue_description}</p>
+                <p className="text-slate-500 text-[11px] mt-0.5">{tDb(selectedForResolve.issue_description)}</p>
               </div>
 
               <div>
@@ -808,10 +808,10 @@ export const InterventionsView: React.FC = () => {
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                 <span className="font-semibold text-slate-800">{selectedForVerify.student?.full_name}</span>
                 <p className="text-[11px] text-slate-600">
-                  {language === 'en' ? 'Issue: ' : 'Vấn đề: '}{selectedForVerify.issue_description}
+                  {language === 'en' ? 'Issue: ' : 'Vấn đề: '}{tDb(selectedForVerify.issue_description)}
                 </p>
                 <p className="text-[11px] text-emerald-700 font-medium">
-                  {language === 'en' ? 'Result: ' : 'Kết quả: '}{selectedForVerify.reassessment_result}
+                  {language === 'en' ? 'Result: ' : 'Kết quả: '}{tDb(selectedForVerify.reassessment_result)}
                 </p>
               </div>
 

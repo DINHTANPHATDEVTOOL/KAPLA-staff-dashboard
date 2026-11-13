@@ -29,7 +29,7 @@ import { SupplementaryService, StudentService, realSupabase, MockStorageService 
 
 export const SupplementaryView: React.FC = () => {
   const { currentBranch, profile, activeRole } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
 
   const STATUS_CONFIG: Record<SessionStatus, { label: string; color: string; badge: string }> = useMemo(() => ({
     scheduled: { label: language === 'en' ? 'Upcoming' : 'Sắp diễn ra', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -334,7 +334,7 @@ export const SupplementaryView: React.FC = () => {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusCfg.badge}`}>
                         {statusCfg.label}
                       </span>
-                      <h4 className="text-base font-bold text-slate-900 mt-2">{session.title}</h4>
+                      <h4 className="text-base font-bold text-slate-900 mt-2">{tDb(session.title)}</h4>
                       <p className="text-xs text-slate-500">
                         {session.class
                           ? `${language === 'en' ? 'Class: ' : 'Lớp: '}${session.class.name}`
@@ -357,14 +357,14 @@ export const SupplementaryView: React.FC = () => {
                   <div className="p-3 bg-slate-50 rounded-lg space-y-2 border border-slate-100 text-xs">
                     <div>
                       <strong className="text-slate-800">{language === 'en' ? 'Topic:' : 'Chủ đề:'}</strong>{' '}
-                      <span className="text-slate-700">{session.topic}</span>
+                      <span className="text-slate-700">{tDb(session.topic)}</span>
                     </div>
                     <div>
                       <strong className="text-slate-800 flex items-center gap-1">
                         <Target className="w-3.5 h-3.5 text-blue-600" />
                         {language === 'en' ? 'Lesson Objective:' : 'Mục tiêu bài học:'}
                       </strong>
-                      <span className="text-slate-700">{session.target_objective}</span>
+                      <span className="text-slate-700">{tDb(session.target_objective)}</span>
                     </div>
                   </div>
 
@@ -411,7 +411,7 @@ export const SupplementaryView: React.FC = () => {
                     </span>
                     <span className="flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                      {session.room || (language === 'en' ? 'Main Classroom' : 'Phòng học chính')}
+                      {session.room ? tDb(session.room) : (language === 'en' ? 'Main Classroom' : 'Phòng học chính')}
                     </span>
                   </div>
                 </div>

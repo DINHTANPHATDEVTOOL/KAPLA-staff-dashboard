@@ -24,7 +24,7 @@ import { MockStorageService, realSupabase } from '../../lib/supabase';
 
 export const ActivityLogsView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
-  const { language } = useLanguage();
+  const { language, tDb } = useLanguage();
   const isSystemAdmin = profile?.system_role === 'system_admin';
 
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -196,7 +196,7 @@ export const ActivityLogsView: React.FC = () => {
                       {log.target_user_email || '—'}
                     </td>
                     <td className="py-3.5 px-4 text-[#043264] font-medium">
-                      {log.branch_name || (language === 'en' ? 'All Campuses' : 'Toàn hệ thống')}
+                      {log.branch_name ? tDb(log.branch_name) : (language === 'en' ? 'All Campuses' : 'Toàn hệ thống')}
                     </td>
                     <td className="py-3.5 px-5 text-slate-600 font-mono text-[11px] max-w-md truncate">
                       {JSON.stringify(log.details)}

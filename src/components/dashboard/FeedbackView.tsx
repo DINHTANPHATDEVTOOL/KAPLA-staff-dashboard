@@ -31,7 +31,7 @@ import { FeedbackService, StudentService, realSupabase, MockStorageService } fro
 
 export const FeedbackView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
-  const { language, t } = useLanguage();
+  const { language, t, tDb } = useLanguage();
 
   const TYPE_CONFIG: Record<FeedbackType, { label: string; icon: any; color: string }> = useMemo(() => ({
     academic_concern: { label: language === 'en' ? 'Academic Concern' : 'Băn khoăn học vụ', icon: HelpCircle, color: 'text-amber-700 bg-amber-50 border-amber-200' },
@@ -393,7 +393,7 @@ export const FeedbackView: React.FC = () => {
                       </div>
 
                       <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                        <span>{f.parent_name}</span>
+                        <span>{tDb(f.parent_name)}</span>
                         <span className="text-slate-400 font-normal">({f.parent_phone})</span>
                         <span className="text-slate-300">•</span>
                         <span className="text-slate-600 font-normal">
@@ -403,7 +403,7 @@ export const FeedbackView: React.FC = () => {
                       </div>
 
                       <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        {f.content}
+                        {tDb(f.content)}
                       </p>
 
                       {f.resolution_notes && (
@@ -413,7 +413,7 @@ export const FeedbackView: React.FC = () => {
                             <strong className="block text-emerald-900">
                               {language === 'en' ? 'Resolution Notes:' : 'Kết quả xử lý:'}
                             </strong>
-                            {f.resolution_notes}
+                            {tDb(f.resolution_notes)}
                           </div>
                         </div>
                       )}

@@ -41,7 +41,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     refreshProfile,
     signOut,
   } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, tDb, language } = useLanguage();
 
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -156,7 +156,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             >
               <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
               <span className="max-w-[130px] sm:max-w-[180px] truncate">
-                {currentBranch ? currentBranch.name : t('topbar.selectBranch', 'Chọn chi nhánh')}
+                {currentBranch ? tDb(currentBranch.name) : t('topbar.selectBranch', 'Chọn chi nhánh')}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
@@ -186,7 +186,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         }`}
                       >
                         <div className="truncate">
-                          <span className="block font-medium">{branch.name}</span>
+                          <span className="block font-medium">{tDb(branch.name)}</span>
                           <span className="text-[10px] text-slate-400 font-mono">
                             {language === 'en' ? `Code: ${branch.code}` : `Mã: ${branch.code}`}
                           </span>
@@ -207,7 +207,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
             <span className="max-w-[130px] sm:max-w-[180px] truncate">
-              {currentBranch ? currentBranch.name : (language === 'en' ? 'Campus' : 'Chi nhánh')}
+              {currentBranch ? tDb(currentBranch.name) : (language === 'en' ? 'Campus' : 'Chi nhánh')}
             </span>
           </div>
         )}

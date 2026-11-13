@@ -32,7 +32,7 @@ import { StudentService, realSupabase, MockStorageService } from '../../lib/supa
 
 export const StudentListView: React.FC = () => {
   const { profile, activeRole, currentBranch } = useAuth();
-  const { language, t } = useLanguage();
+  const { language, t, tDb } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isCM = activeRole === 'CM';
   const canManage = isSysAdmin || isCM;
@@ -561,7 +561,7 @@ export const StudentListView: React.FC = () => {
 
                       {/* Parent Info */}
                       <td className="py-3 px-4">
-                        <div className="font-medium text-slate-800">{student.parent_name}</div>
+                        <div className="font-medium text-slate-800">{tDb(student.parent_name)}</div>
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                           <span className="flex items-center gap-1 font-mono text-slate-700">
                             <Phone className="w-3 h-3 text-slate-400" />
