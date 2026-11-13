@@ -1924,10 +1924,11 @@ export const SystemConfigService = {
     });
   },
 
-  async getStudentsDueForTuitionAlert(daysThreshold?: number): Promise<any[]> {
+  async getStudentsDueForTuitionAlert(daysThreshold?: number, includeOverdue: boolean = false): Promise<any[]> {
     if (realSupabase) {
       const { data, error } = await realSupabase.rpc('get_students_due_for_tuition_alert', {
         p_days_threshold: daysThreshold || null,
+        p_include_overdue: includeOverdue,
       });
       if (!error && data) return data;
     }

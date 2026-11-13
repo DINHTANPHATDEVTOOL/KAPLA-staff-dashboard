@@ -4,8 +4,9 @@
 // 2. Trích xuất link xác thực thực tế từ Mailpit
 // 3. Trình duyệt Chrome thật (Chrome 146) mở link xác thực -> redirect về SPA localhost:5173
 // 4. Kiểm tra DOM trình duyệt hiển thị màn hình Chờ duyệt (PendingApprovalScreen)
-// 5. CM phê duyệt phân quyền cho nhân viên
-// 6. Trình duyệt tải lại -> Tự động chuyển thẳng vào Dashboard nghiệp vụ (AppLayout)
+// 5. CM đăng nhập trên GIAO DIỆN TRÌNH DUYỆT, vào tab Nhân sự & Phân quyền
+// 6. CM mở modal và bấm nút "Xác nhận cấp quyền" TRỰC TIẾP TRÊN UI TRÌNH DUYỆT
+// 7. CM đăng xuất, nhân viên mới đăng nhập lại trên UI -> Vào thẳng Dashboard làm việc
 // ==============================================================================
 
 import WebSocket from 'ws';
@@ -122,7 +123,7 @@ async function getConfirmationLinkFromMailpit(recipientEmail: string): Promise<s
   const detail = await detailRes.json();
   const fullBody = (detail.HTML || '') + ' ' + (detail.Text || '');
 
-  // Trích xuất link xác thực Supabase
+  // Trích xuất link xác thực Supabase và giải mã &amp;
   const linkMatch = fullBody.match(/http:\/\/127\.0\.0\.1:54321\/auth\/v1\/verify\?[^"'\s<>]+/);
   if (!linkMatch) {
     throw new Error(`Không trích xuất được link verify từ email Mailpit`);
@@ -133,7 +134,7 @@ async function getConfirmationLinkFromMailpit(recipientEmail: string): Promise<s
 async function runBrowserAuthVerificationFlow() {
   console.log('======================================================================');
   console.log('  KAPLA — KIỂM THỬ TRÌNH DUYỆT THẬT (CHROME DEVTOOLS PROTOCOL)');
-  console.log('  Đăng ký -> Link xác thực -> Chờ duyệt -> CM duyệt -> Dashboard');
+  console.log('  Đăng ký -> Xác thực -> Chờ duyệt -> CM DUYỆT TRÊN GIAO DIỆN -> Dashboard');
   console.log('======================================================================\n');
 
   const runId = Date.now();
@@ -141,7 +142,25 @@ async function runBrowserAuthVerificationFlow() {
   const candidateEmail = `candidate.${runId}@kapla.edu.vn`;
   const candidateName = `Lê Thu Hằng (Ứng viên ${runId.toString().slice(-4)})`;
 
-  // 1. Đăng ký tài khoản nhân viên mới
+  // 1. Khởi tạo tài khoản Giám đốc cơ sở (CM) Phạm Hùng
+  const cmEmail = `cm.ph.${runId}@kapla.edu.vn`;
+  const { data: cmUser } = await adminClient.auth.admin.createUser({
+    email: cmEmail,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: 'Hoàng Minh Tuấn (CM Phạm Hùng)', preferred_branch_id: BRANCH_PH_ID },
+  });
+  const cmId = cmUser.user!.id;
+  await adminClient.from('profiles').update({ status: 'active', preferred_branch_id: BRANCH_PH_ID }).eq('id', cmId);
+  await adminClient.from('branch_memberships').insert({
+    user_id: cmId,
+    branch_id: BRANCH_PH_ID,
+    role: 'CM',
+    status: 'active',
+    is_primary: true,
+  });
+
+  // 2. Đăng ký tài khoản nhân viên mới
   console.log(`[1] Đăng ký nhân viên mới qua API: ${candidateEmail}...`);
   const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const { data: signUpData, error: signUpError } = await anonClient.auth.signUp({
@@ -157,15 +176,18 @@ async function runBrowserAuthVerificationFlow() {
   });
 
   assert('Đăng ký tài khoản thành công qua API Supabase Auth', signUpError === null && signUpData.user !== null, `User ID: ${signUpData?.user?.id}`);
-  const userId = signUpData.user!.id;
+  const candidateUserId = signUpData.user!.id;
 
-  // 2. Trích xuất link xác thực từ Mailpit
+  // 3. Trích xuất link xác thực từ Mailpit
   console.log(`[2] Trích xuất link xác thực từ Mailpit (port 54324)...`);
   const verifyLink = await getConfirmationLinkFromMailpit(candidateEmail);
   assert('Trích xuất thành công link xác thực thực tế từ Mailpit', verifyLink.includes('/auth/v1/verify'), `Link: ${verifyLink}`);
 
-  // 3. Khởi động Headless Chrome 146 với DevTools Protocol
+  // 4. Khởi động Headless Chrome 146 với DevTools Protocol
   console.log(`[3] Khởi động trình duyệt Headless Chrome 146 (Remote Debugging Port: 9222)...`);
+  const screenshotDir = '/home/rd/Desktop/KAPLA/docs/screenshots';
+  if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
+
   const chromeProcess: ChildProcess = spawn('/usr/bin/google-chrome', [
     '--headless=new',
     '--remote-debugging-port=9222',
@@ -176,7 +198,6 @@ async function runBrowserAuthVerificationFlow() {
   ]);
 
   try {
-    // Đợi Chrome sẵn sàng
     await waitForHttp('http://127.0.0.1:9222/json/version');
     const targets = await waitForHttp('http://127.0.0.1:9222/json');
     const pageTarget = targets.find((t: any) => t.type === 'page');
@@ -189,20 +210,15 @@ async function runBrowserAuthVerificationFlow() {
 
     assert('Kết nối thành công tới trình duyệt Chrome thật qua CDP WebSocket', true);
 
-    // 4. Trình duyệt thật điều hướng đến link xác thực email
+    // 5. Ứng viên mở link xác thực -> Nhận HTTP 303 Redirect về SPA -> Chờ duyệt
     console.log(`[4] Trình duyệt Chrome mở link xác thực và xử lý HTTP 303 Redirect về SPA...`);
     await cdp.send('Page.navigate', { url: verifyLink });
 
-    // Đợi SPA xử lý hash #access_token=... và mount React components
     let screenText = '';
-    let currentUrl = '';
     for (let i = 0; i < 25; i++) {
-      await new Promise((r) => setTimeout(r, 500));
-      currentUrl = (await cdp.eval('window.location.href')) || '';
+      await new Promise((r) => setTimeout(r, 400));
       screenText = (await cdp.eval('document.body.innerText')) || '';
-      console.log(`     [Browser Poll ${i + 1}] URL: ${currentUrl.slice(0, 80)}... | Body snippet: "${screenText.slice(0, 60).replace(/\n/g, ' ')}"`);
       if (screenText.includes('Tài khoản đang chờ duyệt quyền') || screenText.includes('Chờ phê duyệt')) {
-        console.log(`     [Browser] Đã vào trang: ${currentUrl.split('#')[0]}, tiêu đề: "Tài khoản đang chờ duyệt quyền"`);
         break;
       }
     }
@@ -213,88 +229,222 @@ async function runBrowserAuthVerificationFlow() {
       'DOM hiển thị tiêu đề: "Tài khoản đang chờ duyệt quyền"'
     );
 
-    console.log('\n--- DOM TEXT HIỆN TẠI TRÊN TRÌNH DUYỆT ---');
-    console.log(screenText);
-    console.log('-------------------------------------------\n');
-
     assert(
-      'Màn hình Chờ duyệt hiển thị đúng email của nhân viên',
+      'Màn hình Chờ duyệt hiển thị đúng email của nhân viên ứng tuyển',
       screenText.includes(candidateEmail),
       `Email hiển thị trong DOM: ${candidateEmail}`
     );
 
-    // Chụp ảnh màn hình Chờ duyệt
-    const screenshotDir = '/home/rd/Desktop/KAPLA/docs/screenshots';
-    if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
+    // Chụp ảnh màn hình 1: Ứng viên chờ duyệt
     const pendingScreenshotPath = path.join(screenshotDir, '01_browser_pending_approval.png');
     await cdp.captureScreenshot(pendingScreenshotPath);
-    console.log(`     [Artifact] Đã lưu ảnh chụp màn hình Chờ duyệt: ${pendingScreenshotPath}`);
+    console.log(`     [Artifact 1] Đã lưu ảnh chụp màn hình Chờ duyệt: ${pendingScreenshotPath}`);
 
-    // 5. CM chi nhánh thực hiện duyệt quyền trên cơ sở dữ liệu
-    console.log(`[5] Giám đốc cơ sở (CM) Phạm Hùng thực hiện duyệt và cấp vai trò HRT...`);
-    await adminClient.from('profiles').update({ status: 'active' }).eq('id', userId);
-    await adminClient.from('branch_memberships').insert({
-      user_id: userId,
-      branch_id: BRANCH_PH_ID,
-      role: 'HRT',
-      status: 'active',
-      is_primary: true,
-    });
-    await adminClient.from('audit_logs').insert({
-      actor_email: 'cm.ph@kapla.edu.vn',
-      action: 'APPROVE_USER_ROLE',
-      target_user_id: userId,
-      branch_id: BRANCH_PH_ID,
-      details: { role: 'HRT', branch: 'KAPLA Phạm Hùng', note: 'Phê duyệt từ bản nghiệm thu trình duyệt' },
-    });
-
-    assert('CM phê duyệt tài khoản và cấp vai trò HRT tại chi nhánh Phạm Hùng thành công', true);
-
-    // 6. Nhấn nút "Kiểm tra lại trạng thái duyệt" trên màn hình hoặc làm mới phiên
-    console.log(`[6] Nhấn nút "Kiểm tra lại trạng thái duyệt" trên giao diện để làm mới quyền...`);
-    const clickResult = await cdp.eval(`
+    // 6. Ứng viên bấm Đăng xuất trên màn hình Chờ duyệt
+    console.log(`[5] Ứng viên bấm Đăng xuất để nhường phiên cho Giám đốc cơ sở (CM) đăng nhập...`);
+    await cdp.eval(`
       (() => {
         const btns = Array.from(document.querySelectorAll('button'));
-        const btn = btns.find(b => b.innerText.includes('Kiểm tra lại trạng thái duyệt'));
-        if (btn) {
-          btn.click();
-          return 'Clicked button thành công';
-        }
-        return 'Không tìm thấy nút';
+        const logoutBtn = btns.find(b => b.innerText.includes('Đăng xuất'));
+        if (logoutBtn) logoutBtn.click();
       })()
     `);
-    console.log(`     [UI Action] Kết quả: ${clickResult}`);
 
-    let dashboardText = '';
+    // Chờ giao diện hiển thị form Đăng nhập
+    for (let i = 0; i < 15; i++) {
+      await new Promise((r) => setTimeout(r, 300));
+      const loginCheck = (await cdp.eval('document.body.innerText')) || '';
+      if (loginCheck.includes('Đăng nhập vào cổng học vụ') || loginCheck.includes('Email cơ quan')) {
+        break;
+      }
+    }
+
+    // 7. CM đăng nhập TRỰC TIẾP TRÊN GIAO DIỆN TRÌNH DUYỆT
+    console.log(`[6] Giám đốc cơ sở (CM) điền thông tin và đăng nhập TRỰC TIẾP TRÊN GIAO DIỆN TRÌNH DUYỆT...`);
+    await cdp.eval(`
+      (() => {
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-password');
+        const form = document.querySelector('form');
+        if (emailInput && passInput && form) {
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+          setter.call(emailInput, '${cmEmail}');
+          emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+          setter.call(passInput, '${password}');
+          passInput.dispatchEvent(new Event('input', { bubbles: true }));
+          form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
+      })()
+    `);
+
+    // Chờ CM vào Dashboard
+    let cmDashboardText = '';
     for (let i = 0; i < 25; i++) {
       await new Promise((r) => setTimeout(r, 400));
-      dashboardText = (await cdp.eval('document.body.innerText')) || '';
-      console.log(`     [Dashboard Poll ${i + 1}] Snippet: "${dashboardText.slice(0, 80).replace(/\n/g, ' ')}"`);
-      if (dashboardText.includes('Tổng quan học vụ') || dashboardText.includes('Hồ sơ học viên') || dashboardText.includes('Công việc HRT')) {
+      cmDashboardText = (await cdp.eval('document.body.innerText')) || '';
+      if (cmDashboardText.includes('Nhân sự & Phân quyền') || cmDashboardText.includes('Tổng quan học vụ')) {
+        break;
+      }
+    }
+    assert('CM đăng nhập thành công qua form đăng nhập trên giao diện trình duyệt', cmDashboardText.includes('Nhân sự & Phân quyền'));
+
+    // 8. CM click menu "Nhân sự & Phân quyền" trên Sidebar
+    console.log(`[7] CM bấm chọn mục "Nhân sự & Phân quyền" trên thanh điều hướng Sidebar...`);
+    await cdp.eval(`
+      (() => {
+        const btns = Array.from(document.querySelectorAll('button, a'));
+        const staffMenu = btns.find(b => b.innerText.includes('Nhân sự & Phân quyền'));
+        if (staffMenu) staffMenu.click();
+      })()
+    `);
+
+    // Chờ bảng danh sách chờ duyệt tải xong
+    let pendingListText = '';
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 400));
+      pendingListText = (await cdp.eval('document.body.innerText')) || '';
+      if (pendingListText.includes('Danh sách tài khoản nhân viên đang chờ phê duyệt') && pendingListText.includes(candidateEmail)) {
+        break;
+      }
+    }
+    assert(
+      'Giao diện CM hiển thị danh sách chờ duyệt có chứa ứng viên mới đăng ký',
+      pendingListText.includes(candidateEmail),
+      `Ứng viên ${candidateName} có mặt trong danh sách chờ duyệt của CM`
+    );
+
+    // 9. CM bấm nút "Phê duyệt & Cấp vai trò" trên hàng của ứng viên
+    console.log(`[8] CM bấm nút "Phê duyệt & Cấp vai trò" để mở Modal phê duyệt trên UI...`);
+    const clickModalRes = await cdp.eval(`
+      (() => {
+        const rows = Array.from(document.querySelectorAll('tr'));
+        const targetRow = rows.find(r => r.innerText.includes('${candidateEmail}'));
+        if (!targetRow) return 'Không tìm thấy dòng của candidate';
+        const btns = Array.from(targetRow.querySelectorAll('button'));
+        const btn = btns.find(b => b.innerText.includes('Phê duyệt'));
+        if (!btn) return 'Không tìm thấy nút Phê duyệt. Các nút hiện có: ' + btns.map(b => b.innerText).join(', ') + ' | InnerText: ' + targetRow.innerText;
+        btn.click();
+        return 'Đã click nút Phê duyệt thành công';
+      })()
+    `);
+    console.log(`     [UI Action] Kết quả: ${clickModalRes}`);
+
+    // Chờ Modal phê duyệt mở
+    let modalText = '';
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 300));
+      modalText = (await cdp.eval('document.body.innerText')) || '';
+      if (modalText.includes('Xác nhận cấp quyền') || modalText.includes('Phê duyệt vai trò')) {
+        break;
+      }
+    }
+    assert('Modal "Phê duyệt vai trò nhân sự" mở thành công trên giao diện', modalText.includes('Xác nhận cấp quyền') || modalText.includes('Phê duyệt vai trò'));
+
+    // 10. CM bấm nút "Xác nhận phân quyền" trên Modal
+    console.log(`[9] CM bấm nút "Xác nhận phân quyền" trong Modal để cấp quyền HRT...`);
+    const clickConfirmRes = await cdp.eval(`
+      (() => {
+        const modalBtns = Array.from(document.querySelectorAll('button'));
+        const confirmBtn = modalBtns.find(b => b.innerText.includes('Xác nhận phân quyền') || b.innerText.includes('Xác nhận cấp quyền'));
+        if (confirmBtn) {
+          confirmBtn.click();
+          return 'CLICKED: ' + confirmBtn.innerText.trim();
+        }
+        return 'NOT_FOUND: ' + modalBtns.map(b => b.innerText.trim()).join(', ');
+      })()
+    `);
+    console.log(`     [UI Action] Kết quả: ${clickConfirmRes}`);
+
+    // Chờ thông báo thành công xuất hiện trên giao diện
+    let successNoticeText = '';
+    for (let i = 0; i < 25; i++) {
+      await new Promise((r) => setTimeout(r, 400));
+      successNoticeText = (await cdp.eval('document.body.innerText')) || '';
+      if (
+        successNoticeText.includes('Đã phê duyệt tài khoản') ||
+        successNoticeText.includes('Đã duyệt thành công') ||
+        successNoticeText.includes('thành công')
+      ) {
         break;
       }
     }
 
     assert(
-      'Sau khi CM duyệt, trình duyệt tự động chuyển vào Dashboard làm việc (AppLayout)',
-      dashboardText.includes('Tổng quan học vụ') || dashboardText.includes('Hồ sơ học viên') || dashboardText.includes('Công việc HRT'),
-      'DOM xuất hiện danh mục nghiệp vụ: "Tổng quan học vụ", "Hồ sơ học viên"'
+      'CM phê duyệt và cấp vai trò HRT cho nhân viên THÀNH CÔNG TRỰC TIẾP TRÊN GIAO DIỆN TRÌNH DUYỆT',
+      successNoticeText.includes('Đã phê duyệt tài khoản') ||
+        successNoticeText.includes('Đã duyệt thành công') ||
+        successNoticeText.includes('với vai trò HRT'),
+      `Thông báo UI: "${successNoticeText.slice(0, 100).replace(/\n/g, ' ')}"`
+    );
+
+    // Chụp ảnh màn hình 2: CM duyệt thành công trên UI
+    const cmApprovedScreenshotPath = path.join(screenshotDir, '02_browser_cm_approval_on_ui.png');
+    await cdp.captureScreenshot(cmApprovedScreenshotPath);
+    console.log(`     [Artifact 2] Đã lưu ảnh chụp CM duyệt trên UI: ${cmApprovedScreenshotPath}`);
+
+    // 11. CM đăng xuất khỏi hệ thống
+    console.log(`[10] CM đăng xuất khỏi giao diện...`);
+    await cdp.eval(`
+      (() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        const logoutBtn = btns.find(b => b.innerText.includes('Đăng xuất'));
+        if (logoutBtn) logoutBtn.click();
+      })()
+    `);
+
+    for (let i = 0; i < 15; i++) {
+      await new Promise((r) => setTimeout(r, 300));
+      const logoutCheck = (await cdp.eval('document.body.innerText')) || '';
+      if (logoutCheck.includes('Đăng nhập vào cổng học vụ')) break;
+    }
+
+    // 12. Nhân viên mới (đã được duyệt) đăng nhập vào hệ thống TRÊN TRÌNH DUYỆT
+    console.log(`[11] Nhân viên mới đăng nhập lại trên giao diện trình duyệt...`);
+    await cdp.eval(`
+      (() => {
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-password');
+        const form = document.querySelector('form');
+        if (emailInput && passInput && form) {
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+          setter.call(emailInput, '${candidateEmail}');
+          emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+          setter.call(passInput, '${password}');
+          passInput.dispatchEvent(new Event('input', { bubbles: true }));
+          form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
+      })()
+    `);
+
+    // Chờ vào Dashboard của nhân viên mới
+    let candidateDashboardText = '';
+    for (let i = 0; i < 25; i++) {
+      await new Promise((r) => setTimeout(r, 400));
+      candidateDashboardText = (await cdp.eval('document.body.innerText')) || '';
+      if (candidateDashboardText.includes('Tổng quan học vụ') || candidateDashboardText.includes('Hồ sơ học viên')) {
+        break;
+      }
+    }
+
+    assert(
+      'Sau khi được CM duyệt trên UI, nhân viên mới đăng nhập và vào thẳng Dashboard tác nghiệp (AppLayout)',
+      candidateDashboardText.includes('Tổng quan học vụ') || candidateDashboardText.includes('Hồ sơ học viên'),
+      'DOM hiển thị đầy đủ các thanh chức năng nghiệp vụ của HRT'
     );
 
     assert(
-      'Màn hình Chờ duyệt đã hoàn toàn biến mất, quyền nghiệp vụ đã được mở đầy đủ',
-      !dashboardText.includes('Tài khoản đang chờ duyệt quyền'),
-      'Giao diện đã chuyển từ Pending sang Active Dashboard'
+      'Màn hình Chờ duyệt đã hoàn toàn biến mất, quyền nghiệp vụ đã được mở đầy đủ cho nhân viên mới',
+      !candidateDashboardText.includes('Tài khoản đang chờ duyệt quyền'),
+      'Chuyển trạng thái từ Pending sang Active hoàn tất trên trình duyệt'
     );
 
-    // Chụp ảnh màn hình Dashboard sau khi duyệt
-    const dashboardScreenshotPath = path.join(screenshotDir, '02_browser_approved_dashboard.png');
-    await cdp.captureScreenshot(dashboardScreenshotPath);
-    console.log(`     [Artifact] Đã lưu ảnh chụp màn hình Dashboard: ${dashboardScreenshotPath}`);
+    // Chụp ảnh màn hình 3: Dashboard của nhân viên mới
+    const candidateDashboardScreenshotPath = path.join(screenshotDir, '03_browser_approved_dashboard.png');
+    await cdp.captureScreenshot(candidateDashboardScreenshotPath);
+    console.log(`     [Artifact 3] Đã lưu ảnh chụp Dashboard nhân viên mới: ${candidateDashboardScreenshotPath}`);
 
     cdp.close();
   } finally {
-    // Tắt Chrome
     chromeProcess.kill('SIGKILL');
   }
 

@@ -1,9 +1,10 @@
 // ==============================================================================
-// KAPLA — TÁC VỤ GỬI EMAIL ĐỊNH KỲ NHẮC HỌC PHÍ CHO HRT PHỤ TRÁCH (T05)
-// - Múi giờ Việt Nam (Asia/Ho_Chi_Minh = UTC+7)
-// - Gom nhóm học viên vào 1 email duy nhất cho mỗi HRT mỗi ngày
-// - Tích hợp Mailpit API (http://127.0.0.1:54324/api/v1/send)
-// - Chống gửi trùng lặp & Ghi nhật ký đầy đủ (sent, skipped, failed)
+// KAPLA — TÁC VỤ GỬI EMAIL ĐỊNH KỲ NHẮC HỌC PHÍ CHO HRT PHỤ TRÁCH (T05 RELIABLE)
+// 1. Chống gửi trùng khi 2 tiến trình chạy đồng thời (FOR UPDATE SKIP LOCKED)
+// 2. Khóa chống gửi trùng (idempotency_key) & Kiểm tra provider_message_id
+// 3. Xác thực lại HRT phụ trách, tài khoản HRT và hạn phí tươi mới ngay trước khi gửi
+// 4. Cơ chế thử lại có giới hạn (max_retries = 3) & Kiểm tra kết quả ghi DB nghiêm ngặt
+// 5. Cửa sổ nhắc trước hạn chuẩn (không gửi lại học viên đã quá hạn nhiều ngày)
 // ==============================================================================
 
 import WebSocket from 'ws';
@@ -27,125 +28,184 @@ export function getVietnamToday(): string {
 
 export interface DispatchResult {
   success: boolean;
+  worker_id: string;
   target_date: string;
   queue_prepared: any;
+  claimed_emails: number;
   sent_emails: number;
+  skipped_emails: number;
   failed_emails: number;
   errors: any[];
 }
 
-export async function dispatchDailyTuitionEmails(customDate?: string): Promise<DispatchResult> {
+export async function dispatchDailyTuitionEmails(
+  customDate?: string,
+  options?: {
+    workerId?: string;
+    batchSize?: number;
+    simulateProviderCrashAfterSend?: boolean; // For testing provider-succeeded-but-db-failed
+  }
+): Promise<DispatchResult> {
   const targetDate = customDate || getVietnamToday();
-  console.log(`[TuitionEmailDispatcher] Bắt đầu tác vụ kiểm tra hạn học phí cho ngày ${targetDate} (Asia/Ho_Chi_Minh)...`);
+  const workerId = options?.workerId || `worker-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const batchSize = options?.batchSize || 20;
 
-  // 1. Chuẩn bị hàng đợi trong DB (Tính toán HRT hiện tại, gom nhóm học viên, chống trùng)
+  console.log(`[TuitionEmailDispatcher] [${workerId}] Bắt đầu tác vụ kiểm tra hạn học phí cho ngày ${targetDate} (Asia/Ho_Chi_Minh)...`);
+
+  // 1. Chuẩn bị hàng đợi trong DB (Gom nhóm học viên theo HRT, áp cửa sổ nhắc trước hạn)
   const { data: queuePrep, error: prepError } = await adminClient.rpc('prepare_daily_tuition_alert_queue', {
     p_target_date: targetDate,
   });
 
   if (prepError) {
-    console.error('[TuitionEmailDispatcher] Lỗi khi chuẩn bị hàng đợi:', prepError);
+    console.error(`[TuitionEmailDispatcher] [${workerId}] Lỗi khi chuẩn bị hàng đợi:`, prepError);
     throw prepError;
   }
 
-  console.log('[TuitionEmailDispatcher] Kết quả chuẩn bị hàng đợi:', queuePrep);
+  console.log(`[TuitionEmailDispatcher] [${workerId}] Kết quả chuẩn bị hàng đợi:`, queuePrep);
 
-  // 2. Lấy danh sách email đang chờ gửi trong ngày
-  const { data: pendingQueue, error: queueError } = await adminClient
-    .from('email_dispatch_queue')
-    .select('*')
-    .eq('dispatch_date', targetDate)
-    .eq('status', 'pending');
+  // 2. Nhận hàng đợi nguyên tử với khóa FOR UPDATE SKIP LOCKED
+  //    Đảm bảo 2 tiến trình chạy đồng thời không bao giờ nhận trùng bản ghi
+  const { data: claimedQueue, error: claimError } = await adminClient.rpc('claim_tuition_email_queue_batch', {
+    p_dispatch_date: targetDate,
+    p_worker_id: workerId,
+    p_batch_size: batchSize,
+  });
 
-  if (queueError) {
-    console.error('[TuitionEmailDispatcher] Lỗi lấy hàng đợi pending:', queueError);
-    throw queueError;
+  if (claimError) {
+    console.error(`[TuitionEmailDispatcher] [${workerId}] Lỗi khi claim hàng đợi:`, claimError);
+    throw claimError;
   }
 
+  const items = claimedQueue || [];
+  console.log(`[TuitionEmailDispatcher] [${workerId}] Đã nhận thành công ${items.length} email cần xử lý từ hàng đợi.`);
+
   let sentCount = 0;
+  let skippedCount = 0;
   let failedCount = 0;
   const errors: any[] = [];
 
-  console.log(`[TuitionEmailDispatcher] Tìm thấy ${pendingQueue?.length || 0} email tổng hợp cần gửi trong ngày ${targetDate}.`);
-
-  // 3. Gửi từng email qua Mailpit
-  for (const item of pendingQueue || []) {
+  // 3. Xử lý từng email trong lô đã nhận
+  for (const item of items) {
     try {
-      console.log(`  -> Gửi email cho HRT: ${item.recipient_name} <${item.recipient_email}> (${item.student_count} học viên)...`);
+      console.log(`  -> [${workerId}] Đang thẩm định lại dữ liệu trước khi gửi cho Queue ID: ${item.id} (HRT: ${item.recipient_name})...`);
 
-      const payload = {
-        From: {
-          Email: 'hocvu@kapla.edu.vn',
-          Name: 'KAPLA Academic Operations',
-        },
-        To: [
-          {
-            Email: item.recipient_email,
-            Name: item.recipient_name,
-          },
-        ],
-        Subject: item.subject,
-        Text: item.text_body,
-        HTML: item.html_body,
-      };
-
-      const resp = await fetch(MAILPIT_SEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      // 3.1 Thẩm định lại dữ liệu tươi mới ngay trước thời điểm gửi (Pre-dispatch Revalidation)
+      const { data: revalResult, error: revalError } = await adminClient.rpc('revalidate_and_rebuild_queue_item', {
+        p_queue_id: item.id,
+        p_target_date: targetDate,
       });
 
-      if (!resp.ok) {
-        throw new Error(`Mailpit HTTP ${resp.status}: ${await resp.text()}`);
+      if (revalError) {
+        throw new Error(`Lỗi thẩm định dữ liệu tươi mới: ${revalError.message}`);
       }
 
-      const sendResult = await resp.json();
-      console.log(`     [OK] Đã gửi thành công (Mailpit Message ID: ${sendResult.ID})`);
+      if (!revalResult || !revalResult.can_send) {
+        console.log(`     [BỎ QUA] Không đủ điều kiện gửi (Lý do: ${revalResult?.reason || 'không rõ'}). Đã cập nhật skipped.`);
+        skippedCount++;
+        continue;
+      }
 
-      // Cập nhật trạng thái Queue thành sent
-      await adminClient
-        .from('email_dispatch_queue')
-        .update({
-          status: 'sent',
-          sent_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', item.id);
+      console.log(`     [ĐỦ ĐIỀU KIỆN] ${revalResult.student_count} học viên hợp lệ. Đang kiểm tra khóa chống trùng...`);
 
-      // Cập nhật trạng thái các log học viên liên quan thành sent
-      await adminClient
-        .from('email_dispatch_logs')
-        .update({ delivery_status: 'sent' })
-        .eq('queue_id', item.id);
+      // 3.2 Kiểm tra nếu email đã được nhà cung cấp ghi nhận trước đó (trường hợp crash khi ghi DB lần trước)
+      let providerMessageId = revalResult.provider_message_id;
 
+      if (!providerMessageId) {
+        // Gọi nhà cung cấp email (Mailpit) kèm khóa chống gửi trùng Idempotency Key
+        const payload = {
+          From: {
+            Email: 'hocvu@kapla.edu.vn',
+            Name: 'KAPLA Academic Operations',
+          },
+          To: [
+            {
+              Email: revalResult.recipient_email,
+              Name: revalResult.recipient_name,
+            },
+          ],
+          Subject: revalResult.subject,
+          Text: revalResult.text_body,
+          HTML: revalResult.html_body,
+          Headers: {
+            'X-Idempotency-Key': revalResult.idempotency_key,
+          },
+        };
+
+        const resp = await fetch(MAILPIT_SEND_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Idempotency-Key': revalResult.idempotency_key,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!resp.ok) {
+          throw new Error(`Mailpit HTTP ${resp.status}: ${await resp.text()}`);
+        }
+
+        const sendResult = await resp.json();
+        providerMessageId = sendResult.ID;
+        console.log(`     [OK] Mailpit đã tiếp nhận thư (Message ID: ${providerMessageId})`);
+
+        // Mô phỏng trường hợp Provider đã nhận nhưng hệ thống gặp sự cố trước khi chốt DB
+        if (options?.simulateProviderCrashAfterSend) {
+          // Lưu tạm provider_message_id nhưng để status là failed để test luồng retry
+          await adminClient
+            .from('email_dispatch_queue')
+            .update({ provider_message_id: providerMessageId, status: 'failed', error_reason: 'Mô phỏng sự cố mạng sau khi gửi' })
+            .eq('id', item.id);
+          throw new Error('Mô phỏng sự cố mạng sau khi nhà cung cấp email đã nhận thư thành công');
+        }
+      } else {
+        console.log(`     [IDEMPOTENCY RECOVERY] Phát hiện Provider Message ID đã tồn tại (${providerMessageId}). Không gửi lại email, tiến hành chốt trạng thái DB.`);
+      }
+
+      // 3.3 Chốt trạng thái gửi thành công vào Database (Atomic Finalize)
+      const { data: finalizeData, error: finalizeError } = await adminClient.rpc('finalize_tuition_email_dispatch', {
+        p_queue_id: item.id,
+        p_success: true,
+        p_provider_message_id: providerMessageId,
+        p_error_message: null,
+      });
+
+      if (finalizeError) {
+        throw new Error(`Lỗi chốt trạng thái sent trong database: ${finalizeError.message}`);
+      }
+
+      console.log(`     [HOÀN TẤT] Đã chốt trạng thái sent nguyên tử cho Queue ID: ${item.id}`);
       sentCount++;
     } catch (err: any) {
-      console.error(`     [FAIL] Lỗi gửi email cho ${item.recipient_email}:`, err.message);
+      console.error(`     [FAIL] Lỗi gửi email cho Queue ID ${item.id}:`, err.message);
       failedCount++;
-      errors.push({ queue_id: item.id, recipient: item.recipient_email, error: err.message });
+      errors.push({ queue_id: item.id, error: err.message });
 
-      // Cập nhật trạng thái failed
-      await adminClient
-        .from('email_dispatch_queue')
-        .update({
-          status: 'failed',
-          error_reason: err.message,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', item.id);
-
-      await adminClient
-        .from('email_dispatch_logs')
-        .update({ delivery_status: 'failed' })
-        .eq('queue_id', item.id);
+      // Cập nhật trạng thái lỗi kèm lịch retry vào DB
+      try {
+        const { error: fErr } = await adminClient.rpc('finalize_tuition_email_dispatch', {
+          p_queue_id: item.id,
+          p_success: false,
+          p_provider_message_id: null,
+          p_error_message: err.message,
+        });
+        if (fErr) {
+          console.error(`     [CRITICAL] Không thể ghi trạng thái failed vào DB:`, fErr.message);
+        }
+      } catch (innerErr: any) {
+        console.error(`     [CRITICAL] Exception khi chốt trạng thái failed:`, innerErr.message);
+      }
     }
   }
 
   return {
     success: failedCount === 0,
+    worker_id: workerId,
     target_date: targetDate,
     queue_prepared: queuePrep,
+    claimed_emails: items.length,
     sent_emails: sentCount,
+    skipped_emails: skippedCount,
     failed_emails: failedCount,
     errors,
   };

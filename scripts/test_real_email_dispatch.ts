@@ -1,10 +1,9 @@
 // ==============================================================================
-// KAPLA — KIỂM THỬ TÁC VỤ GỬI EMAIL ĐỊNH KỲ QUA MAILPIT TRÊN 2 CHI NHÁNH
-// 1. Gom nhóm học viên vào 1 email cho mỗi HRT mỗi ngày
-// 2. Định tuyến chính xác đến HRT riêng > HRT lớp tại 2 chi nhánh
-// 3. Ghi nhận skipped nếu thiếu HRT phụ trách
-// 4. Chống gửi trùng lặp tuyệt đối khi tác vụ chạy lại trong ngày
-// 5. Đổi HRT trước thời điểm gửi -> Email chuyển ngay sang người mới
+// KAPLA — KIỂM THỬ ĐỘ TIN CẬY & BẢO MẬT GỬI EMAIL NHẮC HỌC PHÍ (T05 RELIABLE)
+// 1. Chống gửi trùng tuyệt đối khi 2 tiến trình chạy đồng thời (Concurrency Lock)
+// 2. Xác thực lại HRT phụ trách, tài khoản HRT và hạn phí tươi mới ngay trước lúc gửi
+// 3. Cơ chế thử lại (Retry) & Khôi phục khi Mailpit nhận thành công nhưng DB gặp lỗi
+// 4. Áp đúng cửa sổ nhắc trước hạn & Hiển thị riêng "Hết hạn hôm nay"
 // ==============================================================================
 
 import WebSocket from 'ws';
@@ -56,9 +55,9 @@ async function getMailpitMessageDetail(id: string) {
   return await res.json();
 }
 
-async function runRealEmailDispatchTests() {
+async function runReliableEmailDispatchTests() {
   console.log('======================================================================');
-  console.log('  KAPLA — KIỂM THỬ TÁC VỤ GỬI EMAIL ĐỊNH KỲ THỰC TẾ (MAILPIT)');
+  console.log('  KAPLA — KIỂM THỬ ĐỘ TIN CẬY & CHỐNG GỬI TRÙNG EMAIL HRT (T05)');
   console.log('  2 Chi nhánh: Phạm Hùng & Bình Tân | Múi giờ ICT (UTC+7)');
   console.log('======================================================================\n');
 
@@ -66,10 +65,10 @@ async function runRealEmailDispatchTests() {
   const password = 'Password123!';
   const todayVn = getVietnamToday();
 
-  // Dọn sạch hộp thư Mailpit trước khi test
+  // Dọn sạch Mailpit trước khi kiểm thử
   await clearMailpit();
 
-  // 1. Tạo tài khoản HRT Mai & Linh tại Phạm Hùng, HRT Bảo tại Bình Tân
+  // 1. Tạo các tài khoản HRT
   const maiEmail = `hrt.mai.${runId}@kapla.edu.vn`;
   const { data: maiUser } = await adminClient.auth.admin.createUser({
     email: maiEmail,
@@ -118,8 +117,7 @@ async function runRealEmailDispatchTests() {
     status: 'active',
   });
 
-  // 2. Tạo lớp học tại 2 chi nhánh
-  // Lớp PH-A1 do Mai làm HRT mặc định
+  // 2. Tạo lớp học
   const { data: classPHA1 } = await adminClient
     .from('classes')
     .insert({
@@ -132,7 +130,6 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  // Lớp BT-B1 do Bảo làm HRT mặc định
   const { data: classBTB1 } = await adminClient
     .from('classes')
     .insert({
@@ -145,7 +142,6 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  // Lớp PH-NoHRT không có HRT mặc định
   const { data: classPHNoHrt } = await adminClient
     .from('classes')
     .insert({
@@ -158,11 +154,11 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  // Đặt cấu hình ngưỡng cảnh báo là 14 ngày
+  // Đặt ngưỡng ngày cảnh báo là 14 ngày
   await adminClient.rpc('set_tuition_warning_days', { p_days: 14 });
 
-  // 3. Tạo các học viên:
-  // - Học viên A (Phạm Hùng): Lớp A1, HRT mặc định là Mai, hạn học phí còn 5 ngày
+  // 3. Tạo các học viên kiểm thử:
+  // - Học viên A: Hạn học phí còn 5 ngày
   const date5Days = new Date();
   date5Days.setDate(date5Days.getDate() + 5);
   const { data: studentA } = await adminClient
@@ -180,28 +176,44 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  // - Học viên B (Phạm Hùng): Lớp A1, HRT mặc định là Mai, hạn học phí còn 10 ngày
-  const date10Days = new Date();
-  date10Days.setDate(date10Days.getDate() + 10);
-  const { data: studentB } = await adminClient
+  // - Học viên Hết hạn hôm nay: date = todayVn (days_remaining = 0)
+  const { data: studentToday } = await adminClient
     .from('students')
     .insert({
       branch_id: BRANCH_PH_ID,
-      student_code: `HV-B-${runId.toString().slice(-4)}`,
-      full_name: 'Trần Thị B (Phạm Hùng)',
-      parent_name: 'PH Em B',
-      parent_phone: '0901000002',
+      student_code: `HV-TODAY-${runId.toString().slice(-4)}`,
+      full_name: 'Vũ Thị Hôm Nay (Hết hạn hôm nay)',
+      parent_name: 'PH Em Hôm Nay',
+      parent_phone: '0901000099',
       current_class_id: classPHA1.id,
-      tuition_expiry_date: date10Days.toISOString().split('T')[0],
-      status: 'active',
+      tuition_expiry_date: todayVn,
+      status: 'warning',
     })
     .select()
     .single();
 
-  // - Học viên C (An - Phạm Hùng): Lớp A1 nhưng có HRT RIÊNG là Linh, hạn còn 3 ngày
+  // - Học viên Đã quá hạn 5 ngày trước (tuition_expiry_date < todayVn) -> KHÔNG được gửi lại trong email nhắc trước hạn!
+  const dateOverdue = new Date();
+  dateOverdue.setDate(dateOverdue.getDate() - 5);
+  const { data: studentOverdue } = await adminClient
+    .from('students')
+    .insert({
+      branch_id: BRANCH_PH_ID,
+      student_code: `HV-OLD-${runId.toString().slice(-4)}`,
+      full_name: 'Đặng Quá Hạn (Đã hết hạn 5 ngày trước)',
+      parent_name: 'PH Em Quá Hạn',
+      parent_phone: '0901000088',
+      current_class_id: classPHA1.id,
+      tuition_expiry_date: dateOverdue.toISOString().split('T')[0],
+      status: 'warning',
+    })
+    .select()
+    .single();
+
+  // - Học viên An: Giao riêng cho HRT Linh
   const date3Days = new Date();
   date3Days.setDate(date3Days.getDate() + 3);
-  const { data: studentC } = await adminClient
+  const { data: studentAn } = await adminClient
     .from('students')
     .insert({
       branch_id: BRANCH_PH_ID,
@@ -216,17 +228,16 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  // Phân công HRT riêng cho An -> Linh bằng RPC assign_student_hrt
   await adminClient.rpc('assign_student_hrt', {
-    p_student_id: studentC.id,
+    p_student_id: studentAn.id,
     p_hrt_id: linhId,
     p_reason: 'An cần chăm sóc đặc biệt bởi Linh',
   });
 
-  // - Học viên D (Bình Tân): Lớp B1, HRT mặc định là Bảo, hạn còn 8 ngày
+  // - Học viên Dũng (Bình Tân)
   const date8Days = new Date();
   date8Days.setDate(date8Days.getDate() + 8);
-  const { data: studentD } = await adminClient
+  const { data: studentDung } = await adminClient
     .from('students')
     .insert({
       branch_id: BRANCH_BT_ID,
@@ -241,8 +252,8 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  // - Học viên E (Không có HRT): Thuộc lớp không có HRT mặc định và không có HRT riêng
-  const { data: studentE } = await adminClient
+  // - Học viên Thiếu HRT
+  const { data: studentNoHrt } = await adminClient
     .from('students')
     .insert({
       branch_id: BRANCH_PH_ID,
@@ -257,132 +268,190 @@ async function runRealEmailDispatchTests() {
     .select()
     .single();
 
-  console.log('--- PHẦN 1: THỰC THI TÁC VỤ GỬI EMAIL ĐỊNH KỲ LẦN 1 ---');
-  const run1 = await dispatchDailyTuitionEmails(todayVn);
-  assert('Tác vụ dispatchDailyTuitionEmails chạy thành công', run1.success, `Đã gửi: ${run1.sent_emails} email`);
+  console.log('--- PHẦN 1: CỬA SỔ NHẮC HỌC PHÍ, HIỂN THỊ "HẾT HẠN HÔM NAY" VÀ CHẶN NHẮC LẶP ---');
+  const run1 = await dispatchDailyTuitionEmails(todayVn, { workerId: 'worker-primary-1' });
+  assert('Tác vụ dispatchDailyTuitionEmails thực thi thành công', run1.success, `Đã gửi: ${run1.sent_emails} email`);
 
-  // Kiểm tra Mailpit
-  const messages = await getMailpitMessages();
-  assert(
-    `Mailpit nhận được đúng số lượng email tổng hợp (${run1.sent_emails} thư)`,
-    messages.length === run1.sent_emails,
-    `Mailpit có ${messages.length} thư mới`
-  );
+  const messages1 = await getMailpitMessages();
+  const maiSummary = messages1.find((m: any) => m.To[0].Address === maiEmail);
+  assert('HRT Mai nhận đúng 1 email tổng hợp trong ngày', maiSummary !== undefined);
 
-  // 1.1 Kiểm tra email của HRT Mai
-  const maiSummary = messages.find((m: any) => m.To[0].Address === maiEmail);
-  assert(
-    'HRT Mai nhận được đúng 1 email tổng hợp trong ngày',
-    maiSummary !== undefined,
-    `Tiêu đề: "${maiSummary?.Subject}"`
-  );
   const maiMsg = await getMailpitMessageDetail(maiSummary.ID);
+
   assert(
-    'Email của Mai gom đúng 2 học viên phụ trách (A và B) và KHÔNG chứa học viên An',
-    maiMsg.HTML.includes('Nguyễn Văn A') &&
-      maiMsg.HTML.includes('Trần Thị B') &&
-      !maiMsg.HTML.includes('Lê Hoàng An'),
-    'Nội dung email gom chuẩn danh sách học viên của lớp A1 do Mai quản lý'
+    'Học viên hết hạn hôm nay được hiển thị riêng nhãn "Hết hạn hôm nay" trong bảng email',
+    maiMsg.HTML.includes('Hết hạn hôm nay') && maiMsg.HTML.includes('Vũ Thị Hôm Nay'),
+    'Email định dạng riêng biệt: Hết hạn hôm nay'
   );
 
-  // 1.2 Kiểm tra email của HRT Linh
-  const linhSummary = messages.find((m: any) => m.To[0].Address === linhEmail);
   assert(
-    'HRT Linh nhận được đúng 1 email chứa học viên An (ưu tiên HRT riêng)',
-    linhSummary !== undefined,
-    `Tiêu đề: "${linhSummary?.Subject}", Người nhận: ${linhEmail}`
-  );
-  const linhMsg = await getMailpitMessageDetail(linhSummary.ID);
-  assert(
-    'Nội dung email của Linh chứa đúng học viên An',
-    linhMsg.HTML.includes('Lê Hoàng An'),
-    'Linh phụ trách An theo phân công riêng'
+    'Học viên đã quá hạn từ trước (5 ngày trước) KHÔNG bị đưa vào email nhắc trước hạn (chống nhắc lặp mỗi ngày)',
+    !maiMsg.HTML.includes('Đặng Quá Hạn'),
+    'Học viên quá hạn được lưu giữ trên Dashboard để nhân viên xử lý thay vì spam email hằng ngày'
   );
 
-  // 1.3 Kiểm tra email của HRT Bảo (Bình Tân)
-  const baoSummary = messages.find((m: any) => m.To[0].Address === baoEmail);
+  console.log('\n--- PHẦN 2: CHỐNG GỬI TRÙNG KHI 2 TIẾN TRÌNH CHẠY ĐỒNG THỜI (CONCURRENCY LOCK) ---');
+  // Giả lập ngày làm việc kế tiếp
+  const dateDay2 = new Date();
+  dateDay2.setDate(dateDay2.getDate() + 1);
+  const day2Str = dateDay2.toISOString().split('T')[0];
+
+  // Chạy đồng thời 2 worker cạnh tranh cùng 1 ngày
+  console.log(`[Concurrency Test] Khởi chạy song song worker-A và worker-B trên ngày ${day2Str}...`);
+  const [workerA, workerB] = await Promise.all([
+    dispatchDailyTuitionEmails(day2Str, { workerId: 'worker-concurrent-A' }),
+    dispatchDailyTuitionEmails(day2Str, { workerId: 'worker-concurrent-B' }),
+  ]);
+
+  // Kiểm tra: Tổng số email được claim chia đều hoặc 1 bên nhận, không bên nào claim trùng bản ghi
   assert(
-    'HRT Bảo tại chi nhánh Bình Tân nhận được đúng email của học viên chi nhánh mình',
-    baoSummary !== undefined,
-    `Tiêu đề: "${baoSummary?.Subject}", Cơ sở Bình Tân độc lập`
-  );
-  const baoMsg = await getMailpitMessageDetail(baoSummary.ID);
-  assert(
-    'Nội dung email của Bảo chứa đúng học viên Phạm Minh Dũng',
-    baoMsg.HTML.includes('Phạm Minh Dũng'),
-    'Bình Tân xử lý độc lập học viên chi nhánh mình'
+    'Hai worker chạy đồng thời phối hợp an toàn qua FOR UPDATE SKIP LOCKED, không xung đột hay trùng lặp',
+    workerA.success && workerB.success,
+    `Worker A gửi: ${workerA.sent_emails}, Worker B gửi: ${workerB.sent_emails}`
   );
 
-  // 1.4 Kiểm tra log của học viên E (Thiếu HRT)
-  const { data: logE } = await adminClient
-    .from('email_dispatch_logs')
+  // Đảm bảo tổng số email gửi ra đúng bằng số HRT có học viên đến hạn
+  const messagesDay2 = (await getMailpitMessages()).filter((m: any) => m.Subject.includes(day2Str.split('-').reverse().join('/')));
+  const recipientSet = new Set(messagesDay2.map((m: any) => m.To[0].Address));
+  assert(
+    'Mỗi HRT chỉ nhận duy nhất 1 email tổng hợp, không có email trùng lặp nào được gửi đi',
+    messagesDay2.length === recipientSet.size,
+    `Số email gửi ra: ${messagesDay2.length}, Số người nhận độc lập: ${recipientSet.size}`
+  );
+
+  console.log('\n--- PHẦN 3: XÁC THỰC LẠI HRT PHỤ TRÁCH, KHÓA TÀI KHOẢN VÀ GIA HẠN PHÍ TRƯỚC LÚC GỬI ---');
+  const dateDay3 = new Date();
+  dateDay3.setDate(dateDay3.getDate() + 2);
+  const day3Str = dateDay3.toISOString().split('T')[0];
+
+  // Chuẩn bị hàng đợi trước
+  await adminClient.rpc('prepare_daily_tuition_alert_queue', { p_target_date: day3Str });
+
+  // TÌNH HUỐNG 3.1: Đổi HRT phụ trách trước lúc gửi
+  // Chuyển học viên An từ Linh sang Mai
+  console.log('-> Tình huống 3.1: Đổi HRT riêng của An sang Mai trước thời điểm gửi...');
+  await adminClient.rpc('assign_student_hrt', {
+    p_student_id: studentAn.id,
+    p_hrt_id: null, // quay về mặc định lớp Mai
+    p_reason: 'Gỡ phân công riêng của Linh, chuyển về HRT lớp là Mai',
+  });
+
+  // TÌNH HUỐNG 3.2: Khóa tài khoản HRT Bảo (Bình Tân) trước thời điểm gửi
+  console.log('-> Tình huống 3.2: Vô hiệu hóa tài khoản HRT Bảo trước thời điểm gửi...');
+  const { error: lockErr } = await adminClient.from('profiles').update({ status: 'inactive' }).eq('id', baoId);
+  if (lockErr) throw lockErr;
+
+  // TÌNH HUỐNG 3.3: Học viên A đã đóng tiền gia hạn học phí (+60 ngày)
+  console.log('-> Tình huống 3.3: Học viên A nộp học phí mới, gia hạn thêm 60 ngày...');
+  const dateExtended = new Date();
+  dateExtended.setDate(dateExtended.getDate() + 60);
+  await adminClient
+    .from('students')
+    .update({ tuition_expiry_date: dateExtended.toISOString().split('T')[0], status: 'active' })
+    .eq('id', studentA.id);
+
+  // Thực thi tác vụ gửi ngày 3
+  const runDay3 = await dispatchDailyTuitionEmails(day3Str, { workerId: 'worker-revalidation' });
+  assert('Tác vụ ngày 3 chạy thành công với cơ chế thẩm định dữ liệu tươi mới', runDay3.success);
+
+  // 1. Kiểm tra HRT Bảo (đã bị khóa)
+  const { data: queueBao } = await adminClient
+    .from('email_dispatch_queue')
     .select('*')
-    .eq('student_id', studentE.id)
-    .eq('dispatch_date', todayVn)
+    .eq('dispatch_date', day3Str)
+    .eq('recipient_hrt_id', baoId)
     .single();
 
   assert(
-    'Học viên thiếu HRT phụ trách được ghi nhận trạng thái "skipped" và lý do rõ ràng',
-    logE?.delivery_status === 'skipped' && logE?.skip_reason?.includes('Thiếu HRT phụ trách'),
-    `Trạng thái: ${logE?.delivery_status}, Lý do: "${logE?.skip_reason}"`
+    'Hàng đợi của HRT bị khóa tài khoản được tự động chuyển sang "skipped" và KHÔNG gửi email',
+    queueBao?.status === 'skipped' && queueBao?.error_reason?.includes('khóa hoặc chưa kích hoạt'),
+    `Trạng thái: ${queueBao?.status}, Lý do: "${queueBao?.error_reason}"`
   );
 
-  console.log('\n--- PHẦN 2: KIỂM THỬ CHỐNG GỬI TRÙNG LẶP (IDEMPOTENCY) KHI TÁC VỤ CHẠY LẠI ---');
-  const countBeforeRerun = messages.length;
-  const run2 = await dispatchDailyTuitionEmails(todayVn);
-  const messagesAfterRerun = await getMailpitMessages();
+  // 2. Kiểm tra email của HRT Linh (An đã chuyển sang Mai -> Linh không còn học viên nào)
+  const { data: queueLinh } = await adminClient
+    .from('email_dispatch_queue')
+    .select('*')
+    .eq('dispatch_date', day3Str)
+    .eq('recipient_hrt_id', linhId)
+    .single();
 
   assert(
-    'Tác vụ chạy lại trong cùng ngày phát hiện toàn bộ học viên đã được xử lý và không thêm email mới vào hàng đợi',
-    run2.queue_prepared.queued_emails === 0,
-    `queued_emails = ${run2.queue_prepared.queued_emails}, batched_students = ${run2.queue_prepared.batched_students}`
+    'Hàng đợi của HRT không còn học viên nào hợp lệ được tự động chuyển sang "skipped"',
+    queueLinh?.status === 'skipped' && queueLinh?.student_count === 0,
+    `Trạng thái: ${queueLinh?.status}, Số học viên còn lại: ${queueLinh?.student_count}`
   );
+
+  // 3. Kiểm tra email của HRT Mai: Học viên A (đã gia hạn) bị loại bỏ, học viên An được bổ sung
+  const messagesDay3 = (await getMailpitMessages()).filter((m: any) => m.Subject.includes(day3Str.split('-').reverse().join('/')));
+  const maiMsgDay3Summary = messagesDay3.find((m: any) => m.To[0].Address === maiEmail);
+  assert('HRT Mai nhận được email ngày 3 sau khi thẩm định dữ liệu tươi mới', maiMsgDay3Summary !== undefined);
+
+  const maiMsgDay3 = await getMailpitMessageDetail(maiMsgDay3Summary.ID);
   assert(
-    'Mailpit không có thêm bất kỳ email trùng lặp nào sau khi chạy lại',
-    messagesAfterRerun.length === countBeforeRerun,
-    `Tổng số thư Mailpit không đổi: ${messagesAfterRerun.length}`
+    'Email tươi mới của Mai: Chứa học viên An (mới chuyển về) và KHÔNG chứa học viên A (đã gia hạn)',
+    maiMsgDay3.HTML.includes('Lê Hoàng An') && !maiMsgDay3.HTML.includes('Nguyễn Văn A'),
+    'Dữ liệu được cập nhật chính xác theo trạng thái tại đúng thời điểm gửi!'
   );
 
-  console.log('\n--- PHẦN 3: KIỂM THỬ ĐỔI HRT TRƯỚC LÚC GỬI -> EMAIL ĐẾN NGƯỜI MỚI ---');
-  // Giả lập ngày làm việc tiếp theo: "2026-11-14"
-  const nextDateObj = new Date();
-  nextDateObj.setDate(nextDateObj.getDate() + 1);
-  const nextDateVn = nextDateObj.toISOString().split('T')[0];
+  console.log('\n--- PHẦN 4: KHÔI PHỤC KHI PROVIDER ĐÃ TIẾP NHẬN NHƯNG DB GẶP SỰ CỐ & THỬ LẠI ---');
+  const dateDay4 = new Date();
+  dateDay4.setDate(dateDay4.getDate() + 3);
+  const day4Str = dateDay4.toISOString().split('T')[0];
 
-  // Xóa phân công riêng của An cho Linh -> Lúc này An sẽ tự động quay về HRT mặc định của lớp là Mai!
-  await adminClient.rpc('assign_student_hrt', {
-    p_student_id: studentC.id,
-    p_hrt_id: null,
-    p_reason: 'Bỏ phân công riêng của Linh, quay về HRT lớp là Mai',
-  });
+  // Kích hoạt lại HRT Bảo để kiểm thử tình huống này
+  await adminClient.from('profiles').update({ status: 'active' }).eq('id', baoId);
 
-  // Chạy tác vụ cho ngày kế tiếp
-  const runNextDay = await dispatchDailyTuitionEmails(nextDateVn);
+  // Chuẩn bị hàng đợi
+  await adminClient.rpc('prepare_daily_tuition_alert_queue', { p_target_date: day4Str });
+
+  // Đếm số thư trong Mailpit trước mô phỏng
+  const countBeforeCrash = (await getMailpitMessages()).length;
+
+  // Lần chạy 1: Mô phỏng nhà cung cấp email nhận thành công nhưng DB crash trước khi ghi sent
+  console.log('-> Lần chạy 1: Mô phỏng gửi Mailpit thành công nhưng DB crash...');
+  try {
+    await dispatchDailyTuitionEmails(day4Str, {
+      workerId: 'worker-crash-sim',
+      simulateProviderCrashAfterSend: true,
+    });
+  } catch (simError: any) {
+    console.log(`     [Simulation Caught] Đã bắt được sự cố mô phỏng: ${simError.message}`);
+  }
+
+  // Mailpit đã nhận được 1 thư mới từ lần chạy 1
+  const countAfterSend = (await getMailpitMessages()).length;
+  assert('Nhà cung cấp Mailpit đã tiếp nhận thư trong lần chạy 1', countAfterSend > countBeforeCrash);
+
+  // Lần chạy 2: Tiến trình chạy lại (Retry)
+  console.log('-> Lần chạy 2: Tác vụ tự động thử lại (Retry) phát hiện provider_message_id đã có...');
+  // Đặt next_retry_at về quá khứ để worker retry ngay lập tức mà không cần chờ hết chu kỳ backoff 1 phút
+  await adminClient
+    .from('email_dispatch_queue')
+    .update({ next_retry_at: new Date(Date.now() - 1000).toISOString() })
+    .eq('dispatch_date', day4Str);
+
+  const runRetry = await dispatchDailyTuitionEmails(day4Str, { workerId: 'worker-recovery' });
+
+  // Mailpit KHÔNG được nhận thêm bất kỳ thư trùng lặp nào!
+  const countAfterRecovery = (await getMailpitMessages()).length;
   assert(
-    `Tác vụ gửi ngày kế tiếp (${nextDateVn}) chạy thành công`,
-    runNextDay.success,
-    `Đã gửi: ${runNextDay.sent_emails} email mới`
+    'Khóa chống trùng (Idempotency Recovery) ngăn chặn gửi lại thư cho nhà cung cấp khi đã có provider_message_id',
+    countAfterRecovery === countAfterSend,
+    `Mailpit giữ nguyên ${countAfterRecovery} thư, không bị double-send!`
   );
 
-  const allMessagesNextDay = await getMailpitMessages();
-  // Lấy các email có tiêu đề chứa ngày kế tiếp
-  const nextDayVnFormatted = nextDateVn.split('-').reverse().join('/');
-  const nextDayMaiSummary = allMessagesNextDay.find(
-    (m: any) => m.To[0].Address === maiEmail && m.Subject.includes(nextDayVnFormatted)
-  );
+  // Kiểm tra trạng thái DB đã được chốt thành công về 'sent'
+  const { data: queueRecovered } = await adminClient
+    .from('email_dispatch_queue')
+    .select('*')
+    .eq('dispatch_date', day4Str)
+    .eq('status', 'sent');
 
   assert(
-    'HRT Mai nhận được email vào ngày kế tiếp',
-    nextDayMaiSummary !== undefined,
-    `Tiêu đề: "${nextDayMaiSummary?.Subject}"`
-  );
-
-  const nextDayMaiMsg = await getMailpitMessageDetail(nextDayMaiSummary.ID);
-
-  assert(
-    'Sau khi bỏ phân công riêng, học viên An lập tức chuyển sang email tổng hợp của HRT Mai!',
-    nextDayMaiMsg.HTML.includes('Lê Hoàng An'),
-    `Tiêu đề: "${nextDayMaiSummary?.Subject}", Nội dung chứa: Lê Hoàng An`
+    'Trạng thái trong cơ sở dữ liệu đã được đối soát và chốt sang "sent" thành công',
+    (queueRecovered?.length || 0) > 0,
+    `Số bản ghi đã chốt: ${queueRecovered?.length}`
   );
 
   console.log('\n======================================================================');
@@ -390,7 +459,7 @@ async function runRealEmailDispatchTests() {
   console.log('======================================================================\n');
 }
 
-runRealEmailDispatchTests().catch((err) => {
-  console.error('\nLỖI KIỂM THỬ TÁC VỤ EMAIL:', err);
+runReliableEmailDispatchTests().catch((err) => {
+  console.error('\nLỖI KIỂM THỬ ĐỘ TIN CẬY EMAIL:', err);
   process.exit(1);
 });

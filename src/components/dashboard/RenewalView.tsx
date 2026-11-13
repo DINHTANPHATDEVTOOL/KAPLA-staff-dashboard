@@ -118,11 +118,11 @@ export const RenewalView: React.FC = () => {
   const handleSimulateEmailAlerts = async () => {
     setSimulatingEmail(true);
     try {
-      const results = await SystemConfigService.getStudentsDueForTuitionAlert(config.tuition_warning_days_threshold);
+      const results = await SystemConfigService.getStudentsDueForTuitionAlert(config.tuition_warning_days_threshold, false);
       setEmailSimulationResults(results);
       setMessage({
         type: 'success',
-        text: `Đã tìm thấy người nhận dự kiến: Tìm thấy ${results.length} học viên cần nhắc học phí. Toàn bộ thông báo sẽ được chuyển đến đúng HRT phụ trách!`,
+        text: `Đã tìm thấy người nhận dự kiến: Tìm thấy ${results.length} học viên trong cửa sổ nhắc trước hạn (từ hôm nay đến ${config.tuition_warning_days_threshold} ngày tới). Toàn bộ thông báo sẽ được chuyển đến đúng HRT phụ trách!`,
       });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Không thể kiểm tra tác vụ email.' });
@@ -291,8 +291,19 @@ export const RenewalView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {emailSimulationResults.map((item) => (
                 <div key={item.student_id} className="bg-white/15 p-2 rounded-lg border border-white/10">
-                  <div className="font-semibold text-white">{item.student_name}</div>
-                  <div className="text-sky-200 text-[11px]">Hạn phí: {item.tuition_expiry_date}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-white">{item.student_name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                      item.days_remaining === 0
+                        ? 'bg-rose-500 text-white'
+                        : item.days_remaining <= 7
+                        ? 'bg-amber-400 text-slate-900'
+                        : 'bg-emerald-400 text-slate-900'
+                    }`}>
+                      {item.days_remaining === 0 ? 'Hết hạn hôm nay' : item.days_remaining > 0 ? `Còn ${item.days_remaining} ngày` : `Đã quá hạn`}
+                    </span>
+                  </div>
+                  <div className="text-sky-200 text-[11px] mt-0.5">Hạn phí: {item.tuition_expiry_date} • Lớp: {item.class_name || 'Chưa xếp'}</div>
                   <div className="text-emerald-300 font-medium text-[11px] mt-1">
                     Email gửi đến: {item.effective_hrt_email || item.effective_hrt_name || 'HRT phụ trách'}
                   </div>
@@ -442,14 +453,22 @@ export const RenewalView: React.FC = () => {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded font-bold text-xs ${
-                            isUrgent
+                            r.days_remaining === 0
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                              : r.days_remaining < 0
+                              ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                              : isUrgent
                               ? 'bg-rose-100 text-rose-800'
                               : isWarning
                               ? 'bg-amber-100 text-amber-800'
                               : 'bg-emerald-100 text-emerald-800'
                           }`}
                         >
-                          {r.days_remaining > 0 ? `Còn ${r.days_remaining} ngày` : 'Đã quá hạn'}
+                          {r.days_remaining === 0
+                            ? 'Hết hạn hôm nay'
+                            : r.days_remaining > 0
+                            ? `Còn ${r.days_remaining} ngày`
+                            : `Đã quá hạn ${Math.abs(r.days_remaining)} ngày`}
                         </span>
                       </td>
 
