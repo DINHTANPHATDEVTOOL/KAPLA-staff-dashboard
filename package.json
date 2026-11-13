@@ -15,6 +15,10 @@
     "test:t04": "tsx scripts/test_t04_assessments_and_interventions.ts",
     "test:hardening": "tsx scripts/test_t03_t04_security_hardening.ts",
     "test:extended": "tsx scripts/test_t04_extended_and_t05.ts",
+    "test:lockdown": "tsx scripts/test_t04_t05_security_lockdown.ts",
+    "test:dispatch": "tsx scripts/test_real_email_dispatch.ts",
+    "test:browser": "tsx scripts/test_browser_auth_verification_flow.ts",
+    "dispatch:tuition": "tsx scripts/dispatch_tuition_emails.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

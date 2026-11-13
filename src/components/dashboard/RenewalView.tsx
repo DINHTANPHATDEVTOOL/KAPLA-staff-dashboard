@@ -122,7 +122,7 @@ export const RenewalView: React.FC = () => {
       setEmailSimulationResults(results);
       setMessage({
         type: 'success',
-        text: `Đã mô phỏng tác vụ gửi email cảnh báo: Tìm thấy ${results.length} học viên cần nhắc học phí. Toàn bộ email được gửi chính xác đến HRT thực sự phụ trách!`,
+        text: `Đã tìm thấy người nhận dự kiến: Tìm thấy ${results.length} học viên cần nhắc học phí. Toàn bộ thông báo sẽ được chuyển đến đúng HRT phụ trách!`,
       });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Không thể kiểm tra tác vụ email.' });
@@ -264,9 +264,10 @@ export const RenewalView: React.FC = () => {
               onClick={handleSimulateEmailAlerts}
               disabled={simulatingEmail}
               className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+              title="Xem trước danh sách người nhận dự kiến"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>{simulatingEmail ? 'Đang kiểm tra...' : 'Kiểm tra tác vụ Email HRT'}</span>
+              <span>{simulatingEmail ? 'Đang kiểm tra...' : 'Xem trước người nhận dự kiến'}</span>
             </button>
           </div>
         </div>
