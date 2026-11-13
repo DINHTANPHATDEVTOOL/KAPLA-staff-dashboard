@@ -1,5 +1,5 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — Supabase Client & Mock Fallback Layer
+// KAPLA Staff Dashboard — Supabase Client & High-Fidelity Mock Layer
 // ==============================================================================
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -24,7 +24,7 @@ export const realSupabase: SupabaseClient | null =
 export const isDevMockMode = forceDevMock || realSupabase === null;
 
 // ==============================================================================
-// In-Memory / LocalStorage Mock Database for Offline Testing & Verification
+// Mock Storage Service with Enforced RBAC & Security Validation
 // ==============================================================================
 
 const STORAGE_KEYS = {
@@ -36,7 +36,7 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'kapla_mock_auth_user',
 };
 
-// Initial Seed Data
+// Initial Seed Data with Two Core Branches
 const DEFAULT_BRANCHES: Branch[] = [
   {
     id: 'a0000000-0000-0000-0000-000000000001',
@@ -194,6 +194,14 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     schedule: 'Thứ 3 & 5 (17:30 - 19:00)',
     status: 'active',
   },
+  {
+    id: 'c0000000-0000-0000-0000-000000000004',
+    branch_id: 'a0000000-0000-0000-0000-000000000002',
+    name: 'BT-Flyers-01',
+    level: 'Flyers',
+    schedule: 'Thứ 7 & CN (14:30 - 16:00)',
+    status: 'active',
+  },
 ];
 
 const DEFAULT_AUDIT_LOGS: AuditLog[] = [
@@ -212,15 +220,6 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
     branch_name: 'KAPLA Phạm Hùng',
     details: { role: 'CM', system_role: 'staff' },
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-  },
-  {
-    id: 'l0000000-0000-0000-0000-000000000003',
-    actor_email: 'cm.phamhung@kapla.edu.vn',
-    action: 'APPROVE_USER_ROLE',
-    target_user_email: 'teacher.mai@kapla.edu.vn',
-    branch_name: 'KAPLA Phạm Hùng',
-    details: { role: 'HRT' },
-    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
 ];
 
@@ -247,6 +246,72 @@ export class MockStorageService {
     localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(profiles));
   }
 
+  /**
+   * Safe profile update enforcing PostgreSQL trigger rules:
+   * Non-admins CANNOT change status, system_role, rejection_reason, or email!
+   */
+  static updateProfileSecure(callerId: string, targetId: string, updates: Partial<UserProfile>): UserProfile {
+    const profiles = this.getProfiles();
+    const caller = profiles.find((p) => p.id === callerId);
+    const targetIdx = profiles.findIndex((p) => p.id === targetId);
+    if (targetIdx === -1) throw new Error('Không tìm thấy tài khoản.');
+
+    const target = profiles[targetIdx];
+    const isSysAdmin = caller?.system_role === 'system_admin' && caller?.status === 'active';
+
+    if (!isSysAdmin) {
+      if (updates.status !== undefined && updates.status !== target.status) {
+        throw new Error('Quyền bị từ chối: Nhân viên không thể tự thay đổi trạng thái tài khoản.');
+      }
+      if (updates.system_role !== undefined && updates.system_role !== target.system_role) {
+        throw new Error('Quyền bị từ chối: Nhân viên không thể tự thay đổi quyền hạn hệ thống.');
+      }
+      if (updates.rejection_reason !== undefined && updates.rejection_reason !== target.rejection_reason) {
+        throw new Error('Quyền bị từ chối: Nhân viên không thể sửa lý do phê duyệt.');
+      }
+      if (updates.id !== undefined && updates.id !== target.id) {
+        throw new Error('Quyền bị từ chối: Không thể sửa định danh ID.');
+      }
+      if (updates.email !== undefined && updates.email !== target.email) {
+        throw new Error('Quyền bị từ chối: Không thể sửa email tài khoản.');
+      }
+    }
+
+    const oldStatus = target.status;
+    const oldSysRole = target.system_role;
+
+    const updatedProfile: UserProfile = {
+      ...target,
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+
+    profiles[targetIdx] = updatedProfile;
+    this.saveProfiles(profiles);
+
+    // Automatic Audit Logs for status or role changes
+    if (updates.status !== undefined && updates.status !== oldStatus) {
+      this.appendAuditLog({
+        actor_email: caller?.email || 'system_trigger',
+        action: 'PROFILE_STATUS_CHANGED',
+        target_user_email: target.email,
+        branch_id: target.preferred_branch_id,
+        details: { old_status: oldStatus, new_status: updates.status, reason: updates.rejection_reason },
+      });
+    }
+
+    if (updates.system_role !== undefined && updates.system_role !== oldSysRole) {
+      this.appendAuditLog({
+        actor_email: caller?.email || 'system_trigger',
+        action: 'SYSTEM_ROLE_CHANGED',
+        target_user_email: target.email,
+        details: { old_role: oldSysRole, new_role: updates.system_role },
+      });
+    }
+
+    return updatedProfile;
+  }
+
   static getMemberships(): BranchMembership[] {
     const raw = localStorage.getItem(STORAGE_KEYS.MEMBERSHIPS);
     if (!raw) {
@@ -258,6 +323,104 @@ export class MockStorageService {
 
   static saveMemberships(m: BranchMembership[]): void {
     localStorage.setItem(STORAGE_KEYS.MEMBERSHIPS, JSON.stringify(m));
+  }
+
+  /**
+   * Safe membership assignment enforcing PostgreSQL rules:
+   * Caller must be system_admin OR CM of that exact branch!
+   * Staff cannot self-assign. CM cannot appoint another CM.
+   */
+  static assignMembershipSecure(
+    callerId: string,
+    targetUserId: string,
+    branchId: string,
+    role: any
+  ): BranchMembership {
+    const profiles = this.getProfiles();
+    const caller = profiles.find((p) => p.id === callerId);
+    if (!caller || caller.status !== 'active') {
+      throw new Error('Người thực hiện không hợp lệ hoặc tài khoản chưa kích hoạt.');
+    }
+
+    const isSysAdmin = caller.system_role === 'system_admin';
+    const memberships = this.getMemberships();
+    const isCMOfBranch = memberships.some(
+      (m) => m.user_id === callerId && m.branch_id === branchId && m.role === 'CM' && m.status === 'active'
+    );
+
+    if (!isSysAdmin && !isCMOfBranch) {
+      throw new Error('Quyền bị từ chối: Chỉ Quản trị hệ thống hoặc CM chi nhánh này mới có quyền cấp vai trò.');
+    }
+
+    if (callerId === targetUserId && !isSysAdmin) {
+      throw new Error('Quyền bị từ chối: Không thể tự cấp hoặc sửa đổi vai trò của chính mình.');
+    }
+
+    if (role === 'CM' && !isSysAdmin) {
+      throw new Error('Quyền bị từ chối: Chỉ Quản trị hệ thống mới có quyền bổ nhiệm Giám đốc cơ sở (CM).');
+    }
+
+    const existingIdx = memberships.findIndex((m) => m.user_id === targetUserId && m.branch_id === branchId);
+    let resultMem: BranchMembership;
+
+    if (existingIdx !== -1) {
+      memberships[existingIdx].role = role;
+      memberships[existingIdx].status = 'active';
+      memberships[existingIdx].updated_at = new Date().toISOString();
+      resultMem = memberships[existingIdx];
+    } else {
+      resultMem = {
+        id: 'mem-' + Math.random().toString(36).substring(2, 9),
+        user_id: targetUserId,
+        branch_id: branchId,
+        role,
+        is_primary: true,
+        status: 'active',
+        created_at: new Date().toISOString(),
+      };
+      memberships.push(resultMem);
+    }
+
+    this.saveMemberships(memberships);
+
+    // Auto audit log
+    const branches = this.getBranches();
+    const branchName = branches.find((b) => b.id === branchId)?.name || 'Chi nhánh';
+    const targetEmail = profiles.find((p) => p.id === targetUserId)?.email;
+
+    this.appendAuditLog({
+      actor_email: caller.email,
+      action: 'APPROVE_USER_ROLE',
+      target_user_email: targetEmail,
+      branch_id: branchId,
+      branch_name: branchName,
+      details: { role, assigned_by: caller.email },
+    });
+
+    return resultMem;
+  }
+
+  /**
+   * Operational classes query enforcing RLS rules:
+   * Pending or Inactive users get ZERO rows!
+   * Revoked members get ZERO rows dynamically!
+   */
+  static getClassesForUser(userId: string, branchId?: string): ClassRoom[] {
+    const profiles = this.getProfiles();
+    const user = profiles.find((p) => p.id === userId);
+    if (!user || user.status !== 'active') {
+      return []; // Strict RLS isolation: pending or disabled users cannot read business data
+    }
+
+    const isSysAdmin = user.system_role === 'system_admin';
+    const memberships = this.getMemberships().filter((m) => m.user_id === userId && m.status === 'active');
+    const allClasses = this.getClasses();
+
+    return allClasses.filter((c) => {
+      if (branchId && c.branch_id !== branchId) return false;
+      if (isSysAdmin) return true;
+      return memberships.some((m) => m.branch_id === c.branch_id);
+    });
   }
 
   static getClasses(): ClassRoom[] {

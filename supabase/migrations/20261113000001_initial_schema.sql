@@ -301,6 +301,9 @@ BEGIN
         RAISE EXCEPTION 'Không tìm thấy hồ sơ người dùng mục tiêu.';
     END IF;
 
+    -- Allow authorized state transition within this transaction
+    PERFORM set_config('kapla.allow_approval', 'true', true);
+
     -- Update profile status
     UPDATE public.profiles
     SET status = 'active',
@@ -377,26 +380,38 @@ AS $$
 DECLARE
     v_caller_id UUID := auth.uid();
     v_caller_email TEXT;
+    v_is_admin BOOLEAN;
 BEGIN
-    IF v_caller_id IS NULL THEN
-        RAISE EXCEPTION 'Chưa đăng nhập.';
-    END IF;
+    v_is_admin := (auth.jwt()->>'role' = 'service_role') OR (v_caller_id IS NOT NULL AND public.is_system_admin(v_caller_id));
 
-    IF NOT public.is_system_admin(v_caller_id) THEN
+    IF NOT v_is_admin THEN
         RAISE EXCEPTION 'Chỉ Quản trị hệ thống mới có thể vô hiệu hóa tài khoản.';
     END IF;
 
-    IF v_caller_id = p_target_user_id THEN
+    IF v_caller_id IS NOT NULL AND v_caller_id = p_target_user_id THEN
         RAISE EXCEPTION 'Không thể tự vô hiệu hóa tài khoản của chính mình.';
     END IF;
 
-    SELECT email INTO v_caller_email FROM public.profiles WHERE id = v_caller_id;
+    IF v_caller_id IS NOT NULL THEN
+        SELECT email INTO v_caller_email FROM public.profiles WHERE id = v_caller_id;
+    ELSE
+        v_caller_email := 'service_role_admin';
+    END IF;
+
+    -- Allow authorized state transition within this transaction
+    PERFORM set_config('kapla.allow_approval', 'true', true);
 
     UPDATE public.profiles
     SET status = 'inactive',
         rejection_reason = p_reason,
         updated_at = now()
     WHERE id = p_target_user_id;
+
+    -- Vô hiệu hóa phân bổ chi nhánh của nhân sự
+    UPDATE public.branch_memberships
+    SET status = 'inactive',
+        updated_at = now()
+    WHERE user_id = p_target_user_id;
 
     INSERT INTO public.audit_logs (
         actor_id,

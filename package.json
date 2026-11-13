@@ -8,6 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "tsx scripts/test_auth_flow.ts",
+    "test:security": "tsx scripts/test_security_api.ts",
+    "test:live": "tsx scripts/test_live_supabase_rls.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
@@ -21,10 +23,12 @@
     "@types/node": "^22.13.5",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.9",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "ws": "^8.22.2"
   }
 }
