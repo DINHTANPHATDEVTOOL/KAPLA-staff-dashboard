@@ -13,6 +13,7 @@
     "test:live": "tsx scripts/test_live_supabase_rls.ts",
     "test:t03": "tsx scripts/test_t03_hrt_precedence.ts",
     "test:t04": "tsx scripts/test_t04_assessments_and_interventions.ts",
+    "test:hardening": "tsx scripts/test_t03_t04_security_hardening.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

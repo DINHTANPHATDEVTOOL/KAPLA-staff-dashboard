@@ -149,6 +149,7 @@ async function runT04Tests() {
       branch_id: BRANCH_PH_ID,
       name: `PH-Starters-T04-${runId}`,
       level: 'Starters',
+      main_teacher_id: mtId,
       status: 'active',
     })
     .select()
@@ -160,6 +161,7 @@ async function runT04Tests() {
       branch_id: BRANCH_BT_ID,
       name: `BT-Starters-T04-${runId}`,
       level: 'Starters',
+      main_teacher_id: htBtId,
       status: 'active',
     })
     .select()
@@ -341,10 +343,15 @@ async function runT04Tests() {
       issue_description: 'Phát âm âm đuôi s/es còn thiếu',
       action_plan: 'Luyện đọc to cùng trợ giảng',
       due_date: '2026-11-30',
-      status: 'resolved',
+      status: 'open',
     })
     .select()
     .single();
+
+  await adminClient
+    .from('interventions')
+    .update({ status: 'resolved', reassessment_result: 'Phát âm cải thiện tốt' })
+    .eq('id', interv2.id);
 
   const { data: cmVerifyRes, error: cmVerifyErr } = await cmPhClient.rpc('verify_intervention', {
     p_intervention_id: interv2.id,
