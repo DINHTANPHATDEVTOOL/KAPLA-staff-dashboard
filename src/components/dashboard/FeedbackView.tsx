@@ -25,6 +25,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { ParentFeedback, FeedbackType, FeedbackChannel, FeedbackStatus, Student, UserProfile } from '../../types';
 import { FeedbackService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
@@ -52,6 +53,7 @@ const STATUS_CONFIG: Record<FeedbackStatus, { label: string; color: string; badg
 
 export const FeedbackView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
+  const { language } = useLanguage();
   const [feedbacks, setFeedbacks] = useState<ParentFeedback[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [staffs, setStaffs] = useState<UserProfile[]>([]);
@@ -331,7 +333,7 @@ export const FeedbackView: React.FC = () => {
           className="w-full md:w-auto px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Ghi nhận phản hồi mới</span>
+          <span>{language === 'en' ? 'Record Parent Feedback' : 'Ghi nhận phản hồi mới'}</span>
         </button>
       </div>
 

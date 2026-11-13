@@ -1,8 +1,8 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — TopBar Component
+// KAPLA Staff Dashboard — TopBar Component with Bilingual Support
 // ==============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Menu,
   Building2,
@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage, LanguageToggle } from '../../context/LanguageContext';
 import { DashboardNavSection } from '../../types';
 
 interface TopBarProps {
@@ -23,53 +24,6 @@ interface TopBarProps {
   onRefreshData?: () => void;
   refreshing?: boolean;
 }
-
-const SECTION_TITLES: Record<DashboardNavSection, { title: string; subtitle: string }> = {
-  overview: {
-    title: 'Tổng quan học vụ & Tiến độ',
-    subtitle: 'Theo dõi tổng thể học viên, mức độ rủi ro và các mốc can thiệp.',
-  },
-  students: {
-    title: 'Hồ sơ học viên (Student Master)',
-    subtitle: 'Quản lý thông tin học tập, phân công HRT và hạn phí học viên.',
-  },
-  care_tasks: {
-    title: 'Công việc HRT (Care Worklist)',
-    subtitle: 'Nhiệm vụ chăm sóc học viên theo quy tắc ưu tiên HRT riêng.',
-  },
-  assessments: {
-    title: 'Đánh giá năng lực 4 kỹ năng',
-    subtitle: 'Ghi nhận Nghe - Nói - Đọc - Viết theo chuẩn Cambridge & Oxford Quality.',
-  },
-  interventions: {
-    title: 'Phiếu can thiệp học thuật',
-    subtitle: 'Theo dõi kế hoạch khắc phục, hạn xử lý và xác minh kết quả.',
-  },
-  feedback: {
-    title: 'Phản hồi & Kỳ vọng phụ huynh',
-    subtitle: 'Ghi nhận và điều phối giải quyết khiếu nại, góp ý từ phụ huynh.',
-  },
-  supplementary: {
-    title: 'Lớp học bổ trợ (Supplementary)',
-    subtitle: 'Theo dõi điểm danh, nội dung bổ trợ và nhận xét sự tiến bộ.',
-  },
-  renewal: {
-    title: 'Quản lý tái tục & Rủi ro học phí',
-    subtitle: 'Cảnh báo hạn tái tục, hỗ trợ chăm sóc phụ huynh trước 15 ngày.',
-  },
-  logs: {
-    title: 'Nhật ký tác nghiệp (Follow-up Logs)',
-    subtitle: 'Lịch sử tương tác giữa các bộ phận chuyên môn và học viên.',
-  },
-  staff_roles: {
-    title: 'Quản trị nhân sự & Phân quyền',
-    subtitle: 'Phê duyệt tài khoản mới, phân bổ vai trò và chi nhánh công tác.',
-  },
-  branches_classes: {
-    title: 'Chi nhánh & Danh sách lớp học',
-    subtitle: 'Cấu hình chi nhánh hoạt động và thiết lập phân công lớp.',
-  },
-};
 
 export const TopBar: React.FC<TopBarProps> = ({
   activeSection,
@@ -86,14 +40,75 @@ export const TopBar: React.FC<TopBarProps> = ({
     refreshProfile,
     signOut,
   } = useAuth();
+  const { t } = useLanguage();
 
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const sectionMeta = SECTION_TITLES[activeSection] || {
-    title: 'KAPLA Staff Dashboard',
-    subtitle: 'Hệ thống quản lý đào tạo & chăm sóc học viên',
-  };
+  const sectionMeta = useMemo(() => {
+    switch (activeSection) {
+      case 'overview':
+        return {
+          title: t('topbar.overviewTitle', 'Tổng quan học vụ & Tiến độ'),
+          subtitle: t('topbar.overviewSub', 'Theo dõi tổng thể học viên, mức độ rủi ro và các mốc can thiệp.'),
+        };
+      case 'students':
+        return {
+          title: t('topbar.studentsTitle', 'Hồ sơ học viên (Student Records)'),
+          subtitle: t('topbar.studentsSub', 'Quản lý thông tin học tập, phân công HRT và hạn phí học viên.'),
+        };
+      case 'care_tasks':
+        return {
+          title: t('topbar.careTasksTitle', 'Công việc HRT (Care Worklist)'),
+          subtitle: t('topbar.careTasksSub', 'Nhiệm vụ chăm sóc học viên theo quy tắc ưu tiên HRT riêng.'),
+        };
+      case 'assessments':
+        return {
+          title: t('topbar.assessmentsTitle', 'Đánh giá năng lực 4 kỹ năng'),
+          subtitle: t('topbar.assessmentsSub', 'Ghi nhận Nghe - Nói - Đọc - Viết theo chuẩn Cambridge & Oxford Quality.'),
+        };
+      case 'interventions':
+        return {
+          title: t('topbar.interventionsTitle', 'Phiếu can thiệp học thuật (Academic Interventions)'),
+          subtitle: t('topbar.interventionsSub', 'Theo dõi kế hoạch khắc phục, hạn xử lý và xác minh kết quả.'),
+        };
+      case 'feedback':
+        return {
+          title: t('topbar.feedbackTitle', 'Phản hồi & Kỳ vọng phụ huynh (Parent Feedback)'),
+          subtitle: t('topbar.feedbackSub', 'Ghi nhận và điều phối giải quyết khiếu nại, góp ý từ phụ huynh.'),
+        };
+      case 'supplementary':
+        return {
+          title: t('topbar.supplementaryTitle', 'Lớp học bổ trợ (Supplementary Tutoring)'),
+          subtitle: t('topbar.supplementarySub', 'Theo dõi điểm danh, nội dung bổ trợ và nhận xét sự tiến bộ.'),
+        };
+      case 'renewal':
+        return {
+          title: t('topbar.renewalTitle', 'Quản lý tái tục & Rủi ro học phí'),
+          subtitle: t('topbar.renewalSub', 'Cảnh báo hạn tái tục, hỗ trợ chăm sóc phụ huynh trước hạn.'),
+        };
+      case 'staff_roles':
+        return {
+          title: t('topbar.staffRolesTitle', 'Quản trị nhân sự & Phân quyền'),
+          subtitle: t('topbar.staffRolesSub', 'Phê duyệt tài khoản mới, phân bổ vai trò và chi nhánh công tác.'),
+        };
+      case 'branches_classes':
+        return {
+          title: t('topbar.branchesClassesTitle', 'Chi nhánh & Danh sách lớp học'),
+          subtitle: t('topbar.branchesClassesSub', 'Cấu hình chi nhánh hoạt động và thiết lập phân công lớp.'),
+        };
+      case 'logs':
+        return {
+          title: t('topbar.logsTitle', 'Nhật ký tác nghiệp (Activity Logs)'),
+          subtitle: t('topbar.logsSub', 'Lịch sử tương tác giữa các bộ phận chuyên môn và học viên.'),
+        };
+      default:
+        return {
+          title: 'KAPLA Staff Dashboard',
+          subtitle: t('brand.portalSubtitle', 'Hệ thống quản lý đào tạo & chăm sóc học viên'),
+        };
+    }
+  }, [activeSection, t]);
 
   const isSystemAdmin = profile?.system_role === 'system_admin';
 
@@ -123,9 +138,12 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* -------------------------------------------------------------------- */}
-      {/* Right: Branch Selector, Role Badge & User Profile Menu */}
+      {/* Right: Language Switcher, Branch Selector, Role Badge & User Profile */}
       {/* -------------------------------------------------------------------- */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Bilingual Switcher (🇻🇳 Tiếng Việt / 🇺🇸 English (US)) */}
+        <LanguageToggle />
+
         {/* Branch Selector Dropdown */}
         <div className="relative">
           <button
@@ -135,7 +153,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
             <span className="max-w-[130px] sm:max-w-[180px] truncate">
-              {currentBranch ? currentBranch.name : 'Chọn chi nhánh'}
+              {currentBranch ? currentBranch.name : t('topbar.selectBranch', 'Chọn chi nhánh')}
             </span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
@@ -148,7 +166,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               />
               <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
                 <div className="px-3 py-1.5 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  {isSystemAdmin ? 'Chi nhánh toàn hệ thống' : 'Chi nhánh phân bổ'}
+                  {isSystemAdmin ? t('topbar.systemBranches', 'Chi nhánh toàn hệ thống') : t('topbar.assignedBranches', 'Chi nhánh phân bổ')}
                 </div>
                 {availableBranches.map((branch) => {
                   const isSelected = currentBranch?.id === branch.id;
@@ -193,7 +211,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             onClick={onRefreshData}
             disabled={refreshing}
-            title="Làm mới dữ liệu"
+            title={t('topbar.refreshData', 'Làm mới dữ liệu')}
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -228,7 +246,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     {profile?.email}
                   </p>
                   <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    ● Email đã xác thực
+                    {t('topbar.emailVerified', '● Email đã xác thực')}
                   </span>
                 </div>
 
@@ -242,18 +260,19 @@ export const TopBar: React.FC<TopBarProps> = ({
                     className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-                    Đồng bộ phiên đăng nhập
+                    <span>{t('topbar.refreshData', 'Làm mới phiên làm việc')}</span>
                   </button>
-                </div>
 
-                <div className="pt-1 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => signOut()}
-                    className="w-full text-left px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 font-medium"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      signOut();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
                   >
-                    <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                    Đăng xuất tài khoản
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>{t('auth.logout', 'Đăng xuất')}</span>
                   </button>
                 </div>
               </div>

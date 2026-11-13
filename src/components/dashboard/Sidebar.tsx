@@ -2,7 +2,7 @@
 // KAPLA Staff Dashboard — Sidebar Navigation
 // ==============================================================================
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { DashboardNavSection } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface SidebarProps {
   activeSection: DashboardNavSection;
@@ -46,32 +47,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingCount = 0,
 }) => {
   const { profile, activeRole, currentBranch, signOut } = useAuth();
+  const { t } = useLanguage();
   const isCMOrAdmin = profile?.system_role === 'system_admin' || activeRole === 'CM';
 
-  const navItems: NavItem[] = [
-    { id: 'overview', label: 'Tổng quan học vụ', icon: LayoutDashboard },
-    { id: 'students', label: 'Hồ sơ học viên', icon: Users },
-    { id: 'care_tasks', label: 'Công việc HRT', icon: ClipboardList },
-    { id: 'assessments', label: 'Đánh giá năng lực', icon: ClipboardCheck },
-    { id: 'interventions', label: 'Phiếu can thiệp', icon: AlertTriangle },
-    { id: 'feedback', label: 'Phản hồi phụ huynh', icon: MessageSquareHeart },
-    { id: 'supplementary', label: 'Lớp học bổ trợ', icon: BookOpenCheck },
-    { id: 'renewal', label: 'Quản lý tái tục', icon: CalendarClock },
-    { id: 'logs', label: 'Nhật ký tác nghiệp', icon: History },
-    {
-      id: 'staff_roles',
-      label: 'Nhân sự & Phân quyền',
-      icon: ShieldCheck,
-      badge: pendingCount,
-      adminOrCmOnly: false, // visible to staff to view team directory, but approval tab is restricted
-    },
-    {
-      id: 'branches_classes',
-      label: 'Chi nhánh & Lớp học',
-      icon: Building2,
-      adminOrCmOnly: false,
-    },
-  ];
+  const navItems: NavItem[] = useMemo(
+    () => [
+      { id: 'overview', label: t('nav.overview', 'Tổng quan học vụ'), icon: LayoutDashboard },
+      { id: 'students', label: t('nav.students', 'Hồ sơ học viên'), icon: Users },
+      { id: 'care_tasks', label: t('nav.care_tasks', 'Công việc HRT'), icon: ClipboardList },
+      { id: 'assessments', label: t('nav.assessments', 'Đánh giá năng lực'), icon: ClipboardCheck },
+      { id: 'interventions', label: t('nav.interventions', 'Phiếu can thiệp'), icon: AlertTriangle },
+      { id: 'feedback', label: t('nav.feedback', 'Phản hồi phụ huynh'), icon: MessageSquareHeart },
+      { id: 'supplementary', label: t('nav.supplementary', 'Lớp học bổ trợ'), icon: BookOpenCheck },
+      { id: 'renewal', label: t('nav.renewal', 'Quản lý tái tục'), icon: CalendarClock },
+      { id: 'logs', label: t('nav.logs', 'Nhật ký tác nghiệp'), icon: History },
+      {
+        id: 'staff_roles',
+        label: t('nav.staff_roles', 'Nhân sự & Phân quyền'),
+        icon: ShieldCheck,
+        badge: pendingCount,
+        adminOrCmOnly: false,
+      },
+      {
+        id: 'branches_classes',
+        label: t('nav.branches_classes', 'Chi nhánh & Lớp học'),
+        icon: Building2,
+        adminOrCmOnly: false,
+      },
+    ],
+    [t, pendingCount]
+  );
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#012147] text-slate-200 w-64 xl:w-72 shrink-0 select-none border-r border-[#043264]/40">

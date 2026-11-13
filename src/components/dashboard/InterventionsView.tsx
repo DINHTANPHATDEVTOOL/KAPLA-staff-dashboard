@@ -19,6 +19,7 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { InterventionTicket, InterventionStatus, Student, ClassRoom, UserProfile } from '../../types';
 import { InterventionService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
@@ -54,6 +55,7 @@ const STATUS_LABELS: Record<
 
 export const InterventionsView: React.FC = () => {
   const { currentBranch, profile, activeRole } = useAuth();
+  const { language } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isHeadTeacher = activeRole === 'Head Teacher';
   const isCM = activeRole === 'CM';
@@ -259,10 +261,14 @@ export const InterventionsView: React.FC = () => {
             <span className="p-2 rounded-xl bg-amber-50 text-amber-700">
               <AlertTriangle className="w-5 h-5" />
             </span>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Phiếu can thiệp học thuật</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              {language === 'en' ? 'Academic Interventions' : 'Phiếu can thiệp học thuật'}
+            </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Quy trình can thiệp 4 bước: Mở → Đang xử lý → Đã xử lý → Head Teacher / CM xác minh tại {currentBranch?.name || 'KAPLA'}
+            {language === 'en'
+              ? `4-step intervention workflow: Open → In Progress → Resolved → Verified by Head Teacher / CM at ${currentBranch?.name || 'KAPLA'}`
+              : `Quy trình can thiệp 4 bước: Mở → Đang xử lý → Đã xử lý → Head Teacher / CM xác minh tại ${currentBranch?.name || 'KAPLA'}`}
           </p>
         </div>
 
@@ -272,7 +278,7 @@ export const InterventionsView: React.FC = () => {
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
         >
           <Plus className="w-4 h-4" />
-          Tạo phiếu can thiệp
+          {language === 'en' ? 'Create Intervention Ticket' : 'Tạo phiếu can thiệp'}
         </button>
       </div>
 

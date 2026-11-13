@@ -18,6 +18,7 @@
     "test:lockdown": "tsx scripts/test_t04_t05_security_lockdown.ts",
     "test:dispatch": "tsx scripts/test_real_email_dispatch.ts",
     "test:browser": "tsx scripts/test_browser_auth_verification_flow.ts",
+    "test:bilingual": "tsx scripts/test_bilingual_toggle_browser.ts",
     "dispatch:tuition": "tsx scripts/dispatch_tuition_emails.ts",
     "lint": "tsc --noEmit"
   },

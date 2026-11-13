@@ -24,11 +24,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Student, ClassRoom, UserProfile, ClassTransfer } from '../../types';
 import { StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
 export const StudentListView: React.FC = () => {
   const { profile, activeRole, currentBranch } = useAuth();
+  const { language, t } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isCM = activeRole === 'CM';
   const canManage = isSysAdmin || isCM;
@@ -290,10 +292,14 @@ export const StudentListView: React.FC = () => {
             <span className="p-2 rounded-xl bg-blue-50 text-[#043264]">
               <GraduationCap className="w-5 h-5" />
             </span>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Hồ sơ học viên (Student Directory)</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              {language === 'en' ? 'Student Records' : 'Hồ sơ học viên (Student Directory)'}
+            </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Quản lý thông tin học viên, hạn học phí, lớp học và phân công HRT tại {currentBranch?.name || 'KAPLA'}
+            {language === 'en'
+              ? `Manage student records, tuition expiry, class enrollment, and HRT assignments at ${currentBranch?.name || 'KAPLA'}`
+              : `Quản lý thông tin học viên, hạn học phí, lớp học và phân công HRT tại ${currentBranch?.name || 'KAPLA'}`}
           </p>
         </div>
 
@@ -304,7 +310,7 @@ export const StudentListView: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            Thêm học viên mới
+            {language === 'en' ? 'Add New Student' : 'Thêm học viên mới'}
           </button>
         )}
       </div>

@@ -5,10 +5,12 @@
 import React, { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { AuthLayout } from './AuthLayout';
 
 export const LoginForm: React.FC = () => {
   const { signIn, setAuthScreen } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -20,11 +22,11 @@ export const LoginForm: React.FC = () => {
     setFormError(null);
 
     if (!email.trim()) {
-      setFormError('Vui lòng nhập địa chỉ email cơ quan.');
+      setFormError(t('auth.emailError', 'Vui lòng nhập địa chỉ email cơ quan.'));
       return;
     }
     if (!password) {
-      setFormError('Vui lòng nhập mật khẩu.');
+      setFormError(t('auth.passwordError', 'Vui lòng nhập mật khẩu.'));
       return;
     }
 
@@ -41,8 +43,8 @@ export const LoginForm: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Đăng nhập tài khoản"
-      subtitle="Nhập email và mật khẩu được cấp để truy cập vào hệ thống KAPLA."
+      title={t('auth.loginTitle', 'Đăng nhập tài khoản')}
+      subtitle={t('auth.loginSubtitle', 'Nhập email và mật khẩu được cấp để truy cập vào hệ thống KAPLA.')}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {formError && (
@@ -58,7 +60,7 @@ export const LoginForm: React.FC = () => {
             htmlFor="login-email"
             className="block text-xs font-semibold text-slate-700 mb-1.5"
           >
-            Email cơ quan <span className="text-red-500">*</span>
+            {t('auth.emailLabel', 'Email cơ quan')} <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -71,7 +73,7 @@ export const LoginForm: React.FC = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ten.nhanvien@kapla.edu.vn"
+              placeholder={t('auth.emailPlaceholder', 'ten.nhanvien@kapla.edu.vn')}
               className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all placeholder:text-slate-400"
             />
           </div>
@@ -84,14 +86,14 @@ export const LoginForm: React.FC = () => {
               htmlFor="login-password"
               className="block text-xs font-semibold text-slate-700"
             >
-              Mật khẩu <span className="text-red-500">*</span>
+              {t('auth.passwordLabel', 'Mật khẩu')} <span className="text-red-500">*</span>
             </label>
             <button
               type="button"
               onClick={() => setAuthScreen('forgot-password')}
               className="text-xs text-[#026fd7] hover:text-[#043264] font-medium transition-colors"
             >
-              Quên mật khẩu?
+              {t('auth.forgotPassword', 'Quên mật khẩu?')}
             </button>
           </div>
           <div className="relative">
@@ -121,7 +123,7 @@ export const LoginForm: React.FC = () => {
             className="w-4 h-4 text-[#026fd7] border-slate-300 rounded focus:ring-[#026fd7]"
           />
           <label htmlFor="remember-me" className="ml-2 text-xs text-slate-600 cursor-pointer">
-            Ghi nhớ trạng thái đăng nhập trên thiết bị này
+            {t('auth.rememberMe', 'Ghi nhớ trạng thái đăng nhập trên thiết bị này')}
           </label>
         </div>
 
@@ -134,12 +136,12 @@ export const LoginForm: React.FC = () => {
           {submitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Đang xác thực...
+              {t('auth.signingIn', 'Đang xác thực...')}
             </>
           ) : (
             <>
               <LogIn className="w-4 h-4" />
-              Đăng nhập hệ thống
+              {t('auth.signInBtn', 'Đăng nhập hệ thống')}
             </>
           )}
         </button>
@@ -147,13 +149,13 @@ export const LoginForm: React.FC = () => {
         {/* Register Navigation */}
         <div className="pt-4 border-t border-slate-200 text-center">
           <p className="text-xs text-slate-600">
-            Bạn là nhân sự mới của KAPLA?{' '}
+            {t('auth.newStaffPrompt', 'Bạn là nhân sự mới của KAPLA?')}{' '}
             <button
               type="button"
               onClick={() => setAuthScreen('register')}
               className="font-semibold text-[#026fd7] hover:text-[#043264] underline underline-offset-2 transition-colors"
             >
-              Đăng ký tài khoản ngay
+              {t('auth.registerNow', 'Đăng ký tài khoản ngay')}
             </button>
           </p>
         </div>
