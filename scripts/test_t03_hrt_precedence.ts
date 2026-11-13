@@ -123,6 +123,35 @@ async function runT03Tests() {
     status: 'active',
   });
 
+  // CM Bình Tân (Cơ sở đích)
+  const cmBtEmail = `cm.bt.${runId}@kapla.edu.vn`;
+  const { data: cmBtUser } = await adminClient.auth.admin.createUser({
+    email: cmBtEmail,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: 'Trần Minh Đức (CM Bình Tân)', preferred_branch_id: BRANCH_BT_ID },
+  });
+  const cmBtId = cmBtUser.user!.id;
+  await adminClient.from('profiles').update({ status: 'active' }).eq('id', cmBtId);
+  await adminClient.from('branch_memberships').insert({
+    user_id: cmBtId,
+    branch_id: BRANCH_BT_ID,
+    role: 'CM',
+    is_primary: true,
+    status: 'active',
+  });
+
+  // Quản trị hệ thống (System Admin)
+  const adminEmail = `admin.${runId}@kapla.edu.vn`;
+  const { data: sysAdminUser } = await adminClient.auth.admin.createUser({
+    email: adminEmail,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: 'Quản trị viên Hệ thống' },
+  });
+  const sysAdminId = sysAdminUser.user!.id;
+  await adminClient.from('profiles').update({ status: 'active', system_role: 'system_admin' }).eq('id', sysAdminId);
+
   // Tạo client đăng nhập tương ứng
   const maiClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   await maiClient.auth.signInWithPassword({ email: maiEmail, password });
@@ -136,7 +165,13 @@ async function runT03Tests() {
   const cmPhClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   await cmPhClient.auth.signInWithPassword({ email: cmPhEmail, password });
 
-  assert('Khởi tạo tài khoản Mai (HRT PH), Linh (HRT PH), Nam (HRT BT) và CM Phạm Hùng thành công', true);
+  const cmBtClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await cmBtClient.auth.signInWithPassword({ email: cmBtEmail, password });
+
+  const sysAdminClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await sysAdminClient.auth.signInWithPassword({ email: adminEmail, password });
+
+  assert('Khởi tạo tài khoản Mai, Linh, CM Phạm Hùng, CM Bình Tân và Quản trị hệ thống thành công', true);
 
   // ---------------------------------------------------------------------------
   // 2. TẠO LỚP HỌC VÀ THIẾT LẬP HRT MẶC ĐỊNH
@@ -520,6 +555,134 @@ async function runT03Tests() {
     'Sau khi chuyển lớp: Mai không còn thấy em Bình',
     !maiFinalIds.includes(studentBinh.id),
     `Quyền xem được điều chỉnh chính xác theo lớp mới`
+  );
+
+  // ---------------------------------------------------------------------------
+  // 9. KIỂM THỬ CÁC ĐIỂM P0 CỦA T03: GIỚI HẠN CHUYỂN LIÊN CƠ SỞ & CONCURRENCY
+  // ---------------------------------------------------------------------------
+  console.log('\n--- 9. KIỂM THỬ ĐIỂM P0: GIỚI HẠN CHUYỂN LIÊN CƠ SỞ & BẢO ĐẢM 1 GHI DANH ACTIVE ---');
+
+  // 9.1 CM ở cơ sở nguồn (CM Phạm Hùng) cố tình chuyển em Bình sang cơ sở Bình Tân
+  const { error: cmSourceCrossErr } = await cmPhClient.rpc('transfer_student_class', {
+    p_student_id: studentBinh.id,
+    p_to_class_id: classBT1.id,
+    p_reason: 'CM Phạm Hùng muốn chuyển học viên sang cơ sở Bình Tân',
+  });
+
+  assert(
+    'Chặn CM cơ sở nguồn chuyển học viên sang chi nhánh khác (Chỉ dành cho Quản trị hệ thống)',
+    Boolean(cmSourceCrossErr),
+    `Phản hồi từ API: ${cmSourceCrossErr?.message || cmSourceCrossErr?.code}`
+  );
+
+  // 9.2 CM ở cơ sở đích (CM Bình Tân) cố tình kéo học viên An từ Phạm Hùng sang cơ sở Bình Tân
+  const { error: cmTargetCrossErr } = await cmBtClient.rpc('transfer_student_class', {
+    p_student_id: studentAn.id,
+    p_to_class_id: classBT1.id,
+    p_reason: 'CM Bình Tân muốn kéo học viên từ cơ sở Phạm Hùng sang',
+  });
+
+  assert(
+    'Chặn CM cơ sở đích tự ý chuyển học viên từ chi nhánh khác về cơ sở mình',
+    Boolean(cmTargetCrossErr),
+    `Phản hồi từ API: ${cmTargetCrossErr?.message || cmTargetCrossErr?.code}`
+  );
+
+  // 9.3 Quản trị hệ thống (System Admin) chuyển liên cơ sở thành công
+  const { data: adminCrossRes, error: adminCrossErr } = await sysAdminClient.rpc('transfer_student_class', {
+    p_student_id: studentCuong.id,
+    p_to_class_id: classBT1.id,
+    p_reason: 'Gia đình học viên Cường chuyển nhà từ Quận 8 sang Quận Bình Tân, điều phối bởi Tổng bộ',
+  });
+
+  assert(
+    'Quản trị hệ thống thực hiện chuyển học viên liên cơ sở thành công',
+    !adminCrossErr && adminCrossRes?.success === true,
+    `Kết quả RPC: ${JSON.stringify(adminCrossRes)}`
+  );
+
+  // 9.4 Hai yêu cầu chuyển lớp cùng lúc (Concurrency test) & Ràng buộc duy nhất 1 ghi danh active
+  console.log('\n--- 9.4 HAI YÊU CẦU CHUYỂN CÙNG LÚC & KIỂM TRA DUY NHẤT 1 ENROLLMENT ACTIVE ---');
+
+  // Tạo thêm 1 lớp thứ 3 tại Phạm Hùng để test chuyển đồng thời
+  const { data: classA3 } = await adminClient
+    .from('classes')
+    .insert({
+      branch_id: BRANCH_PH_ID,
+      name: `PH-A3-Starters-${runId}`,
+      level: 'Starters',
+      default_hrt_id: maiId,
+      status: 'active',
+    })
+    .select()
+    .single();
+
+  // Tạo một học viên mới để test chuyển đồng thời
+  const { data: concurrentStudent } = await adminClient
+    .from('students')
+    .insert({
+      branch_id: BRANCH_PH_ID,
+      student_code: `CONCUR-${runId}`,
+      full_name: 'Phạm Minh Khôi',
+      parent_name: 'Phạm Văn Hùng',
+      parent_phone: '0905556667',
+      tuition_expiry_date: '2027-01-01',
+      status: 'active',
+      current_class_id: classA1.id,
+      assigned_hrt_id: linhId, // Giao riêng cho Linh
+    })
+    .select()
+    .single();
+
+  await adminClient.from('enrollments').insert({
+    student_id: concurrentStudent.id,
+    class_id: classA1.id,
+    branch_id: BRANCH_PH_ID,
+    status: 'active',
+  });
+
+  // Bắn 2 yêu cầu chuyển lớp đồng thời đối với học viên Khôi: 1 sang A2, 1 sang A3
+  const [req1, req2] = await Promise.allSettled([
+    cmPhClient.rpc('transfer_student_class', {
+      p_student_id: concurrentStudent.id,
+      p_to_class_id: classA2.id,
+      p_reason: 'Yêu cầu chuyển lớp 1 (Concurrent)',
+    }),
+    cmPhClient.rpc('transfer_student_class', {
+      p_student_id: concurrentStudent.id,
+      p_to_class_id: classA3.id,
+      p_reason: 'Yêu cầu chuyển lớp 2 (Concurrent)',
+    }),
+  ]);
+
+  // Kiểm tra bảng enrollments: Số ghi danh active PHẢI là đúng 1
+  const { data: activeEnrolls } = await adminClient
+    .from('enrollments')
+    .select('*')
+    .eq('student_id', concurrentStudent.id)
+    .eq('status', 'active');
+
+  assert(
+    'Khóa bi-quan FOR UPDATE và Partial Unique Index bảo đảm duy nhất 1 ghi danh active khi có 2 yêu cầu đồng thời',
+    activeEnrolls !== null && activeEnrolls.length === 1,
+    `Số enrollment active hiện tại trong DB: ${activeEnrolls?.length} (Lớp hiện tại ID: ${activeEnrolls?.[0]?.class_id})`
+  );
+
+  // 9.5 Kiểm tra quy tắc HRT riêng ưu tiên hơn HRT lớp sau khi chuyển
+  console.log('\n--- 9.5 KIỂM TRA QUY TẮC HRT RIÊNG ƯU TIÊN HƠN HRT LỚP SAU KHI CHUYỂN ---');
+
+  // Học viên Khôi đã được chuyển (sang A2 hoặc A3). Cả A2 (Linh) và A3 (Mai) đều có HRT mặc định.
+  // Nhưng Khôi có HRT riêng được gán là Linh!
+  // Ta kiểm tra xem Linh có thấy Khôi không, và Mai (dù là HRT mặc định của A3) có bị ẩn Khôi nếu Khôi vào A3 không:
+  const { data: linhCheckConcur } = await linhClient
+    .from('students')
+    .select('id, full_name')
+    .eq('id', concurrentStudent.id);
+
+  assert(
+    'Linh (HRT riêng) vẫn thấy học viên Khôi sau khi chuyển lớp (Ưu tiên HRT riêng được bảo toàn)',
+    linhCheckConcur !== null && linhCheckConcur.length === 1 && linhCheckConcur[0].id === concurrentStudent.id,
+    `Học viên tìm thấy qua client của Linh: ${linhCheckConcur?.[0]?.full_name}`
   );
 
   console.log('\n======================================================================');
