@@ -246,6 +246,101 @@ export interface InterventionTicket {
 }
 
 // -----------------------------------------------------------------------------
+// Phase T04 Extended: Feedback, Supplementary & Renewal Tracking
+// -----------------------------------------------------------------------------
+
+export type FeedbackType = 'academic_concern' | 'complaint' | 'inquiry' | 'compliment' | 'facility';
+export type FeedbackChannel = 'phone' | 'zalo' | 'in_person' | 'app' | 'email';
+export type FeedbackStatus = 'open' | 'in_progress' | 'resolved';
+
+export interface ParentFeedback {
+  id: string;
+  student_id: string;
+  branch_id: string;
+  parent_name: string;
+  parent_phone: string;
+  feedback_type: FeedbackType;
+  channel: FeedbackChannel;
+  content: string;
+  assigned_staff_id?: string;
+  assigned_staff_name?: string;
+  due_date: string;
+  resolution_notes?: string;
+  status: FeedbackStatus;
+  student?: Student;
+  branch?: Branch;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type SessionStatus = 'scheduled' | 'completed' | 'cancelled';
+export type AttendanceStatus = 'present' | 'absent' | 'excused';
+
+export interface SupplementaryAttendee {
+  id: string;
+  session_id: string;
+  student_id: string;
+  attendance_status: AttendanceStatus;
+  assessment_score?: number;
+  teacher_feedback?: string;
+  student?: Student;
+}
+
+export interface SupplementarySession {
+  id: string;
+  branch_id: string;
+  class_id?: string;
+  title: string;
+  session_date: string;
+  start_time: string;
+  end_time: string;
+  teacher_id?: string;
+  teacher_name?: string;
+  room?: string;
+  topic: string;
+  target_objective: string;
+  status: SessionStatus;
+  notes?: string;
+  attendees_count?: number;
+  branch?: Branch;
+  class?: ClassRoom;
+  attendees?: SupplementaryAttendee[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type RenewalStatus = 'monitoring' | 'contacted' | 'committed' | 'renewed' | 'churned';
+export type RenewalRisk = 'high' | 'medium' | 'low';
+
+export interface RenewalRecord {
+  id: string;
+  student_id: string;
+  branch_id: string;
+  current_expiry_date: string;
+  days_remaining: number;
+  risk_level: RenewalRisk;
+  assigned_hrt_id?: string;
+  assigned_hrt_name?: string;
+  status: RenewalStatus;
+  last_contact_date?: string;
+  contact_count: number;
+  notes?: string;
+  new_expiry_date?: string;
+  tuition_package?: string;
+  student?: Student;
+  branch?: Branch;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SystemConfig {
+  tuition_warning_days_threshold: number; // Mốc cảnh báo học phí cấu hình được (Admin)
+  auto_email_alerts_enabled: boolean;
+  cambridge_scale_max: number; // 5.0 khiên
+  academic_risk_threshold: number; // < 3.0 khiên
+}
+
+// -----------------------------------------------------------------------------
 // Role Labels & Metadata in Vietnamese
 // -----------------------------------------------------------------------------
 

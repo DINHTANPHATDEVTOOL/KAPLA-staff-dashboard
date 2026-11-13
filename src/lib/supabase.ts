@@ -17,6 +17,18 @@ import {
   StudentAssessment,
   InterventionTicket,
   InterventionStatus,
+  ParentFeedback,
+  FeedbackType,
+  FeedbackChannel,
+  FeedbackStatus,
+  SupplementarySession,
+  SupplementaryAttendee,
+  SessionStatus,
+  AttendanceStatus,
+  RenewalRecord,
+  RenewalStatus,
+  RenewalRisk,
+  SystemConfig,
 } from '../types';
 
 const isDev = Boolean(import.meta.env.DEV);
@@ -61,6 +73,10 @@ const STORAGE_KEYS = {
   CARE_TASKS: 'kapla_mock_care_tasks',
   ASSESSMENTS: 'kapla_mock_assessments',
   INTERVENTIONS: 'kapla_mock_interventions',
+  FEEDBACK: 'kapla_mock_feedback',
+  SUPPLEMENTARY: 'kapla_mock_supplementary',
+  RENEWAL: 'kapla_mock_renewal',
+  SYSTEM_CONFIG: 'kapla_system_config',
 };
 
 // Initial Seed Data with Two Core Branches
@@ -441,6 +457,163 @@ const DEFAULT_INTERVENTIONS: InterventionTicket[] = [
     created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
   },
 ];
+
+const DEFAULT_FEEDBACKS: ParentFeedback[] = [
+  {
+    id: 'fb000000-0000-0000-0000-000000000001',
+    student_id: 's0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    parent_name: 'Nguyễn Hoàng Nam',
+    parent_phone: '0908 123 456',
+    feedback_type: 'academic_concern',
+    channel: 'phone',
+    content: 'Phụ huynh hỏi về lộ trình chuẩn bị thi chứng chỉ Cambridge Starters và nhờ giáo viên lưu ý thêm phần Viết câu.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000003',
+    due_date: '2026-11-20',
+    status: 'in_progress',
+    resolution_notes: 'HRT Linh đã gọi điện tư vấn chi tiết lộ trình và xếp lịch học bổ trợ ngữ pháp thứ Tư hàng tuần.',
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 'fb000000-0000-0000-0000-000000000002',
+    student_id: 's0000000-0000-0000-0000-000000000002',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    parent_name: 'Trần Quốc Tuấn',
+    parent_phone: '0918 234 567',
+    feedback_type: 'compliment',
+    channel: 'zalo',
+    content: 'Phụ huynh khen ngợi bé dạo này về nhà tự giác nghe bài hát tiếng Anh và nói chuyện tự tin hơn nhiều.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000002',
+    due_date: '2026-11-18',
+    status: 'resolved',
+    resolution_notes: 'Đã gửi lời cảm ơn phụ huynh và gửi kèm video clip bé thuyết trình mini trên lớp.',
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: 'fb000000-0000-0000-0000-000000000003',
+    student_id: 's0000000-0000-0000-0000-000000000003',
+    branch_id: 'a0000000-0000-0000-0000-000000000002',
+    parent_name: 'Lê Văn Cảnh',
+    parent_phone: '0989 345 678',
+    feedback_type: 'inquiry',
+    channel: 'app',
+    content: 'Phụ huynh cần bảng điểm tổng hợp giữa kỳ để đối chiếu tiến độ học tiếng Anh ở trường.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000006',
+    due_date: '2026-11-22',
+    status: 'open',
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
+const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
+  {
+    id: 'sp000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    class_id: 'c0000000-0000-0000-0000-000000000001',
+    title: 'Bổ trợ kỹ năng Viết & Thì Hiện Tại Đơn (Starters)',
+    session_date: '2026-11-19',
+    start_time: '17:30',
+    end_time: '18:30',
+    teacher_id: 'u0000000-0000-0000-0000-000000000004',
+    room: 'Phòng Oxford 201',
+    topic: 'Ngữ pháp câu đơn, chia động từ ngôi thứ 3 số ít và viết mô tả đồ vật theo tranh.',
+    target_objective: 'Học viên nhận diện đúng chủ ngữ và chia s/es chính xác ít nhất 80% câu bài tập.',
+    status: 'scheduled',
+    attendees_count: 3,
+    attendees: [
+      {
+        id: 'spa00000-0000-0000-0000-000000000001',
+        session_id: 'sp000000-0000-0000-0000-000000000001',
+        student_id: 's0000000-0000-0000-0000-000000000001',
+        attendance_status: 'present',
+        assessment_score: 3.5,
+        teacher_feedback: 'Học sinh chú ý lắng nghe, làm đúng 4/5 câu viết mẫu.',
+      },
+    ],
+    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: 'sp000000-0000-0000-0000-000000000002',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    class_id: 'c0000000-0000-0000-0000-000000000002',
+    title: 'Luyện phản xạ Nói & Phát âm âm đuôi (Movers)',
+    session_date: '2026-11-14',
+    start_time: '18:00',
+    end_time: '19:00',
+    teacher_id: 'u0000000-0000-0000-0000-000000000004',
+    room: 'Phòng Cambridge 302',
+    topic: 'Mô tả sự khác biệt giữa hai bức tranh và kể lại câu chuyện 4 tranh.',
+    target_objective: 'Nói câu hoàn chỉnh có thì Quá khứ đơn, phát âm rõ âm đuôi /s/, /z/, /id/.',
+    status: 'completed',
+    attendees_count: 4,
+    notes: 'Buổi học diễn ra hào hứng, học sinh có tương tác nhóm tốt.',
+    attendees: [
+      {
+        id: 'spa00000-0000-0000-0000-000000000002',
+        session_id: 'sp000000-0000-0000-0000-000000000002',
+        student_id: 's0000000-0000-0000-0000-000000000002',
+        attendance_status: 'present',
+        assessment_score: 4.0,
+        teacher_feedback: 'Phát âm chuẩn hơn, đã tự sửa được lỗi âm cuối.',
+      },
+    ],
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+];
+
+const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
+  {
+    id: 'rn000000-0000-0000-0000-000000000001',
+    student_id: 's0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    current_expiry_date: '2026-11-24',
+    days_remaining: 11,
+    risk_level: 'high',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000003',
+    status: 'contacted',
+    last_contact_date: '2026-11-12',
+    contact_count: 2,
+    notes: 'Phụ huynh rất quan tâm khóa Starters nâng cao, hẹn thứ Bảy lên trung tâm chốt gói 6 tháng.',
+    tuition_package: 'Gói Starters Pro (6 tháng - 24 tuần)',
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: 'rn000000-0000-0000-0000-000000000002',
+    student_id: 's0000000-0000-0000-0000-000000000002',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    current_expiry_date: '2026-12-05',
+    days_remaining: 22,
+    risk_level: 'low',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000002',
+    status: 'monitoring',
+    contact_count: 0,
+    notes: 'Học lực đều, phụ huynh hài lòng, chuẩn bị gửi thư ngỏ lộ trình Movers.',
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: 'rn000000-0000-0000-0000-000000000003',
+    student_id: 's0000000-0000-0000-0000-000000000003',
+    branch_id: 'a0000000-0000-0000-0000-000000000002',
+    current_expiry_date: '2026-11-20',
+    days_remaining: 7,
+    risk_level: 'high',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000006',
+    status: 'committed',
+    last_contact_date: '2026-11-11',
+    contact_count: 3,
+    notes: 'Phụ huynh đã đồng ý tái tục gói 1 năm, đang đợi chuyển khoản trước 18/11.',
+    new_expiry_date: '2027-11-20',
+    tuition_package: 'Gói Cambridge Toàn Diện (12 tháng)',
+    created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+  },
+];
+
+const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
+  tuition_warning_days_threshold: 14,
+  auto_email_alerts_enabled: true,
+  cambridge_scale_max: 5.0,
+  academic_risk_threshold: 3.0,
+};
 
 export class MockStorageService {
   private static ensureDevOnly(): void {
@@ -1027,6 +1200,163 @@ export class MockStorageService {
     localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
   }
 
+  static getFeedbacks(branchId?: string, status?: FeedbackStatus): ParentFeedback[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
+    const feedbacks: ParentFeedback[] = raw ? JSON.parse(raw) : DEFAULT_FEEDBACKS;
+    if (!raw) localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(DEFAULT_FEEDBACKS));
+
+    const students = this.getStudents();
+    const profiles = this.getProfiles();
+    const branches = this.getBranches();
+
+    let filtered = [...feedbacks];
+    if (branchId) filtered = filtered.filter((f) => f.branch_id === branchId);
+    if (status) filtered = filtered.filter((f) => f.status === status);
+
+    return filtered.map((f) => ({
+      ...f,
+      student: students.find((s) => s.id === f.student_id),
+      branch: branches.find((b) => b.id === f.branch_id),
+      assigned_staff_name: profiles.find((p) => p.id === f.assigned_staff_id)?.full_name || 'Chưa phân công',
+    }));
+  }
+
+  static addFeedback(payload: Omit<ParentFeedback, 'id' | 'created_at' | 'updated_at'>): ParentFeedback {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
+    const feedbacks: ParentFeedback[] = raw ? JSON.parse(raw) : DEFAULT_FEEDBACKS;
+    const newFeedback: ParentFeedback = {
+      ...payload,
+      id: 'fb' + Math.random().toString(36).substring(2, 9),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    feedbacks.unshift(newFeedback);
+    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedbacks));
+    return newFeedback;
+  }
+
+  static updateFeedback(id: string, updates: Partial<ParentFeedback>): void {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
+    const feedbacks: ParentFeedback[] = raw ? JSON.parse(raw) : DEFAULT_FEEDBACKS;
+    const idx = feedbacks.findIndex((f) => f.id === id);
+    if (idx === -1) throw new Error('Không tìm thấy phản hồi.');
+    feedbacks[idx] = { ...feedbacks[idx], ...updates, updated_at: new Date().toISOString() };
+    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedbacks));
+  }
+
+  static getSupplementarySessions(branchId?: string, status?: SessionStatus): SupplementarySession[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
+    const sessions: SupplementarySession[] = raw ? JSON.parse(raw) : DEFAULT_SUPPLEMENTARY_SESSIONS;
+    if (!raw) localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(DEFAULT_SUPPLEMENTARY_SESSIONS));
+
+    const classes = this.getClasses();
+    const profiles = this.getProfiles();
+    const branches = this.getBranches();
+    const students = this.getStudents();
+
+    let filtered = [...sessions];
+    if (branchId) filtered = filtered.filter((s) => s.branch_id === branchId);
+    if (status) filtered = filtered.filter((s) => s.status === status);
+
+    return filtered.map((s) => ({
+      ...s,
+      class: classes.find((c) => c.id === s.class_id),
+      branch: branches.find((b) => b.id === s.branch_id),
+      teacher_name: profiles.find((p) => p.id === s.teacher_id)?.full_name || 'Chưa gán',
+      attendees: (s.attendees || []).map((a) => ({
+        ...a,
+        student: students.find((st) => st.id === a.student_id),
+      })),
+    }));
+  }
+
+  static addSupplementarySession(payload: Omit<SupplementarySession, 'id' | 'created_at' | 'updated_at'>): SupplementarySession {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
+    const sessions: SupplementarySession[] = raw ? JSON.parse(raw) : DEFAULT_SUPPLEMENTARY_SESSIONS;
+    const newSession: SupplementarySession = {
+      ...payload,
+      id: 'sp' + Math.random().toString(36).substring(2, 9),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    sessions.unshift(newSession);
+    localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(sessions));
+    return newSession;
+  }
+
+  static updateSupplementarySession(id: string, updates: Partial<SupplementarySession>): void {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
+    const sessions: SupplementarySession[] = raw ? JSON.parse(raw) : DEFAULT_SUPPLEMENTARY_SESSIONS;
+    const idx = sessions.findIndex((s) => s.id === id);
+    if (idx === -1) throw new Error('Không tìm thấy buổi học.');
+    sessions[idx] = { ...sessions[idx], ...updates, updated_at: new Date().toISOString() };
+    localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(sessions));
+  }
+
+  static getRenewalRecords(branchId?: string, status?: RenewalStatus): RenewalRecord[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.RENEWAL);
+    const records: RenewalRecord[] = raw ? JSON.parse(raw) : DEFAULT_RENEWAL_RECORDS;
+    if (!raw) localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(DEFAULT_RENEWAL_RECORDS));
+
+    const students = this.getStudents();
+    const profiles = this.getProfiles();
+    const branches = this.getBranches();
+
+    let filtered = [...records];
+    if (branchId) filtered = filtered.filter((r) => r.branch_id === branchId);
+    if (status) filtered = filtered.filter((r) => r.status === status);
+
+    return filtered.map((r) => {
+      const student = students.find((s) => s.id === r.student_id);
+      return {
+        ...r,
+        student,
+        branch: branches.find((b) => b.id === r.branch_id),
+        assigned_hrt_name: profiles.find((p) => p.id === r.assigned_hrt_id)?.full_name || 'Chưa gán',
+      };
+    });
+  }
+
+  static updateRenewalRecord(id: string, updates: Partial<RenewalRecord>): void {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.RENEWAL);
+    const records: RenewalRecord[] = raw ? JSON.parse(raw) : DEFAULT_RENEWAL_RECORDS;
+    const idx = records.findIndex((r) => r.id === id);
+    if (idx === -1) throw new Error('Không tìm thấy bản ghi tái tục.');
+    records[idx] = { ...records[idx], ...updates, updated_at: new Date().toISOString() };
+    localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(records));
+  }
+
+  static getSystemConfig(): SystemConfig {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.SYSTEM_CONFIG);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.SYSTEM_CONFIG, JSON.stringify(DEFAULT_SYSTEM_CONFIG));
+      return DEFAULT_SYSTEM_CONFIG;
+    }
+    return JSON.parse(raw);
+  }
+
+  static updateSystemConfig(callerId: string, updates: Partial<SystemConfig>): SystemConfig {
+    this.ensureDevOnly();
+    const profiles = this.getProfiles();
+    const caller = profiles.find((p) => p.id === callerId);
+    if (caller?.system_role !== 'system_admin') {
+      throw new Error('Quyền bị từ chối: Chỉ Quản trị hệ thống (System Admin) mới có quyền chỉnh sửa cấu hình hệ thống.');
+    }
+    const current = this.getSystemConfig();
+    const updated = { ...current, ...updates };
+    localStorage.setItem(STORAGE_KEYS.SYSTEM_CONFIG, JSON.stringify(updated));
+    return updated;
+  }
+
   static resetToDefault(): void {
     localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(DEFAULT_BRANCHES));
     localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(DEFAULT_PROFILES));
@@ -1039,6 +1369,10 @@ export class MockStorageService {
     localStorage.setItem(STORAGE_KEYS.CARE_TASKS, JSON.stringify(DEFAULT_CARE_TASKS));
     localStorage.setItem(STORAGE_KEYS.ASSESSMENTS, JSON.stringify(DEFAULT_ASSESSMENTS));
     localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(DEFAULT_INTERVENTIONS));
+    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(DEFAULT_FEEDBACKS));
+    localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(DEFAULT_SUPPLEMENTARY_SESSIONS));
+    localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(DEFAULT_RENEWAL_RECORDS));
+    localStorage.setItem(STORAGE_KEYS.SYSTEM_CONFIG, JSON.stringify(DEFAULT_SYSTEM_CONFIG));
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
   }
 }
@@ -1367,5 +1701,254 @@ export const InterventionService = {
       return;
     }
     MockStorageService.verifyInterventionMock(callerId || '', id, verificationNotes, isSysAdmin, isHtOrCm);
+  },
+};
+
+// ==============================================================================
+// Phase T04 Extended: FeedbackService, SupplementaryService & RenewalService
+// Phase T05: SystemConfigService (Configurable Tuition Alert & HRT Dispatch)
+// ==============================================================================
+
+export const FeedbackService = {
+  async getFeedbacks(branchId?: string, status?: FeedbackStatus): Promise<ParentFeedback[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('parent_feedbacks')
+        .select(`
+          *,
+          student:students(*),
+          branch:branches(*),
+          assigned_staff:profiles!parent_feedbacks_assigned_staff_id_fkey(*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (branchId) query = query.eq('branch_id', branchId);
+      if (status) query = query.eq('status', status);
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map((f: any) => ({
+          ...f,
+          assigned_staff_name: f.assigned_staff?.full_name || 'Chưa phân công',
+        }));
+      }
+    }
+    return MockStorageService.getFeedbacks(branchId, status);
+  },
+
+  async createFeedback(payload: Omit<ParentFeedback, 'id' | 'created_at' | 'updated_at'>): Promise<ParentFeedback> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('parent_feedbacks')
+        .insert({
+          student_id: payload.student_id,
+          branch_id: payload.branch_id,
+          parent_name: payload.parent_name,
+          parent_phone: payload.parent_phone,
+          feedback_type: payload.feedback_type,
+          channel: payload.channel,
+          content: payload.content,
+          assigned_staff_id: payload.assigned_staff_id,
+          due_date: payload.due_date,
+          status: payload.status || 'open',
+        })
+        .select('*, student:students(*), branch:branches(*)')
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return MockStorageService.addFeedback(payload);
+  },
+
+  async updateStatus(id: string, status: FeedbackStatus, resolutionNotes?: string): Promise<void> {
+    if (realSupabase) {
+      const updates: any = { status, updated_at: new Date().toISOString() };
+      if (resolutionNotes) updates.resolution_notes = resolutionNotes;
+      const { error } = await realSupabase.from('parent_feedbacks').update(updates).eq('id', id);
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.updateFeedback(id, { status, resolution_notes: resolutionNotes });
+  },
+};
+
+export const SupplementaryService = {
+  async getSessions(branchId?: string, status?: SessionStatus): Promise<SupplementarySession[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('supplementary_sessions')
+        .select(`
+          *,
+          class:classes(*),
+          branch:branches(*),
+          teacher:profiles!supplementary_sessions_teacher_id_fkey(*),
+          attendees:supplementary_attendees(*, student:students(*))
+        `)
+        .order('session_date', { ascending: false });
+
+      if (branchId) query = query.eq('branch_id', branchId);
+      if (status) query = query.eq('status', status);
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map((s: any) => ({
+          ...s,
+          teacher_name: s.teacher?.full_name || 'Chưa gán',
+          attendees_count: s.attendees?.length || 0,
+        }));
+      }
+    }
+    return MockStorageService.getSupplementarySessions(branchId, status);
+  },
+
+  async createSession(payload: Omit<SupplementarySession, 'id' | 'created_at' | 'updated_at'>): Promise<SupplementarySession> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('supplementary_sessions')
+        .insert({
+          branch_id: payload.branch_id,
+          class_id: payload.class_id,
+          title: payload.title,
+          session_date: payload.session_date,
+          start_time: payload.start_time,
+          end_time: payload.end_time,
+          teacher_id: payload.teacher_id,
+          room: payload.room,
+          topic: payload.topic,
+          target_objective: payload.target_objective,
+          status: payload.status || 'scheduled',
+          notes: payload.notes,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return MockStorageService.addSupplementarySession(payload);
+  },
+
+  async updateSessionStatus(id: string, status: SessionStatus, notes?: string): Promise<void> {
+    if (realSupabase) {
+      const updates: any = { status, updated_at: new Date().toISOString() };
+      if (notes) updates.notes = notes;
+      const { error } = await realSupabase.from('supplementary_sessions').update(updates).eq('id', id);
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.updateSupplementarySession(id, { status, notes });
+  },
+};
+
+export const RenewalService = {
+  async getRecords(branchId?: string, status?: RenewalStatus): Promise<RenewalRecord[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('renewal_tracking')
+        .select(`
+          *,
+          student:students(*),
+          branch:branches(*),
+          assigned_hrt:profiles!renewal_tracking_assigned_hrt_id_fkey(*)
+        `)
+        .order('current_expiry_date', { ascending: true });
+
+      if (branchId) query = query.eq('branch_id', branchId);
+      if (status) query = query.eq('status', status);
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map((r: any) => {
+          const daysRemaining = Math.ceil(
+            (new Date(r.current_expiry_date).getTime() - new Date().getTime()) / 86400000
+          );
+          return {
+            ...r,
+            days_remaining: daysRemaining,
+            assigned_hrt_name: r.assigned_hrt?.full_name || 'Chưa gán',
+          };
+        });
+      }
+    }
+    return MockStorageService.getRenewalRecords(branchId, status);
+  },
+
+  async updateRecord(id: string, updates: Partial<RenewalRecord>): Promise<void> {
+    if (realSupabase) {
+      const { error } = await realSupabase
+        .from('renewal_tracking')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.updateRenewalRecord(id, updates);
+  },
+};
+
+export const SystemConfigService = {
+  async getConfig(): Promise<SystemConfig> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'tuition_warning_threshold')
+        .single();
+      if (!error && data?.value) {
+        return {
+          tuition_warning_days_threshold: data.value.days ?? 14,
+          auto_email_alerts_enabled: data.value.auto_email_enabled ?? true,
+          cambridge_scale_max: 5.0,
+          academic_risk_threshold: 3.0,
+        };
+      }
+    }
+    return MockStorageService.getSystemConfig();
+  },
+
+  async updateThreshold(days: number, callerId?: string): Promise<SystemConfig> {
+    if (realSupabase) {
+      const { error } = await realSupabase.rpc('update_system_setting', {
+        p_key: 'tuition_warning_threshold',
+        p_value: { days, auto_email_enabled: true },
+      });
+      if (error) throw error;
+      return {
+        tuition_warning_days_threshold: days,
+        auto_email_alerts_enabled: true,
+        cambridge_scale_max: 5.0,
+        academic_risk_threshold: 3.0,
+      };
+    }
+    return MockStorageService.updateSystemConfig(callerId || '', {
+      tuition_warning_days_threshold: days,
+    });
+  },
+
+  async getStudentsDueForTuitionAlert(daysThreshold?: number): Promise<any[]> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase.rpc('get_students_due_for_tuition_alert', {
+        p_days_threshold: daysThreshold || null,
+      });
+      if (!error && data) return data;
+    }
+    // Fallback: calculate using local mock student data + effective HRT rule
+    const students = MockStorageService.getStudents();
+    const threshold = daysThreshold ?? MockStorageService.getSystemConfig().tuition_warning_days_threshold;
+    const now = new Date();
+
+    return students
+      .filter((s) => {
+        const diff = Math.ceil((new Date(s.tuition_expiry_date).getTime() - now.getTime()) / 86400000);
+        return diff <= threshold;
+      })
+      .map((s) => ({
+        student_id: s.id,
+        student_code: s.student_code,
+        student_name: s.full_name,
+        branch_id: s.branch_id,
+        tuition_expiry_date: s.tuition_expiry_date,
+        effective_hrt_id: s.assigned_hrt_id || s.current_class?.default_hrt_id,
+        effective_hrt_name: s.effective_hrt_name,
+      }));
   },
 };

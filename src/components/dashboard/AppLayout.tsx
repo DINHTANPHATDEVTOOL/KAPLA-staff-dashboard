@@ -12,6 +12,9 @@ import { StudentListView } from './StudentListView';
 import { CareTasksView } from './CareTasksView';
 import { AssessmentsView } from './AssessmentsView';
 import { InterventionsView } from './InterventionsView';
+import { FeedbackView } from './FeedbackView';
+import { SupplementaryView } from './SupplementaryView';
+import { RenewalView } from './RenewalView';
 import { DashboardNavSection, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
@@ -136,26 +139,17 @@ export const AppLayout: React.FC = () => {
             <InterventionsView />
           )}
 
-          {activeSection === 'feedback' &&
-            renderPlaceholder(
-              'Phản hồi & Khiếu nại từ phụ huynh',
-              'Giai đoạn T04',
-              'Tiếp nhận kỳ vọng phụ huynh, phân công người xử lý và ghi nhận kết quả phản hồi.'
-            )}
+          {activeSection === 'feedback' && (
+            <FeedbackView />
+          )}
 
-          {activeSection === 'supplementary' &&
-            renderPlaceholder(
-              'Lớp học bổ trợ học vụ',
-              'Giai đoạn T04',
-              'Ghi nhận buổi học bổ trợ, điểm danh, mục tiêu bài học và kết quả rèn luyện.'
-            )}
+          {activeSection === 'supplementary' && (
+            <SupplementaryView />
+          )}
 
-          {activeSection === 'renewal' &&
-            renderPlaceholder(
-              'Quản lý tái tục học phí',
-              'Giai đoạn T04 & T05',
-              'Cảnh báo học phí sắp hết hạn trước 15 ngày, tự động tạo hàng đợi gửi email thông báo cho HRT phụ trách.'
-            )}
+          {activeSection === 'renewal' && (
+            <RenewalView />
+          )}
 
           {activeSection === 'logs' &&
             renderPlaceholder(
