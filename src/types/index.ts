@@ -91,6 +91,7 @@ export type AuthScreen =
 export type DashboardNavSection =
   | 'overview'
   | 'students'
+  | 'care_tasks'
   | 'assessments'
   | 'interventions'
   | 'feedback'
@@ -99,6 +100,96 @@ export type DashboardNavSection =
   | 'logs'
   | 'staff_roles'
   | 'branches_classes';
+
+// -----------------------------------------------------------------------------
+// Phase T03: Student Profiles, Tuition, Enrollments & Care Tasks
+// -----------------------------------------------------------------------------
+
+export type StudentStatus = 'active' | 'warning' | 'expired' | 'reserved' | 'dropped';
+
+export interface Student {
+  id: string;
+  branch_id: string;
+  student_code: string;
+  full_name: string;
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'other';
+  parent_name: string;
+  parent_phone: string;
+  parent_email?: string;
+  tuition_expiry_date: string;
+  status: StudentStatus;
+  current_class_id?: string;
+  assigned_hrt_id?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  branch?: Branch;
+  current_class?: ClassRoom;
+  assigned_hrt?: UserProfile;
+  effective_hrt_name?: string;
+}
+
+export interface Enrollment {
+  id: string;
+  student_id: string;
+  class_id: string;
+  branch_id: string;
+  start_date: string;
+  end_date?: string;
+  status: 'active' | 'transferred' | 'completed' | 'dropped';
+  class?: ClassRoom;
+  created_at?: string;
+}
+
+export interface ClassTransfer {
+  id: string;
+  student_id: string;
+  from_class_id: string;
+  to_class_id: string;
+  from_branch_id: string;
+  to_branch_id: string;
+  transfer_date: string;
+  reason: string;
+  transferred_by?: string;
+  transferred_by_name?: string;
+  from_class_name?: string;
+  to_class_name?: string;
+  created_at?: string;
+}
+
+export interface StudentHrtAssignment {
+  id: string;
+  student_id: string;
+  hrt_id?: string;
+  assigned_by?: string;
+  assignment_type: 'specific' | 'unassigned';
+  reason?: string;
+  created_at?: string;
+}
+
+export type CareTaskType =
+  | 'care_call'
+  | 'progress_report'
+  | 'tuition_reminder'
+  | 'attendance_check'
+  | 'academic_support';
+
+export type CareTaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface StudentTask {
+  id: string;
+  student_id: string;
+  branch_id: string;
+  title: string;
+  task_type: CareTaskType;
+  due_date: string;
+  status: CareTaskStatus;
+  notes?: string;
+  student?: Student;
+  created_at?: string;
+  updated_at?: string;
+}
 
 // -----------------------------------------------------------------------------
 // Role Labels & Metadata in Vietnamese

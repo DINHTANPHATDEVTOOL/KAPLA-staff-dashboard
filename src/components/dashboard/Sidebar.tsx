@@ -6,6 +6,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   Users,
+  ClipboardList,
   ClipboardCheck,
   AlertTriangle,
   MessageSquareHeart,
@@ -50,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems: NavItem[] = [
     { id: 'overview', label: 'Tổng quan học vụ', icon: LayoutDashboard },
     { id: 'students', label: 'Hồ sơ học viên', icon: Users },
+    { id: 'care_tasks', label: 'Công việc HRT', icon: ClipboardList },
     { id: 'assessments', label: 'Đánh giá năng lực', icon: ClipboardCheck },
     { id: 'interventions', label: 'Phiếu can thiệp', icon: AlertTriangle },
     { id: 'feedback', label: 'Phản hồi phụ huynh', icon: MessageSquareHeart },

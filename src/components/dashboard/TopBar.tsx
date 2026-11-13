@@ -33,6 +33,10 @@ const SECTION_TITLES: Record<DashboardNavSection, { title: string; subtitle: str
     title: 'Hồ sơ học viên (Student Master)',
     subtitle: 'Quản lý thông tin học tập, phân công HRT và hạn phí học viên.',
   },
+  care_tasks: {
+    title: 'Công việc HRT (Care Worklist)',
+    subtitle: 'Nhiệm vụ chăm sóc học viên theo quy tắc ưu tiên HRT riêng.',
+  },
   assessments: {
     title: 'Đánh giá năng lực 4 kỹ năng',
     subtitle: 'Ghi nhận Nghe - Nói - Đọc - Viết theo chuẩn Cambridge & Oxford Quality.',

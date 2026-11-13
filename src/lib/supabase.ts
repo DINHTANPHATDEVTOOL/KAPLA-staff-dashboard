@@ -3,7 +3,18 @@
 // ==============================================================================
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Branch, UserProfile, BranchMembership, AuditLog, ClassRoom } from '../types';
+import {
+  Branch,
+  UserProfile,
+  BranchMembership,
+  AuditLog,
+  ClassRoom,
+  Student,
+  Enrollment,
+  ClassTransfer,
+  StudentTask,
+  CareTaskStatus,
+} from '../types';
 
 const isDev = Boolean(import.meta.env.DEV);
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -41,6 +52,10 @@ const STORAGE_KEYS = {
   CLASSES: 'kapla_mock_classes',
   AUDIT_LOGS: 'kapla_mock_audit_logs',
   CURRENT_USER: 'kapla_mock_auth_user',
+  STUDENTS: 'kapla_mock_students',
+  ENROLLMENTS: 'kapla_mock_enrollments',
+  TRANSFERS: 'kapla_mock_transfers',
+  CARE_TASKS: 'kapla_mock_care_tasks',
 };
 
 // Initial Seed Data with Two Core Branches
@@ -227,6 +242,141 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
     branch_name: 'KAPLA Phạm Hùng',
     details: { role: 'CM', system_role: 'staff' },
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+  },
+];
+
+const DEFAULT_STUDENTS: Student[] = [
+  {
+    id: 's0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    student_code: 'KAP-PH-001',
+    full_name: 'Nguyễn Bình An',
+    date_of_birth: '2017-05-10',
+    gender: 'male',
+    parent_name: 'Nguyễn Văn Minh (Bố)',
+    parent_phone: '0901 112 223',
+    parent_email: 'minh.nguyen@gmail.com',
+    tuition_expiry_date: '2026-12-31',
+    status: 'active',
+    current_class_id: 'c0000000-0000-0000-0000-000000000001',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // Giao riêng cho Linh
+    notes: 'Học viên có năng khiếu giao tiếp, cần bổ trợ phần ngữ pháp đọc hiểu.',
+    created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
+  },
+  {
+    id: 's0000000-0000-0000-0000-000000000002',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    student_code: 'KAP-PH-002',
+    full_name: 'Trần Thái Bình',
+    date_of_birth: '2017-08-20',
+    gender: 'male',
+    parent_name: 'Trần Thị Hà (Mẹ)',
+    parent_phone: '0902 223 334',
+    parent_email: 'ha.tran@gmail.com',
+    tuition_expiry_date: '2026-11-20', // Cận ngày hết hạn
+    status: 'warning',
+    current_class_id: 'c0000000-0000-0000-0000-000000000001',
+    assigned_hrt_id: undefined, // Mặc định theo lớp -> Mai
+    notes: 'Phụ huynh quan tâm tiến độ nghe nói chuẩn Oxford.',
+    created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+  },
+  {
+    id: 's0000000-0000-0000-0000-000000000003',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    student_code: 'KAP-PH-003',
+    full_name: 'Lê Quốc Cường',
+    date_of_birth: '2016-03-15',
+    gender: 'male',
+    parent_name: 'Lê Văn Sang (Bố)',
+    parent_phone: '0903 334 445',
+    tuition_expiry_date: '2027-02-28',
+    status: 'active',
+    current_class_id: 'c0000000-0000-0000-0000-000000000002',
+    assigned_hrt_id: undefined, // Mặc định theo lớp Movers -> Linh
+    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+  },
+  {
+    id: 's0000000-0000-0000-0000-000000000004',
+    branch_id: 'a0000000-0000-0000-0000-000000000002',
+    student_code: 'KAP-BT-001',
+    full_name: 'Hoàng Tiến Dũng',
+    date_of_birth: '2017-01-05',
+    gender: 'male',
+    parent_name: 'Hoàng Văn Tuấn',
+    parent_phone: '0904 445 556',
+    tuition_expiry_date: '2026-12-15',
+    status: 'active',
+    current_class_id: 'c0000000-0000-0000-0000-000000000003',
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+];
+
+const DEFAULT_ENROLLMENTS: Enrollment[] = [
+  {
+    id: 'e0000000-0000-0000-0000-000000000001',
+    student_id: 's0000000-0000-0000-0000-000000000001',
+    class_id: 'c0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    start_date: '2026-10-01',
+    status: 'active',
+  },
+  {
+    id: 'e0000000-0000-0000-0000-000000000002',
+    student_id: 's0000000-0000-0000-0000-000000000002',
+    class_id: 'c0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    start_date: '2026-10-15',
+    status: 'active',
+  },
+  {
+    id: 'e0000000-0000-0000-0000-000000000003',
+    student_id: 's0000000-0000-0000-0000-000000000003',
+    class_id: 'c0000000-0000-0000-0000-000000000002',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    start_date: '2026-10-20',
+    status: 'active',
+  },
+  {
+    id: 'e0000000-0000-0000-0000-000000000004',
+    student_id: 's0000000-0000-0000-0000-000000000004',
+    class_id: 'c0000000-0000-0000-0000-000000000003',
+    branch_id: 'a0000000-0000-0000-0000-000000000002',
+    start_date: '2026-11-01',
+    status: 'active',
+  },
+];
+
+const DEFAULT_TRANSFERS: ClassTransfer[] = [];
+
+const DEFAULT_CARE_TASKS: StudentTask[] = [
+  {
+    id: 't0000000-0000-0000-0000-000000000001',
+    student_id: 's0000000-0000-0000-0000-000000000001',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    title: 'Gọi điện báo cáo tiến độ tuần 4 cho phụ huynh em An',
+    task_type: 'care_call',
+    due_date: '2026-11-20',
+    status: 'pending',
+    notes: 'Trao đổi kết quả bài kiểm tra mini-check 1',
+  },
+  {
+    id: 't0000000-0000-0000-0000-000000000002',
+    student_id: 's0000000-0000-0000-0000-000000000002',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    title: 'Nhắc tái tục học phí sắp hết hạn cho em Bình',
+    task_type: 'tuition_reminder',
+    due_date: '2026-11-18',
+    status: 'pending',
+    notes: 'Hạn học phí còn dưới 7 ngày, gửi lộ trình tiếp theo khóa Starters 2',
+  },
+  {
+    id: 't0000000-0000-0000-0000-000000000003',
+    student_id: 's0000000-0000-0000-0000-000000000004',
+    branch_id: 'a0000000-0000-0000-0000-000000000002',
+    title: 'Kiểm tra điểm danh học viên Dũng',
+    task_type: 'attendance_check',
+    due_date: '2026-11-19',
+    status: 'pending',
   },
 ];
 
@@ -466,12 +616,393 @@ export class MockStorageService {
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(logs));
   }
 
+  static getStudents(): Student[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.STUDENTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(DEFAULT_STUDENTS));
+      return DEFAULT_STUDENTS;
+    }
+    return JSON.parse(raw);
+  }
+
+  static getStudentsForCaller(
+    callerId?: string,
+    branchId?: string,
+    isSysAdmin = false,
+    isCm = false
+  ): Student[] {
+    const students = this.getStudents();
+    const classes = this.getClasses();
+    const branches = this.getBranches();
+    const profiles = this.getProfiles();
+
+    let filtered = students;
+    if (branchId) {
+      filtered = filtered.filter((s) => s.branch_id === branchId);
+    }
+
+    if (!isSysAdmin && !isCm && callerId) {
+      filtered = filtered.filter((s) => {
+        // Precedence Rule:
+        // Priority 1: Specific HRT assigned
+        if (s.assigned_hrt_id) {
+          return s.assigned_hrt_id === callerId;
+        }
+        // Priority 2: Class default HRT
+        const cls = classes.find((c) => c.id === s.current_class_id);
+        return cls?.default_hrt_id === callerId;
+      });
+    }
+
+    return filtered.map((s) => {
+      const cls = classes.find((c) => c.id === s.current_class_id);
+      const br = branches.find((b) => b.id === s.branch_id);
+      const hrt = profiles.find((p) => p.id === s.assigned_hrt_id);
+      const defHrt = cls?.default_hrt_id ? profiles.find((p) => p.id === cls.default_hrt_id) : null;
+      return {
+        ...s,
+        branch: br,
+        current_class: cls,
+        assigned_hrt: hrt,
+        effective_hrt_name: hrt ? `${hrt.full_name} (HRT riêng)` : defHrt ? `${defHrt.full_name} (Theo lớp)` : 'Chưa phân công',
+      };
+    });
+  }
+
+  static addStudent(payload: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Student {
+    this.ensureDevOnly();
+    const students = this.getStudents();
+    const newStudent: Student = {
+      ...payload,
+      id: 's' + Math.random().toString(36).substring(2, 9),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    students.unshift(newStudent);
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+
+    // Also add enrollment
+    if (payload.current_class_id) {
+      const enrollments = this.getEnrollments();
+      enrollments.push({
+        id: 'e' + Math.random().toString(36).substring(2, 9),
+        student_id: newStudent.id,
+        class_id: payload.current_class_id,
+        branch_id: payload.branch_id,
+        start_date: new Date().toISOString().split('T')[0],
+        status: 'active',
+      });
+      localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(enrollments));
+    }
+
+    return newStudent;
+  }
+
+  static getEnrollments(): Enrollment[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.ENROLLMENTS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(DEFAULT_ENROLLMENTS));
+      return DEFAULT_ENROLLMENTS;
+    }
+    return JSON.parse(raw);
+  }
+
+  static getTransfers(studentId?: string): ClassTransfer[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
+    const transfers: ClassTransfer[] = raw ? JSON.parse(raw) : DEFAULT_TRANSFERS;
+    if (studentId) {
+      return transfers.filter((t) => t.student_id === studentId);
+    }
+    return transfers;
+  }
+
+  static transferStudentClass(studentId: string, toClassId: string, reason: string): void {
+    this.ensureDevOnly();
+    const students = this.getStudents();
+    const classes = this.getClasses();
+    const studentIdx = students.findIndex((s) => s.id === studentId);
+    if (studentIdx === -1) throw new Error('Không tìm thấy học viên.');
+
+    const student = students[studentIdx];
+    const targetClass = classes.find((c) => c.id === toClassId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học đích.');
+
+    const fromClassId = student.current_class_id || '';
+    const fromBranchId = student.branch_id;
+    const toBranchId = targetClass.branch_id;
+
+    // Record transfer
+    const transfers = this.getTransfers();
+    const fromClass = classes.find((c) => c.id === fromClassId);
+    transfers.unshift({
+      id: 'tf-' + Math.random().toString(36).substring(2, 9),
+      student_id: studentId,
+      from_class_id: fromClassId,
+      to_class_id: toClassId,
+      from_branch_id: fromBranchId,
+      to_branch_id: toBranchId,
+      transfer_date: new Date().toISOString(),
+      reason,
+      from_class_name: fromClass?.name,
+      to_class_name: targetClass.name,
+      transferred_by_name: 'Giám đốc cơ sở (CM)',
+      created_at: new Date().toISOString(),
+    });
+    localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(transfers));
+
+    // Update student
+    student.current_class_id = toClassId;
+    student.branch_id = toBranchId;
+    student.updated_at = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+
+    // Update enrollments
+    const enrollments = this.getEnrollments();
+    enrollments.forEach((e) => {
+      if (e.student_id === studentId && e.status === 'active') {
+        e.status = 'transferred';
+        e.end_date = new Date().toISOString().split('T')[0];
+      }
+    });
+    enrollments.push({
+      id: 'e' + Math.random().toString(36).substring(2, 9),
+      student_id: studentId,
+      class_id: toClassId,
+      branch_id: toBranchId,
+      start_date: new Date().toISOString().split('T')[0],
+      status: 'active',
+    });
+    localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(enrollments));
+  }
+
+  static assignStudentHrt(studentId: string, hrtId: string | null, reason?: string): void {
+    this.ensureDevOnly();
+    const students = this.getStudents();
+    const studentIdx = students.findIndex((s) => s.id === studentId);
+    if (studentIdx === -1) throw new Error('Không tìm thấy học viên.');
+
+    students[studentIdx].assigned_hrt_id = hrtId || undefined;
+    students[studentIdx].updated_at = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+  }
+
+  static getCareTasks(callerId?: string, branchId?: string, isSysAdmin = false, isCm = false): StudentTask[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.CARE_TASKS);
+    const tasks: StudentTask[] = raw ? JSON.parse(raw) : DEFAULT_CARE_TASKS;
+    const students = this.getStudents();
+    const classes = this.getClasses();
+
+    let filtered = tasks;
+    if (branchId) {
+      filtered = filtered.filter((t) => t.branch_id === branchId);
+    }
+
+    if (!isSysAdmin && !isCm && callerId) {
+      filtered = filtered.filter((t) => {
+        const student = students.find((s) => s.id === t.student_id);
+        if (!student) return false;
+        if (student.assigned_hrt_id) {
+          return student.assigned_hrt_id === callerId;
+        }
+        const cls = classes.find((c) => c.id === student.current_class_id);
+        return cls?.default_hrt_id === callerId;
+      });
+    }
+
+    return filtered.map((t) => ({
+      ...t,
+      student: students.find((s) => s.id === t.student_id),
+    }));
+  }
+
+  static updateTaskStatus(taskId: string, status: CareTaskStatus): void {
+    this.ensureDevOnly();
+    const tasks = this.getCareTasks();
+    const idx = tasks.findIndex((t) => t.id === taskId);
+    if (idx !== -1) {
+      tasks[idx].status = status;
+      tasks[idx].updated_at = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEYS.CARE_TASKS, JSON.stringify(tasks));
+    }
+  }
+
   static resetToDefault(): void {
     localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(DEFAULT_BRANCHES));
     localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(DEFAULT_PROFILES));
     localStorage.setItem(STORAGE_KEYS.MEMBERSHIPS, JSON.stringify(DEFAULT_MEMBERSHIPS));
     localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(DEFAULT_CLASSES));
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(DEFAULT_AUDIT_LOGS));
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(DEFAULT_STUDENTS));
+    localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(DEFAULT_ENROLLMENTS));
+    localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(DEFAULT_TRANSFERS));
+    localStorage.setItem(STORAGE_KEYS.CARE_TASKS, JSON.stringify(DEFAULT_CARE_TASKS));
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
   }
 }
+
+// ==============================================================================
+// Unified StudentService Layer (Supports Live Supabase & Dev Mock)
+// ==============================================================================
+
+export const StudentService = {
+  async getStudents(
+    branchId?: string,
+    callerId?: string,
+    isSysAdmin = false,
+    isCm = false
+  ): Promise<Student[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('students')
+        .select(`
+          *,
+          branch:branches(*),
+          current_class:classes(*),
+          assigned_hrt:profiles!students_assigned_hrt_id_fkey(*)
+        `)
+        .order('full_name');
+
+      if (branchId) {
+        query = query.eq('branch_id', branchId);
+      }
+
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map((s: any) => ({
+          ...s,
+          effective_hrt_name: s.assigned_hrt
+            ? `${s.assigned_hrt.full_name} (HRT riêng)`
+            : s.current_class?.default_hrt_name
+            ? `${s.current_class.default_hrt_name} (Theo lớp)`
+            : 'Chưa phân công',
+        }));
+      }
+    }
+    return MockStorageService.getStudentsForCaller(callerId, branchId, isSysAdmin, isCm);
+  },
+
+  async createStudent(payload: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('students')
+        .insert({
+          branch_id: payload.branch_id,
+          student_code: payload.student_code,
+          full_name: payload.full_name,
+          date_of_birth: payload.date_of_birth,
+          gender: payload.gender,
+          parent_name: payload.parent_name,
+          parent_phone: payload.parent_phone,
+          parent_email: payload.parent_email,
+          tuition_expiry_date: payload.tuition_expiry_date,
+          status: payload.status || 'active',
+          current_class_id: payload.current_class_id,
+          assigned_hrt_id: payload.assigned_hrt_id,
+          notes: payload.notes,
+        })
+        .select('*, branch:branches(*), current_class:classes(*)')
+        .single();
+      if (error) throw error;
+
+      if (payload.current_class_id) {
+        await realSupabase.from('enrollments').insert({
+          student_id: data.id,
+          class_id: payload.current_class_id,
+          branch_id: payload.branch_id,
+          status: 'active',
+        });
+      }
+      return data;
+    }
+    return MockStorageService.addStudent(payload);
+  },
+
+  async transferClass(studentId: string, toClassId: string, reason: string): Promise<void> {
+    if (realSupabase) {
+      const { error } = await realSupabase.rpc('transfer_student_class', {
+        p_student_id: studentId,
+        p_to_class_id: toClassId,
+        p_reason: reason,
+      });
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.transferStudentClass(studentId, toClassId, reason);
+  },
+
+  async assignHrt(studentId: string, hrtId: string | null, reason?: string): Promise<void> {
+    if (realSupabase) {
+      const { error } = await realSupabase.rpc('assign_student_hrt', {
+        p_student_id: studentId,
+        p_hrt_id: hrtId,
+        p_reason: reason || null,
+      });
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.assignStudentHrt(studentId, hrtId, reason);
+  },
+
+  async getTransfers(studentId: string): Promise<ClassTransfer[]> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('class_transfers')
+        .select(`
+          *,
+          from_class:classes!class_transfers_from_class_id_fkey(name),
+          to_class:classes!class_transfers_to_class_id_fkey(name),
+          transferred_by_user:profiles!class_transfers_transferred_by_fkey(full_name)
+        `)
+        .eq('student_id', studentId)
+        .order('transfer_date', { ascending: false });
+      if (!error && data) {
+        return data.map((t: any) => ({
+          ...t,
+          from_class_name: t.from_class?.name,
+          to_class_name: t.to_class?.name,
+          transferred_by_name: t.transferred_by_user?.full_name,
+        }));
+      }
+    }
+    return MockStorageService.getTransfers(studentId);
+  },
+
+  async getCareTasks(
+    branchId?: string,
+    callerId?: string,
+    isSysAdmin = false,
+    isCm = false
+  ): Promise<StudentTask[]> {
+    if (realSupabase) {
+      let query = realSupabase
+        .from('student_tasks')
+        .select(`
+          *,
+          student:students(*, current_class:classes(*))
+        `)
+        .order('due_date');
+      if (branchId) {
+        query = query.eq('branch_id', branchId);
+      }
+      const { data, error } = await query;
+      if (!error && data) return data;
+    }
+    return MockStorageService.getCareTasks(callerId, branchId, isSysAdmin, isCm);
+  },
+
+  async updateTaskStatus(taskId: string, status: CareTaskStatus): Promise<void> {
+    if (realSupabase) {
+      const { error } = await realSupabase
+        .from('student_tasks')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', taskId);
+      if (error) throw error;
+      return;
+    }
+    MockStorageService.updateTaskStatus(taskId, status);
+  },
+};

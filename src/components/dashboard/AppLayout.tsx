@@ -8,6 +8,8 @@ import { TopBar } from './TopBar';
 import { OverviewView } from './OverviewView';
 import { StaffApprovalView } from './StaffApprovalView';
 import { BranchesClassesView } from './BranchesClassesView';
+import { StudentListView } from './StudentListView';
+import { CareTasksView } from './CareTasksView';
 import { DashboardNavSection, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
@@ -116,12 +118,13 @@ export const AppLayout: React.FC = () => {
             <BranchesClassesView />
           )}
 
-          {activeSection === 'students' &&
-            renderPlaceholder(
-              'Hồ sơ học viên (Student Master)',
-              'Giai đoạn T03',
-              'Quản lý học viên, liên kết thông tin phụ huynh theo quyền hạn, phân bổ HRT riêng và tính toán hạn phí.'
-            )}
+          {activeSection === 'students' && (
+            <StudentListView />
+          )}
+
+          {activeSection === 'care_tasks' && (
+            <CareTasksView />
+          )}
 
           {activeSection === 'assessments' &&
             renderPlaceholder(
