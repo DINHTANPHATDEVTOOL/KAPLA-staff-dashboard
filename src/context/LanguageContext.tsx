@@ -768,6 +768,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  useEffect(() => {
+    document.title =
+      language === 'vi'
+        ? 'KAPLA - Tiếng Anh Sáng Tạo | Staff Portal'
+        : 'KAPLA - Oxford Quality English | Staff Portal';
+  }, [language]);
+
   const toggleLanguage = () => {
     setLanguage(language === 'vi' ? 'en' : 'vi');
   };
