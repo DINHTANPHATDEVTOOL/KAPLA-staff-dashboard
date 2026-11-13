@@ -21,13 +21,11 @@ export function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#012147] flex flex-col items-center justify-center p-4 text-white">
-        <div className="bg-white p-3 rounded-2xl shadow-xl border border-white/20 mb-4 animate-bounce">
-          <img
-            src="/assets/kapla-logo-color.png"
-            alt="KAPLA Logo"
-            className="h-10 w-auto object-contain"
-          />
-        </div>
+        <img
+          src="/assets/kapla-logo-color.png"
+          alt="KAPLA Logo"
+          className="h-12 w-auto object-contain mb-4 animate-pulse drop-shadow-xl"
+        />
         <div className="flex items-center gap-2 text-sky-200 text-sm font-medium">
           <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
           <span>Đang kết nối hệ thống phân quyền KAPLA...</span>

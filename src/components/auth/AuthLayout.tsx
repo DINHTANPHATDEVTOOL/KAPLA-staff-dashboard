@@ -22,73 +22,135 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
       {/* ---------------------------------------------------------------------- */}
       {/* Left Column: Brand Showcase (Desktop only) */}
       {/* ---------------------------------------------------------------------- */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#012147] text-white flex-col justify-between p-12 overflow-hidden">
-        {/* Background photo with subtle dark navy overlay */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#012147] text-white flex-col justify-between p-10 xl:p-12 overflow-hidden">
+        {/* Atmospheric Background Photo with soft overlay */}
         <div
-          className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-30"
+          className="absolute inset-0 bg-cover bg-center opacity-20 scale-105 transition-transform duration-1000"
           style={{ backgroundImage: "url('/assets/kapla-english-room.jpg')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#012147]/95 via-[#043264]/90 to-[#012147]/98" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#012147]/85 via-[#012147]/90 to-[#043264]/95" />
 
         {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="bg-white p-2.5 rounded-xl shadow-md border border-white/20">
-            <img
-              src="/assets/kapla-logo-color.png"
-              alt="KAPLA Logo"
-              className="h-10 w-auto object-contain"
-            />
-          </div>
+        <div className="relative z-10 flex items-center gap-3.5">
+          <img
+            src="/assets/kapla-logo-color.png"
+            alt="KAPLA Logo"
+            className="h-10 xl:h-11 w-auto object-contain drop-shadow"
+          />
+          <div className="h-7 w-px bg-white/20" />
           <div>
-            <span className="font-display text-xl font-bold tracking-tight text-white block">
-              {t('brand.portalTitle', 'KAPLA Staff Portal')}
+            <span className="font-display text-sm xl:text-base font-bold tracking-tight text-white block uppercase">
+              Staff Portal
             </span>
-            <span className="text-xs text-sky-200 font-medium tracking-wide">
+            <span className="text-[11px] text-sky-200 font-medium tracking-wide">
               {t('brand.portalSubtitle', 'Hệ Thống Quản Lý Tiến Độ & Chăm Sóc Học Viên')}
             </span>
           </div>
         </div>
 
-        {/* Core Value Pillars */}
-        <div className="relative z-10 my-auto py-8 space-y-6 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold uppercase tracking-wider">
+        {/* Core Value Pillars & Visual Campus Showcase */}
+        <div className="relative z-10 my-auto py-4 space-y-4 max-w-lg">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold uppercase tracking-wider">
             <Award className="w-4 h-4 text-amber-300" />
             {t('brand.oxfordBadge', 'Độc quyền chuẩn Oxford Quality')}
           </div>
 
-          <h1 className="font-display text-3xl xl:text-4xl font-extrabold leading-tight text-white">
+          <h1 className="font-display text-2xl xl:text-3xl font-extrabold leading-tight text-white">
             {t('brand.heroHeadline', 'Đồng hành cùng học viên bứt phá tiềm năng Anh ngữ.')}
           </h1>
 
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <p className="text-slate-300 text-xs xl:text-sm leading-relaxed">
             {t('brand.heroDesc', 'Nền tảng tác nghiệp nội bộ dành riêng cho đội ngũ Quản lý cơ sở (CM), Giám đốc học thuật, Giáo viên chính, HRT và Chăm sóc khách hàng trong việc theo dõi học tập, can thiệp kịp thời và gắn kết phụ huynh.')}
           </p>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/60">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-blue-900/60 border border-blue-700/50 text-blue-300">
-                <ShieldCheck className="w-5 h-5" />
+          {/* Photographic Campus & Classroom Showcase Card */}
+          <div className="relative rounded-2xl overflow-hidden border border-white/20 bg-white/5 backdrop-blur-md shadow-2xl p-3">
+            {/* Main Campus Photo */}
+            <div className="relative h-44 xl:h-52 rounded-xl overflow-hidden group">
+              <img
+                src="/assets/kapla-pham-hung.png"
+                alt="KAPLA Flagship Campus"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#012147]/90 via-[#012147]/20 to-transparent" />
+
+              {/* Floating Campus Badge */}
+              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-md border border-white/20 text-white text-[11px] font-medium shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{t('brand.campusBadge', 'Cơ sở Phạm Hùng • Flagship Campus TP.HCM')}</span>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-white">{t('brand.securityPillar', 'Phân quyền chặt chẽ')}</p>
-                <p className="text-[11px] text-slate-400">{t('brand.securityPillarDesc', 'Bảo mật thông tin phụ huynh và học phí theo từng vai trò')}</p>
+
+              {/* Oxford Quality Badge */}
+              <div className="absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-bold shadow-sm uppercase tracking-wider">
+                <Award className="w-3.5 h-3.5" />
+                <span>Oxford Quality</span>
+              </div>
+
+              {/* Bottom Caption Overlay */}
+              <div className="absolute bottom-2.5 left-3 right-3 text-white">
+                <p className="text-xs font-semibold leading-tight drop-shadow">
+                  {t('brand.campusHighlight', 'Không gian đào tạo tiếng Anh sáng tạo & STEM chuẩn Mỹ')}
+                </p>
+                <p className="text-[10px] text-sky-200 mt-0.5 line-clamp-1 drop-shadow">
+                  {t('brand.campusSub', 'Hệ thống phòng học tương tác, thư viện Oxford và xưởng sáng chế Robotics.')}
+                </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-blue-900/60 border border-blue-700/50 text-blue-300">
-                <Building2 className="w-5 h-5" />
+            {/* Thumbnail Row */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="relative h-20 rounded-lg overflow-hidden border border-white/10 group">
+                <img
+                  src="/assets/kapla-english-room.jpg"
+                  alt="Phòng học Oxford Quality"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <span className="absolute bottom-1.5 left-2 right-2 text-[10px] font-medium text-white truncate drop-shadow">
+                  {t('brand.classroomThumb', 'Phòng học Oxford Quality')}
+                </span>
+              </div>
+
+              <div className="relative h-20 rounded-lg overflow-hidden border border-white/10 group">
+                <img
+                  src="/assets/kapla-robotics-room.jpg"
+                  alt="STEAM & Robotics Lab"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <span className="absolute bottom-1.5 left-2 right-2 text-[10px] font-medium text-white truncate drop-shadow">
+                  {t('brand.roboticsThumb', 'STEAM & Robotics Lab')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Security & Multi-branch Pillars */}
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-blue-900/40 border border-blue-700/40">
+              <div className="p-1.5 rounded-lg bg-blue-800/60 text-blue-300 shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-white">{t('brand.securityPillar', 'Phân quyền chặt chẽ')}</p>
+                <p className="text-[10px] text-slate-300 leading-tight mt-0.5">{t('brand.securityPillarDesc', 'Bảo mật thông tin phụ huynh và học phí theo từng vai trò')}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 p-2 rounded-xl bg-blue-900/40 border border-blue-700/40">
+              <div className="p-1.5 rounded-lg bg-blue-800/60 text-blue-300 shrink-0">
+                <Building2 className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">{t('brand.multiBranchPillar', 'Đa chi nhánh từ gốc')}</p>
-                <p className="text-[11px] text-slate-400">{t('brand.multiBranchPillarDesc', 'Triển khai tập trung, vận hành độc lập từng trung tâm')}</p>
+                <p className="text-[10px] text-slate-300 leading-tight mt-0.5">{t('brand.multiBranchPillarDesc', 'Triển khai tập trung, vận hành độc lập từng trung tâm')}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer Credit & Facility Info */}
-        <div className="relative z-10 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800 pt-6">
+        <div className="relative z-10 flex items-center justify-between text-xs text-slate-400 border-t border-slate-800/80 pt-4">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-blue-400" />
             <span>KAPLA Education Systems © 2026</span>
@@ -106,13 +168,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
         {/* Top Control Bar with Language Switcher */}
         <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200">
           <div className="flex items-center gap-2.5">
-            <div className="lg:hidden flex items-center gap-2">
+            <div className="lg:hidden flex items-center">
               <img
-                src="/assets/kapla-logo-color.png"
+                src="/assets/kapla-logo-dark.png"
                 alt="KAPLA Logo"
-                className="h-7 w-auto object-contain"
+                className="h-8 w-auto object-contain"
               />
-              <span className="font-display text-sm font-bold text-slate-900">KAPLA</span>
             </div>
             <span className="text-[11px] font-semibold bg-blue-50 text-[#026fd7] px-2.5 py-0.5 rounded-full border border-blue-200">
               {t('brand.internalTag', 'Nội bộ')}

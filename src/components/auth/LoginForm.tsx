@@ -159,6 +159,40 @@ export const LoginForm: React.FC = () => {
             </button>
           </p>
         </div>
+
+        {/* Quick Fill Test Accounts */}
+        <div className="pt-4 border-t border-dashed border-slate-200">
+          <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+            <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+              {t('auth.demoAccountsHeader', 'Chọn nhanh tài khoản thử nghiệm:')}
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">PW: Kapla@2026</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            {[
+              { label: '👑 Admin', email: 'admin@kapla.edu.vn' },
+              { label: '🏢 CM Phạm Hùng', email: 'cm.phamhung@kapla.edu.vn' },
+              { label: '🏢 CM Bình Tân', email: 'cm.binhtan@kapla.edu.vn' },
+              { label: '👩‍🏫 HRT Mai (A1)', email: 'hrt.mai@kapla.edu.vn' },
+              { label: '👩‍💼 HRT Linh (Riêng)', email: 'hrt.linh@kapla.edu.vn' },
+              { label: '🧑‍🏫 Giáo viên chính', email: 'teacher.ph@kapla.edu.vn' },
+            ].map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword('Kapla@2026');
+                }}
+                className="text-left px-2.5 py-1.5 text-[11px] rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 border border-slate-200 transition-colors font-medium text-slate-700 truncate"
+                title={`${acc.label} (${acc.email})`}
+              >
+                {acc.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </form>
     </AuthLayout>
   );

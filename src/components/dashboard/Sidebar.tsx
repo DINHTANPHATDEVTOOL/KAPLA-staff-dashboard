@@ -84,19 +84,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand Header */}
       {/* -------------------------------------------------------------------- */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-[#043264]">
-        <div className="flex items-center gap-3">
-          <div className="bg-white p-1.5 rounded-lg shadow-sm">
-            <img
-              src="/assets/kapla-logo-color.png"
-              alt="KAPLA Logo"
-              className="h-7 w-auto object-contain"
-            />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/assets/kapla-logo-color.png"
+            alt="KAPLA"
+            className="h-7 w-auto object-contain drop-shadow"
+          />
+          <div className="h-6 w-px bg-[#043264]" />
           <div>
-            <span className="font-display text-sm font-bold tracking-tight text-white block leading-tight">
-              KAPLA Staff
+            <span className="font-display text-xs font-bold tracking-tight text-white block uppercase">
+              Staff Portal
             </span>
-            <span className="text-[10px] text-sky-200 font-medium tracking-wide truncate block max-w-[140px]">
+            <span className="text-[10px] text-sky-300 font-medium tracking-wide truncate block max-w-[130px]">
               {currentBranch?.name || 'Hệ Thống KAPLA'}
             </span>
           </div>

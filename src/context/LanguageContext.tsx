@@ -22,6 +22,11 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'brand.multiBranchPillarDesc': 'Triển khai tập trung, vận hành độc lập từng trung tâm',
     'brand.footerVersion': 'Phiên bản 2.1 (RLS Secured)',
     'brand.internalTag': 'Nội bộ',
+    'brand.campusBadge': 'Cơ sở Phạm Hùng • Flagship Campus TP.HCM',
+    'brand.campusHighlight': 'Không gian đào tạo tiếng Anh sáng tạo & STEM chuẩn Mỹ',
+    'brand.campusSub': 'Hệ thống phòng học tương tác, thư viện Oxford và xưởng sáng chế Robotics.',
+    'brand.classroomThumb': 'Phòng học Oxford Quality',
+    'brand.roboticsThumb': 'STEAM & Robotics Lab',
 
     // Auth Screens
     'auth.loginTitle': 'Đăng nhập tài khoản',
@@ -35,6 +40,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'auth.signingIn': 'Đang xác thực...',
     'auth.newStaffPrompt': 'Bạn là nhân sự mới của KAPLA?',
     'auth.registerNow': 'Đăng ký tài khoản ngay',
+    'auth.demoAccountsHeader': 'Chọn nhanh tài khoản thử nghiệm:',
 
     'auth.registerTitle': 'Đăng ký tài khoản nhân viên',
     'auth.registerSubtitle': 'Tạo tài khoản công tác để được xét duyệt phân quyền theo cơ sở.',
@@ -126,6 +132,11 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'brand.multiBranchPillarDesc': 'Centralized deployment with autonomous campus operations',
     'brand.footerVersion': 'Version 2.1 (RLS Secured)',
     'brand.internalTag': 'Internal',
+    'brand.campusBadge': 'Pham Hung Campus • Flagship Center HCMC',
+    'brand.campusHighlight': 'Creative American English & STEM Learning Environment',
+    'brand.campusSub': 'Smart interactive classrooms, Oxford library, and Robotics makerspace.',
+    'brand.classroomThumb': 'Oxford Quality Classroom',
+    'brand.roboticsThumb': 'STEAM & Robotics Lab',
 
     // Auth Screens
     'auth.loginTitle': 'Sign in to your account',
@@ -139,6 +150,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'auth.signingIn': 'Authenticating...',
     'auth.newStaffPrompt': 'New to KAPLA staff?',
     'auth.registerNow': 'Register account now',
+    'auth.demoAccountsHeader': 'Quick select demo account:',
 
     'auth.registerTitle': 'Create Staff Account',
     'auth.registerSubtitle': 'Create an internal account for branch assignment and role approval.',
