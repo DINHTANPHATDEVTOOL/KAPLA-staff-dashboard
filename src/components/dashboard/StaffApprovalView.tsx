@@ -33,11 +33,17 @@ import {
   UserProfile,
 } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { isDevMockMode, MockStorageService, realSupabase } from '../../lib/supabase';
 
 export const StaffApprovalView: React.FC = () => {
   const { profile, activeRole, currentBranch, availableBranches } = useAuth();
-  const [activeTab, setActiveTab] = useState<'pending' | 'staff' | 'audit'>('pending');
+  const { t, language } = useLanguage();
+  const isSystemAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const canApprove = isSystemAdmin || isCM;
+
+  const [activeTab, setActiveTab] = useState<'pending' | 'staff' | 'audit'>(canApprove ? 'pending' : 'staff');
 
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [memberships, setMemberships] = useState<BranchMembership[]>([]);
@@ -56,10 +62,6 @@ export const StaffApprovalView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterBranch, setFilterBranch] = useState<string>('all');
-
-  const isSystemAdmin = profile?.system_role === 'system_admin';
-  const isCM = activeRole === 'CM';
-  const canApprove = isSystemAdmin || isCM;
 
   // Fetch data
   const loadData = useCallback(async () => {
@@ -292,33 +294,35 @@ export const StaffApprovalView: React.FC = () => {
       )}
 
       {/* -------------------------------------------------------------------- */}
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs (Strictly hide unauthorized tabs) */}
       {/* -------------------------------------------------------------------- */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-2">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('pending')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-              activeTab === 'pending'
-                ? 'bg-[#043264] text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            <span>Tài khoản chờ duyệt</span>
-            {pendingUsers.length > 0 && (
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  activeTab === 'pending'
-                    ? 'bg-amber-400 text-slate-950'
-                    : 'bg-amber-100 text-amber-900 border border-amber-300'
-                }`}
-              >
-                {pendingUsers.length}
-              </span>
-            )}
-          </button>
+          {canApprove && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('pending')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+                activeTab === 'pending'
+                  ? 'bg-[#043264] text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>{language === 'en' ? 'Pending Approvals' : 'Tài khoản chờ duyệt'}</span>
+              {pendingUsers.length > 0 && (
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    activeTab === 'pending'
+                      ? 'bg-amber-400 text-slate-950'
+                      : 'bg-amber-100 text-amber-900 border border-amber-300'
+                  }`}
+                >
+                  {pendingUsers.length}
+                </span>
+              )}
+            </button>
+          )}
 
           <button
             type="button"
@@ -330,21 +334,27 @@ export const StaffApprovalView: React.FC = () => {
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Danh sách nhân sự ({activeStaffList.length})</span>
+            <span>
+              {language === 'en'
+                ? `Staff Directory (${activeStaffList.length})`
+                : `Danh sách nhân sự (${activeStaffList.length})`}
+            </span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
-              activeTab === 'audit'
-                ? 'bg-[#043264] text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            <span>Nhật ký phân quyền</span>
-          </button>
+          {canApprove && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('audit')}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all ${
+                activeTab === 'audit'
+                  ? 'bg-[#043264] text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              <span>{language === 'en' ? 'Permission Audit Trail' : 'Nhật ký phân quyền'}</span>
+            </button>
+          )}
         </div>
 
         <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">

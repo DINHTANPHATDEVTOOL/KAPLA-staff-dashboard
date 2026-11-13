@@ -21,11 +21,20 @@ import { MockStorageService, realSupabase } from '../../lib/supabase';
 import { Construction, Sparkles } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
-  const { currentBranch, refreshProfile } = useAuth();
+  const { currentBranch, refreshProfile, profile, activeRole } = useAuth();
   const [activeSection, setActiveSection] = useState<DashboardNavSection>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+
+  const isCMOrAdmin = profile?.system_role === 'system_admin' || activeRole === 'CM';
+
+  // Guard: if non-manager tries to access manager-only sections, redirect to overview
+  useEffect(() => {
+    if (!isCMOrAdmin && (activeSection === 'staff_roles' || activeSection === 'branches_classes')) {
+      setActiveSection('overview');
+    }
+  }, [isCMOrAdmin, activeSection]);
 
   // Check pending approval count for sidebar badge
   const checkPendingCount = async () => {

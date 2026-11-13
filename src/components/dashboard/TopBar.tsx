@@ -40,7 +40,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     refreshProfile,
     signOut,
   } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -200,8 +200,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
           <span>
             {profile?.system_role === 'system_admin'
-              ? 'Quản trị hệ thống'
-              : activeRole || 'Nhân viên'}
+              ? (language === 'en' ? '👑 System Admin' : '👑 Quản trị hệ thống')
+              : activeRole || (language === 'en' ? 'Staff' : 'Nhân viên')}
           </span>
         </div>
 

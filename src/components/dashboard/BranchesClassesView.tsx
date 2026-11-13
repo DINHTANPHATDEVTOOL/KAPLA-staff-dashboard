@@ -6,10 +6,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Building2, BookOpen, Plus, MapPin, Phone, Users, ShieldAlert } from 'lucide-react';
 import { Branch, ClassRoom } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
 
 export const BranchesClassesView: React.FC = () => {
   const { currentBranch, availableBranches, profile } = useAuth();
+  const { t, language } = useLanguage();
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,10 +53,14 @@ export const BranchesClassesView: React.FC = () => {
           <div>
             <h3 className="font-display text-sm font-bold text-slate-900 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#026fd7]" />
-              Chi nhánh trong hệ thống ({availableBranches.length})
+              {language === 'en'
+                ? `System Campuses (${availableBranches.length})`
+                : `Chi nhánh trong hệ thống (${availableBranches.length})`}
             </h3>
             <p className="text-xs text-slate-500">
-              Kiến trúc đa chi nhánh tập trung, vận hành phân quyền độc lập theo từng cơ sở.
+              {language === 'en'
+                ? 'Centralized multi-branch architecture with autonomous campus operations and isolated data scopes.'
+                : 'Kiến trúc đa chi nhánh tập trung, vận hành phân quyền độc lập theo từng cơ sở.'}
             </p>
           </div>
         </div>
@@ -82,7 +88,7 @@ export const BranchesClassesView: React.FC = () => {
                   </div>
                   {isCurrent && (
                     <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">
-                      Đang chọn
+                      {language === 'en' ? 'Active' : 'Đang chọn'}
                     </span>
                   )}
                 </div>
@@ -90,7 +96,7 @@ export const BranchesClassesView: React.FC = () => {
                 <div className="mt-3 space-y-1.5 text-xs text-slate-600">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="text-[11px] leading-relaxed">{branch.address || 'Đang cập nhật địa chỉ'}</span>
+                    <span className="text-[11px] leading-relaxed">{branch.address || (language === 'en' ? 'Address pending update' : 'Đang cập nhật địa chỉ')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -111,10 +117,14 @@ export const BranchesClassesView: React.FC = () => {
           <div>
             <h3 className="font-display text-sm font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-[#026fd7]" />
-              Danh sách lớp học tại {currentBranch?.name || 'Chi nhánh hiện tại'} ({filteredClasses.length})
+              {language === 'en'
+                ? `Classroom Cohorts at ${currentBranch?.name || 'Active Campus'} (${filteredClasses.length})`
+                : `Danh sách lớp học tại ${currentBranch?.name || 'Chi nhánh hiện tại'} (${filteredClasses.length})`}
             </h3>
             <p className="text-xs text-slate-500">
-              Thiết lập lớp học và phân công HRT mặc định phục vụ luồng nhắc phí và can thiệp học thuật.
+              {language === 'en'
+                ? 'Cohort setup, default HRT designation, and schedule management for tutoring and intervention routing.'
+                : 'Thiết lập lớp học và phân công HRT mặc định phục vụ luồng nhắc phí và can thiệp học thuật.'}
             </p>
           </div>
         </div>
@@ -122,19 +132,19 @@ export const BranchesClassesView: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
           {filteredClasses.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-500">
-              Chưa có dữ liệu lớp học tại chi nhánh này.
+              {language === 'en' ? 'No class records found for this campus.' : 'Chưa có dữ liệu lớp học tại chi nhánh này.'}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                    <th className="py-3 px-5">Tên lớp học</th>
-                    <th className="py-3 px-4">Cấp độ (Level)</th>
-                    <th className="py-3 px-4">Giáo viên chủ nhiệm (HRT mặc định)</th>
-                    <th className="py-3 px-4">Giáo viên chính (Main Teacher)</th>
-                    <th className="py-3 px-4">Lịch học</th>
-                    <th className="py-3 px-4">Trạng thái</th>
+                    <th className="py-3 px-5">{t('branches.colClassName', 'Tên lớp học')}</th>
+                    <th className="py-3 px-4">{t('branches.colLevel', 'Cấp độ (Level)')}</th>
+                    <th className="py-3 px-4">{t('branches.colDefaultHrt', 'Giáo viên chủ nhiệm (HRT mặc định)')}</th>
+                    <th className="py-3 px-4">{t('branches.colMainTeacher', 'Giáo viên chính (Main Teacher)')}</th>
+                    <th className="py-3 px-4">{t('branches.colSchedule', 'Lịch học')}</th>
+                    <th className="py-3 px-4">{t('branches.colStatus', 'Trạng thái')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

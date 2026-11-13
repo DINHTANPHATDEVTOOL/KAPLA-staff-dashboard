@@ -386,10 +386,10 @@ export const StudentListView: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">Tất cả hạn học phí</option>
-            <option value="active">Còn hạn an toàn</option>
-            <option value="warning">Sắp hết hạn (&le; 14 ngày)</option>
-            <option value="expired">Đã hết hạn</option>
+            <option value="all">{t('students.allStatuses', 'Tất cả trạng thái')}</option>
+            <option value="active">{t('renewal.statusSafe', 'Còn hạn an toàn')}</option>
+            <option value="warning">{t('renewal.statusDueSoon', 'Sắp hết hạn (≤ 14 ngày)')}</option>
+            <option value="expired">{t('renewal.statusOverdue', 'Đã hết hạn')}</option>
           </select>
         </div>
       </div>
@@ -397,15 +397,17 @@ export const StudentListView: React.FC = () => {
       {/* Students Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500">Đang tải danh sách học viên...</div>
+          <div className="p-12 text-center text-xs text-slate-500">{t('common.loading', 'Đang tải danh sách học viên...')}</div>
         ) : filteredStudents.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
               <GraduationCap className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-800">Không có học viên nào phù hợp</h3>
+            <h3 className="text-sm font-semibold text-slate-800">{t('common.noData', 'Không có học viên nào phù hợp')}</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Không tìm thấy học viên trong phạm vi phân quyền hoặc theo bộ lọc hiện tại.
+              {language === 'en'
+                ? 'No students found within your authorized scope or current filters.'
+                : 'Không tìm thấy học viên trong phạm vi phân quyền hoặc theo bộ lọc hiện tại.'}
             </p>
           </div>
         ) : (
@@ -413,12 +415,12 @@ export const StudentListView: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
                 <tr>
-                  <th className="py-3 px-4">Học viên</th>
-                  <th className="py-3 px-4">Phụ huynh</th>
-                  <th className="py-3 px-4">Lớp học</th>
-                  <th className="py-3 px-4">Hạn học phí</th>
-                  <th className="py-3 px-4">HRT Phụ trách</th>
-                  <th className="py-3 px-4 text-right">Thao tác</th>
+                  <th className="py-3 px-4">{t('students.colStudent', 'Học viên')}</th>
+                  <th className="py-3 px-4">{t('students.colParent', 'Phụ huynh')}</th>
+                  <th className="py-3 px-4">{t('students.colClass', 'Lớp học')}</th>
+                  <th className="py-3 px-4">{t('students.colExpiry', 'Hạn học phí')}</th>
+                  <th className="py-3 px-4">{t('students.colHrt', 'HRT Phụ trách')}</th>
+                  {canManage && <th className="py-3 px-4 text-right">{t('students.colActions', 'Thao tác')}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

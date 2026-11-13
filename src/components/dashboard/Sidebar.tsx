@@ -66,17 +66,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         label: t('nav.staff_roles', 'Nhân sự & Phân quyền'),
         icon: ShieldCheck,
         badge: pendingCount,
-        adminOrCmOnly: false,
+        adminOrCmOnly: true,
       },
       {
         id: 'branches_classes',
         label: t('nav.branches_classes', 'Chi nhánh & Lớp học'),
         icon: Building2,
-        adminOrCmOnly: false,
+        adminOrCmOnly: true,
       },
     ],
     [t, pendingCount]
   );
+
+  // Strictly filter navigation items: hide unauthorized items completely
+  const visibleNavItems = useMemo(() => {
+    return navItems.filter((item) => !item.adminOrCmOnly || isCMOrAdmin);
+  }, [navItems, isCMOrAdmin]);
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#012147] text-slate-200 w-64 xl:w-72 shrink-0 select-none border-r border-[#043264]/40">
@@ -115,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Navigation List */}
       {/* -------------------------------------------------------------------- */}
       <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-1">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
 
@@ -171,7 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             type="button"
             onClick={() => signOut()}
-            title="Đăng xuất"
+            title={t('auth.logout', 'Đăng xuất')}
             className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
           >
             <LogOut className="w-4 h-4" />

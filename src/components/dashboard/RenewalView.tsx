@@ -24,6 +24,7 @@ import {
   Check,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { RenewalRecord, RenewalStatus, RenewalRisk, SystemConfig, Student } from '../../types';
 import { RenewalService, SystemConfigService, StudentService } from '../../lib/supabase';
 
@@ -43,6 +44,7 @@ const RISK_CONFIG: Record<RenewalRisk, { label: string; badge: string }> = {
 
 export const RenewalView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
+  const { t, language } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
 
   const [records, setRecords] = useState<RenewalRecord[]>([]);
@@ -229,20 +231,22 @@ export const RenewalView: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-white/10 p-2.5 rounded-xl border border-white/15 shrink-0 flex-wrap">
-            {isSysAdmin ? (
+          {isSysAdmin && (
+            <div className="flex items-center gap-3 bg-white/10 p-2.5 rounded-xl border border-white/15 shrink-0 flex-wrap">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-sky-200 font-medium">Admin cài đặt:</span>
+                <span className="text-xs text-sky-200 font-medium">
+                  {t('renewal.adminConfig', 'Admin cài đặt ngưỡng:')}
+                </span>
                 <select
                   value={adminDaysThreshold}
                   onChange={(e) => setAdminDaysThreshold(Number(e.target.value))}
                   className="bg-white text-slate-900 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:outline-none"
                 >
-                  <option value={7}>7 ngày (1 tuần)</option>
-                  <option value={14}>14 ngày (2 tuần)</option>
-                  <option value={21}>21 ngày (3 tuần)</option>
-                  <option value={30}>30 ngày (1 tháng)</option>
-                  <option value={45}>45 ngày (1.5 tháng)</option>
+                  <option value={7}>7 {t('common.days', 'ngày')} (1 tuần)</option>
+                  <option value={14}>14 {t('common.days', 'ngày')} (2 tuần)</option>
+                  <option value={21}>21 {t('common.days', 'ngày')} (3 tuần)</option>
+                  <option value={30}>30 {t('common.days', 'ngày')} (1 tháng)</option>
+                  <option value={45}>45 {t('common.days', 'ngày')} (1.5 tháng)</option>
                 </select>
                 <button
                   type="button"
@@ -250,26 +254,24 @@ export const RenewalView: React.FC = () => {
                   disabled={savingConfig || adminDaysThreshold === config.tuition_warning_days_threshold}
                   className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                 >
-                  {savingConfig ? 'Đang lưu...' : 'Lưu ngưỡng'}
+                  {savingConfig ? t('common.saving', 'Đang lưu...') : t('renewal.saveThreshold', 'Lưu ngưỡng')}
                 </button>
               </div>
-            ) : (
-              <div className="text-xs text-sky-200 italic">
-                (Chỉ Quản trị hệ thống có quyền điều chỉnh ngưỡng ngày)
-              </div>
-            )}
 
-            <button
-              type="button"
-              onClick={handleSimulateEmailAlerts}
-              disabled={simulatingEmail}
-              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-              title="Xem trước danh sách người nhận dự kiến"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{simulatingEmail ? 'Đang kiểm tra...' : 'Xem trước người nhận dự kiến'}</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={handleSimulateEmailAlerts}
+                disabled={simulatingEmail}
+                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                title={t('renewal.previewRecipients', 'Xem trước danh sách người nhận dự kiến')}
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>
+                  {simulatingEmail ? t('renewal.checking', 'Đang kiểm tra...') : t('renewal.previewRecipients', 'Xem trước người nhận dự kiến')}
+                </span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Email Simulation Result Display */}

@@ -17,24 +17,26 @@ import {
   Filter,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { StudentTask, CareTaskStatus, CareTaskType } from '../../types';
 import { StudentService } from '../../lib/supabase';
 
-const TASK_TYPE_META: Record<
-  CareTaskType,
-  { label: string; color: string; icon: React.ComponentType<{ className?: string }> }
-> = {
-  care_call: { label: 'Cuộc gọi chăm sóc', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: PhoneCall },
-  progress_report: { label: 'Báo cáo tiến độ', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: ClipboardList },
-  tuition_reminder: { label: 'Nhắc tái tục học phí', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: AlertCircle },
-  attendance_check: { label: 'Kiểm tra điểm danh', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
-  academic_support: { label: 'Hỗ trợ học vụ', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Calendar },
-};
-
 export const CareTasksView: React.FC = () => {
   const { profile, activeRole, currentBranch } = useAuth();
+  const { t, language } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isCM = activeRole === 'CM';
+
+  const TASK_TYPE_META: Record<
+    CareTaskType,
+    { label: string; color: string; icon: React.ComponentType<{ className?: string }> }
+  > = useMemo(() => ({
+    care_call: { label: language === 'en' ? 'Care Call' : 'Cuộc gọi chăm sóc', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: PhoneCall },
+    progress_report: { label: language === 'en' ? 'Progress Report' : 'Báo cáo tiến độ', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: ClipboardList },
+    tuition_reminder: { label: language === 'en' ? 'Tuition Reminder' : 'Nhắc tái tục học phí', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: AlertCircle },
+    attendance_check: { label: language === 'en' ? 'Attendance Check' : 'Kiểm tra điểm danh', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
+    academic_support: { label: language === 'en' ? 'Academic Support' : 'Hỗ trợ học vụ', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Calendar },
+  }), [language]);
 
   const [tasks, setTasks] = useState<StudentTask[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -97,31 +99,41 @@ export const CareTasksView: React.FC = () => {
             <span className="p-2 rounded-xl bg-purple-50 text-purple-700">
               <ClipboardList className="w-5 h-5" />
             </span>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Danh sách công việc HRT phụ trách</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              {language === 'en' ? 'Designated HRT Care Worklist' : 'Danh sách công việc HRT phụ trách'}
+            </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Nhiệm vụ chăm sóc và theo dõi tiến độ của các học viên thuộc phạm vi trách nhiệm ({currentBranch?.name || 'KAPLA'})
+            {language === 'en'
+              ? `Student care and progress tracking tasks within authorized scope (${currentBranch?.name || 'KAPLA'})`
+              : `Nhiệm vụ chăm sóc và theo dõi tiến độ của các học viên thuộc phạm vi trách nhiệm (${currentBranch?.name || 'KAPLA'})`}
           </p>
         </div>
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-xs text-purple-800">
           <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
-          <span>Áp dụng quy tắc ưu tiên HRT riêng</span>
+          <span>{language === 'en' ? 'Designated Individual HRT Priority' : 'Áp dụng quy tắc ưu tiên HRT riêng'}</span>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng công việc</span>
+          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            {language === 'en' ? 'Total Tasks' : 'Tổng công việc'}
+          </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/40">
-          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">Cần xử lý</span>
+          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
+            {language === 'en' ? 'Action Needed' : 'Cần xử lý'}
+          </span>
           <div className="text-2xl font-bold text-amber-800 mt-1">{stats.pending}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
-          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Đã hoàn thành</span>
+          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
+            {language === 'en' ? 'Completed' : 'Đã hoàn thành'}
+          </span>
           <div className="text-2xl font-bold text-emerald-800 mt-1">{stats.completed}</div>
         </div>
       </div>
@@ -134,7 +146,7 @@ export const CareTasksView: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tiêu đề công việc hoặc tên học sinh..."
+            placeholder={language === 'en' ? 'Search by task title or student name...' : 'Tìm theo tiêu đề công việc hoặc tên học sinh...'}
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           />
         </div>
@@ -145,9 +157,9 @@ export const CareTasksView: React.FC = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="pending">Chưa hoàn thành</option>
-            <option value="completed">Đã hoàn thành</option>
+            <option value="all">{language === 'en' ? 'All Statuses' : 'Tất cả trạng thái'}</option>
+            <option value="pending">{language === 'en' ? 'Pending' : 'Chưa hoàn thành'}</option>
+            <option value="completed">{language === 'en' ? 'Completed' : 'Đã hoàn thành'}</option>
           </select>
         </div>
       </div>
@@ -155,7 +167,7 @@ export const CareTasksView: React.FC = () => {
       {/* Task List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500">Đang tải danh sách công việc...</div>
+          <div className="p-12 text-center text-xs text-slate-500">{t('common.loading', 'Đang tải danh sách công việc...')}</div>
         ) : filteredTasks.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">

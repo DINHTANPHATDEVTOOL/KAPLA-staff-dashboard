@@ -23,17 +23,19 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { SupplementarySession, SessionStatus, AttendanceStatus, ClassRoom, UserProfile, Student } from '../../types';
 import { SupplementaryService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
-const STATUS_CONFIG: Record<SessionStatus, { label: string; color: string; badge: string }> = {
-  scheduled: { label: 'Sắp diễn ra', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-  completed: { label: 'Đã hoàn thành', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  cancelled: { label: 'Đã hủy', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200' },
-};
-
 export const SupplementaryView: React.FC = () => {
   const { currentBranch, profile, activeRole } = useAuth();
+  const { t, language } = useLanguage();
+
+  const STATUS_CONFIG: Record<SessionStatus, { label: string; color: string; badge: string }> = useMemo(() => ({
+    scheduled: { label: language === 'en' ? 'Upcoming' : 'Sắp diễn ra', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+    completed: { label: language === 'en' ? 'Completed' : 'Đã hoàn thành', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    cancelled: { label: language === 'en' ? 'Cancelled' : 'Đã hủy', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200' },
+  }), [language]);
   const [sessions, setSessions] = useState<SupplementarySession[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [teachers, setTeachers] = useState<UserProfile[]>([]);
@@ -217,7 +219,9 @@ export const SupplementaryView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tổng số buổi bổ trợ</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'Total Sessions' : 'Tổng số buổi bổ trợ'}
+            </div>
           </div>
         </div>
 
@@ -227,7 +231,9 @@ export const SupplementaryView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-indigo-700">{stats.scheduled}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Sắp diễn ra</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'Upcoming' : 'Sắp diễn ra'}
+            </div>
           </div>
         </div>
 
@@ -237,7 +243,9 @@ export const SupplementaryView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-emerald-700">{stats.completed}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Đã hoàn thành</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'Completed' : 'Đã hoàn thành'}
+            </div>
           </div>
         </div>
 
@@ -247,7 +255,9 @@ export const SupplementaryView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-amber-700">{stats.totalAttendees}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Lượt học viên tham gia</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'Student Attendees' : 'Lượt học viên tham gia'}
+            </div>
           </div>
         </div>
       </div>
@@ -259,7 +269,7 @@ export const SupplementaryView: React.FC = () => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Tìm theo chủ đề, giáo viên, phòng học..."
+              placeholder={language === 'en' ? 'Search by topic, teacher, room...' : 'Tìm theo chủ đề, giáo viên, phòng học...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
@@ -273,10 +283,10 @@ export const SupplementaryView: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="scheduled">Sắp diễn ra</option>
-              <option value="completed">Đã hoàn thành</option>
-              <option value="cancelled">Đã hủy</option>
+              <option value="all">{language === 'en' ? 'All Statuses' : 'Tất cả trạng thái'}</option>
+              <option value="scheduled">{language === 'en' ? 'Upcoming' : 'Sắp diễn ra'}</option>
+              <option value="completed">{language === 'en' ? 'Completed' : 'Đã hoàn thành'}</option>
+              <option value="cancelled">{language === 'en' ? 'Cancelled' : 'Đã hủy'}</option>
             </select>
           </div>
         </div>

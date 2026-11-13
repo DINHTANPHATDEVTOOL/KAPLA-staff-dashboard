@@ -19,6 +19,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { StudentAssessment, Student, ClassRoom } from '../../types';
 import { AssessmentService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
@@ -28,6 +29,7 @@ interface AssessmentsViewProps {
 
 export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIntervention }) => {
   const { currentBranch, profile } = useAuth();
+  const { t, language } = useLanguage();
   const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
@@ -169,10 +171,14 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
             <span className="p-2 rounded-xl bg-blue-50 text-[#043264]">
               <ClipboardCheck className="w-5 h-5" />
             </span>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Đánh giá năng lực 4 kỹ năng</h1>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              {t('assessments.title', 'Đánh giá năng lực 4 kỹ năng')}
+            </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Ghi nhận Nghe - Nói - Đọc - Viết theo thang chuẩn Cambridge & Oxford Quality tại {currentBranch?.name || 'KAPLA'}
+            {language === 'en'
+              ? `Track Listening, Speaking, Reading, Writing via Cambridge & Oxford standards at ${currentBranch?.name || 'KAPLA'}`
+              : `Ghi nhận Nghe - Nói - Đọc - Viết theo thang chuẩn Cambridge & Oxford Quality tại ${currentBranch?.name || 'KAPLA'}`}
           </p>
         </div>
 
@@ -182,24 +188,32 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
         >
           <Plus className="w-4 h-4" />
-          Nhập phiếu đánh giá
+          {t('assessments.addBtn', 'Nhập phiếu đánh giá')}
         </button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tổng lượt đánh giá</span>
+          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            {language === 'en' ? 'Total Assessments' : 'Tổng lượt đánh giá'}
+          </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
-          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">Tiến độ tốt (&ge; 3.0 khiên)</span>
+          <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
+            {language === 'en' ? 'Good Progress (≥ 3.0 shields)' : 'Tiến độ tốt (≥ 3.0 khiên)'}
+          </span>
           <div className="text-2xl font-bold text-emerald-800 mt-1">{stats.safeCount}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/40">
-          <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">Phát hiện nguy cơ học thuật</span>
+          <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
+            {language === 'en' ? 'Academic Risk Detected' : 'Phát hiện nguy cơ học thuật'}
+          </span>
           <div className="text-2xl font-bold text-rose-800 mt-1">{stats.riskCount}</div>
-          <span className="text-[10px] text-rose-600">Cần tạo phiếu can thiệp</span>
+          <span className="text-[10px] text-rose-600">
+            {language === 'en' ? 'Requires Intervention' : 'Cần tạo phiếu can thiệp'}
+          </span>
         </div>
       </div>
 
@@ -211,7 +225,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm theo tên học sinh, kỳ đánh giá..."
+            placeholder={language === 'en' ? 'Search by student name, period...' : 'Tìm theo tên học sinh, kỳ đánh giá...'}
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           />
         </div>
@@ -222,7 +236,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
             onChange={(e) => setClassFilter(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">Tất cả lớp học</option>
+            <option value="all">{t('students.allClasses', 'Tất cả lớp học')}</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.level})
@@ -235,9 +249,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
             onChange={(e) => setRiskFilter(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">Tất cả mức độ</option>
-            <option value="risk">Có nguy cơ học tập (&lt; 3.0 khiên)</option>
-            <option value="safe">An toàn</option>
+            <option value="all">{language === 'en' ? 'All Risk Levels' : 'Tất cả mức độ'}</option>
+            <option value="risk">{language === 'en' ? 'Academic Risk (< 3.0 shields)' : 'Có nguy cơ học tập (< 3.0 khiên)'}</option>
+            <option value="safe">{language === 'en' ? 'On Track' : 'An toàn'}</option>
           </select>
         </div>
       </div>

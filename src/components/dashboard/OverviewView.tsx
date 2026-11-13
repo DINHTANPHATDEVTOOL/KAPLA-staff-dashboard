@@ -18,6 +18,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { DashboardNavSection } from '../../types';
 
 interface OverviewViewProps {
@@ -26,6 +27,7 @@ interface OverviewViewProps {
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
   const { currentBranch, profile, activeRole } = useAuth();
+  const { t, language } = useLanguage();
 
   // Test state toggles to demonstrate UI loading/error/empty states
   const [demoState, setDemoState] = useState<'normal' | 'loading' | 'error' | 'empty'>('normal');
@@ -109,20 +111,22 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
         <div>
           <div className="flex items-center gap-2 text-xs text-sky-200 mb-1">
             <Building2 className="w-4 h-4" />
-            <span>Đang làm việc tại: <strong>{currentBranch?.name || 'Tất cả chi nhánh'}</strong></span>
+            <span>{language === 'en' ? 'Operating Campus:' : 'Đang làm việc tại:'} <strong>{currentBranch?.name || (language === 'en' ? 'All Campuses' : 'Tất cả chi nhánh')}</strong></span>
           </div>
           <h2 className="font-display text-xl sm:text-2xl font-bold">
-            Xin chào, {profile?.full_name}!
+            {language === 'en' ? `Welcome back, ${profile?.full_name}!` : `Xin chào, ${profile?.full_name}!`}
           </h2>
           <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
-            Hệ thống phân quyền RLS đang áp dụng theo vai trò <strong>{activeRole || 'Nhân viên'}</strong>. Mọi tác vụ đọc ghi được bảo vệ độc lập theo cơ sở được cấp phép.
+            {language === 'en'
+              ? `Row-level security (RLS) active for role ${activeRole || 'Staff'}. Academic records and tuition data strictly protected by campus assignment.`
+              : `Hệ thống phân quyền RLS đang áp dụng theo vai trò ${activeRole || 'Nhân viên'}. Mọi tác vụ đọc ghi được bảo vệ độc lập theo cơ sở được cấp phép.`}
           </p>
         </div>
 
         {/* State Toggle Tester */}
         <div className="bg-white/10 p-2.5 rounded-xl border border-white/20 text-xs self-start md:self-auto space-y-1.5">
           <span className="text-[10px] text-sky-200 font-semibold block uppercase tracking-wider">
-            Kiểm thử trạng thái giao diện:
+            {t('overview.stateTesting', 'Kiểm thử trạng thái giao diện:')}
           </span>
           <div className="flex items-center gap-1.5">
             <button
@@ -160,16 +164,16 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-slate-500 text-xs">
-            <span className="font-semibold text-slate-600">Tổng học viên theo dõi</span>
+            <span className="font-semibold text-slate-600">{t('overview.kpiStudents', 'Tổng học viên theo dõi')}</span>
             <div className="p-2 bg-blue-50 text-[#026fd7] rounded-xl group-hover:scale-110 transition-transform">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-slate-900">48</span>
-            <span className="text-[11px] text-emerald-600 font-medium">+4 tháng này</span>
+            <span className="text-[11px] text-emerald-600 font-medium">{language === 'en' ? '+4 this month' : '+4 tháng này'}</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Ghi danh chính thức tại cơ sở</p>
+          <p className="text-[11px] text-slate-400 mt-1">{language === 'en' ? 'Officially enrolled at campus' : 'Ghi danh chính thức tại cơ sở'}</p>
         </div>
 
         {/* Metric 2 */}
@@ -178,7 +182,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-slate-500 text-xs">
-            <span className="font-semibold text-slate-600">Rủi ro học thuật cần can thiệp</span>
+            <span className="font-semibold text-slate-600">{t('overview.kpiInterventions', 'Rủi ro học thuật cần can thiệp')}</span>
             <div className="p-2 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
               <AlertTriangle className="w-4 h-4" />
             </div>
@@ -186,10 +190,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           <div className="mt-3 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-amber-600">3</span>
             <span className="text-[11px] text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded font-semibold">
-              Cần xác minh
+              {t('overview.kpiInterventionsBadge', 'Cần xác minh')}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">2 Đang xử lý, 1 Chờ CM duyệt</p>
+          <p className="text-[11px] text-slate-400 mt-1">{language === 'en' ? '2 In Progress, 1 Pending CM' : '2 Đang xử lý, 1 Chờ CM duyệt'}</p>
         </div>
 
         {/* Metric 3 */}
@@ -198,7 +202,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-purple-400 hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-slate-500 text-xs">
-            <span className="font-semibold text-slate-600">Phản hồi phụ huynh đang mở</span>
+            <span className="font-semibold text-slate-600">{t('overview.kpiFeedback', 'Phản hồi phụ huynh đang mở')}</span>
             <div className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform">
               <MessageSquareHeart className="w-4 h-4" />
             </div>
@@ -206,10 +210,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           <div className="mt-3 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-slate-900">2</span>
             <span className="text-[11px] text-purple-700 bg-purple-100 px-1.5 py-0.2 rounded font-semibold">
-              Kỳ vọng phát âm
+              {t('overview.kpiFeedbackBadge', 'Kỳ vọng phát âm')}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">1 CSKH nhận, 1 HRT hỗ trợ</p>
+          <p className="text-[11px] text-slate-400 mt-1">{language === 'en' ? '1 Support Received, 1 HRT' : '1 CSKH nhận, 1 HRT hỗ trợ'}</p>
         </div>
 
         {/* Metric 4 */}
@@ -218,7 +222,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-rose-400 hover:shadow-md transition-all cursor-pointer group"
         >
           <div className="flex items-center justify-between text-slate-500 text-xs">
-            <span className="font-semibold text-slate-600">Học phí sắp hết hạn (15 ngày)</span>
+            <span className="font-semibold text-slate-600">{t('overview.kpiRenewal', 'Học phí sắp hết hạn')}</span>
             <div className="p-2 bg-rose-50 text-rose-600 rounded-xl group-hover:scale-110 transition-transform">
               <CalendarClock className="w-4 h-4" />
             </div>
@@ -226,10 +230,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           <div className="mt-3 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold text-rose-600">5</span>
             <span className="text-[11px] text-rose-700 bg-rose-100 px-1.5 py-0.2 rounded font-semibold">
-              Tái tục cần gọi
+              {t('overview.kpiRenewalBadge', 'Tái tục cần gọi')}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Đã lên lịch email nhắc HRT</p>
+          <p className="text-[11px] text-slate-400 mt-1">{language === 'en' ? 'HRT email reminder scheduled' : 'Đã lên lịch email nhắc HRT'}</p>
         </div>
       </div>
 
@@ -241,34 +245,34 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             <h3 className="font-display text-sm font-bold text-slate-900">
-              Tiến độ hoàn thành giai đoạn T01 & T02 (Nền tảng Auth & Phân quyền)
+              {t('overview.milestonesTitle', 'Tiến độ hoàn thành giai đoạn T01 & T02 (Nền tảng Auth & Phân quyền)')}
             </h3>
           </div>
           <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">
-            Đã bàn giao code chạy được
+            {t('overview.milestonesBadge', 'Đã bàn giao code chạy được')}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div className="space-y-2.5 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
             <span className="font-bold text-slate-800 block text-xs">
-              ✓ Hoàn tất T01 — Nhận diện & Xác thực:
+              {language === 'en' ? '✓ Completed T01 — Identity & Authentication:' : '✓ Hoàn tất T01 — Nhận diện & Xác thực:'}
             </span>
             <ul className="space-y-1.5 text-slate-600 list-disc list-inside">
-              <li>Đăng nhập, Đăng ký, Xác thực email, Chờ duyệt, Quên mật khẩu, Đặt lại mật khẩu.</li>
-              <li>Bố cục 2 cột desktop với ảnh cơ sở thật và nhận diện màu chuẩn Oxford Quality.</li>
-              <li>Khung Dashboard với Sidebar, Topbar, Bộ chọn chi nhánh, Trạng thái Loading / Error / Empty.</li>
+              <li>{language === 'en' ? 'Sign-in, Register, Email Verification, Pending Approval, Password Recovery.' : 'Đăng nhập, Đăng ký, Xác thực email, Chờ duyệt, Quên mật khẩu, Đặt lại mật khẩu.'}</li>
+              <li>{language === 'en' ? 'Responsive 2-column desktop layout with campus photography and Oxford Quality branding.' : 'Bố cục 2 cột desktop với ảnh cơ sở thật và nhận diện màu chuẩn Oxford Quality.'}</li>
+              <li>{language === 'en' ? 'Dashboard layout with Sidebar, TopBar, Branch Selector, Loading / Error / Empty states.' : 'Khung Dashboard với Sidebar, Topbar, Bộ chọn chi nhánh, Trạng thái Loading / Error / Empty.'}</li>
             </ul>
           </div>
 
           <div className="space-y-2.5 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
             <span className="font-bold text-slate-800 block text-xs">
-              ✓ Hoàn tất T02 — Tài khoản & Phân quyền:
+              {language === 'en' ? '✓ Completed T02 — Accounts & Permissions:' : '✓ Hoàn tất T02 — Tài khoản & Phân quyền:'}
             </span>
             <ul className="space-y-1.5 text-slate-600 list-disc list-inside">
-              <li>Mô hình RLS PostgreSQL Supabase: Profiles, Branch Memberships, Classes, Audit Logs.</li>
-              <li>Màn hình duyệt tài khoản chờ cấp quyền, phân công vai trò (CM, Head Teacher, Main Teacher, HRT, TA...).</li>
-              <li>Nhật ký kiểm toán bảo mật (Audit log) tự động ghi nhận mọi sự kiện cấp/thu hồi quyền.</li>
+              <li>{language === 'en' ? 'PostgreSQL Supabase RLS: Profiles, Branch Memberships, Classes, Audit Logs.' : 'Mô hình RLS PostgreSQL Supabase: Profiles, Branch Memberships, Classes, Audit Logs.'}</li>
+              <li>{language === 'en' ? 'Role allocation and approval view for Center Manager (CM), Head Teacher, Main Teacher, HRT.' : 'Màn hình duyệt tài khoản chờ cấp quyền, phân công vai trò (CM, Head Teacher, Main Teacher, HRT, TA...).'}</li>
+              <li>{language === 'en' ? 'Security Audit Trail automatically tracking all role changes, approvals, and revocations.' : 'Nhật ký kiểm toán bảo mật (Audit log) tự động ghi nhận mọi sự kiện cấp/thu hồi quyền.'}</li>
             </ul>
           </div>
         </div>

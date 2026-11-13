@@ -464,26 +464,18 @@ export const InterventionsView: React.FC = () => {
                     </button>
                   )}
 
-                  {ticket.status === 'resolved' && (
-                    <>
-                      {canVerify ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedForVerify(ticket);
-                            setVerificationNotes('');
-                          }}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 shadow-xs flex items-center gap-1.5"
-                        >
-                          <FileCheck2 className="w-3.5 h-3.5" />
-                          Xác minh đạt chuẩn (Head Teacher / CM)
-                        </button>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 italic">
-                          Chờ Head Teacher hoặc CM chi nhánh xác minh
-                        </span>
-                      )}
-                    </>
+                  {ticket.status === 'resolved' && canVerify && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedForVerify(ticket);
+                        setVerificationNotes('');
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 shadow-xs flex items-center gap-1.5"
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5" />
+                      {language === 'en' ? 'Verify Academic Standards (Head Teacher / CM)' : 'Xác minh đạt chuẩn (Head Teacher / CM)'}
+                    </button>
                   )}
                 </div>
               </div>

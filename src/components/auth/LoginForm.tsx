@@ -10,7 +10,7 @@ import { AuthLayout } from './AuthLayout';
 
 export const LoginForm: React.FC = () => {
   const { signIn, setAuthScreen } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -171,12 +171,12 @@ export const LoginForm: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
             {[
-              { label: '👑 Admin', email: 'admin@kapla.edu.vn' },
-              { label: '🏢 CM Phạm Hùng', email: 'cm.phamhung@kapla.edu.vn' },
-              { label: '🏢 CM Bình Tân', email: 'cm.binhtan@kapla.edu.vn' },
-              { label: '👩‍🏫 HRT Mai (A1)', email: 'hrt.mai@kapla.edu.vn' },
-              { label: '👩‍💼 HRT Linh (Riêng)', email: 'hrt.linh@kapla.edu.vn' },
-              { label: '🧑‍🏫 Giáo viên chính', email: 'teacher.ph@kapla.edu.vn' },
+              { labelVi: '👑 Admin', labelEn: '👑 Admin', email: 'admin@kapla.edu.vn' },
+              { labelVi: '🏢 CM Phạm Hùng', labelEn: '🏢 CM Pham Hung', email: 'cm.phamhung@kapla.edu.vn' },
+              { labelVi: '🏢 CM Bình Tân', labelEn: '🏢 CM Binh Tan', email: 'cm.binhtan@kapla.edu.vn' },
+              { labelVi: '👩‍🏫 HRT Mai (A1)', labelEn: '👩‍🏫 HRT Mai (A1)', email: 'hrt.mai@kapla.edu.vn' },
+              { labelVi: '👩‍💼 HRT Linh (Riêng)', labelEn: '👩‍💼 HRT Linh (Special)', email: 'hrt.linh@kapla.edu.vn' },
+              { labelVi: '🧑‍🏫 Giáo viên chính', labelEn: '🧑‍🏫 Main Teacher', email: 'teacher.ph@kapla.edu.vn' },
             ].map((acc) => (
               <button
                 key={acc.email}
@@ -186,9 +186,9 @@ export const LoginForm: React.FC = () => {
                   setPassword('Kapla@2026');
                 }}
                 className="text-left px-2.5 py-1.5 text-[11px] rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 border border-slate-200 transition-colors font-medium text-slate-700 truncate"
-                title={`${acc.label} (${acc.email})`}
+                title={`${language === 'en' ? acc.labelEn : acc.labelVi} (${acc.email})`}
               >
-                {acc.label}
+                {language === 'en' ? acc.labelEn : acc.labelVi}
               </button>
             ))}
           </div>

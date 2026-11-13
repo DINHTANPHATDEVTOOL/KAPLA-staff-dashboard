@@ -29,31 +29,31 @@ import { useLanguage } from '../../context/LanguageContext';
 import { ParentFeedback, FeedbackType, FeedbackChannel, FeedbackStatus, Student, UserProfile } from '../../types';
 import { FeedbackService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
 
-const TYPE_CONFIG: Record<FeedbackType, { label: string; icon: any; color: string }> = {
-  academic_concern: { label: 'Băn khoăn học vụ', icon: HelpCircle, color: 'text-amber-700 bg-amber-50 border-amber-200' },
-  complaint: { label: 'Khiếu nại / Phàn nàn', icon: AlertTriangle, color: 'text-rose-700 bg-rose-50 border-rose-200' },
-  inquiry: { label: 'Hỏi thông tin', icon: MessageCircle, color: 'text-blue-700 bg-blue-50 border-blue-200' },
-  compliment: { label: 'Khen ngợi / Hài lòng', icon: ThumbsUp, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-  facility: { label: 'Cơ sở vật chất', icon: Building2, color: 'text-purple-700 bg-purple-50 border-purple-200' },
-};
-
-const CHANNEL_CONFIG: Record<FeedbackChannel, { label: string; icon: any }> = {
-  phone: { label: 'Điện thoại', icon: Phone },
-  zalo: { label: 'Zalo', icon: MessageCircle },
-  in_person: { label: 'Gặp trực tiếp', icon: User },
-  app: { label: 'Ứng dụng phụ huynh', icon: Sparkles },
-  email: { label: 'Email', icon: Mail },
-};
-
-const STATUS_CONFIG: Record<FeedbackStatus, { label: string; color: string; badge: string }> = {
-  open: { label: 'Mới tiếp nhận', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-  in_progress: { label: 'Đang xử lý', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-  resolved: { label: 'Đã giải quyết', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-};
-
 export const FeedbackView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
+
+  const TYPE_CONFIG: Record<FeedbackType, { label: string; icon: any; color: string }> = useMemo(() => ({
+    academic_concern: { label: language === 'en' ? 'Academic Concern' : 'Băn khoăn học vụ', icon: HelpCircle, color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    complaint: { label: language === 'en' ? 'Complaint / Escalation' : 'Khiếu nại / Phàn nàn', icon: AlertTriangle, color: 'text-rose-700 bg-rose-50 border-rose-200' },
+    inquiry: { label: language === 'en' ? 'Inquiry' : 'Hỏi thông tin', icon: MessageCircle, color: 'text-blue-700 bg-blue-50 border-blue-200' },
+    compliment: { label: language === 'en' ? 'Commendation' : 'Khen ngợi / Hài lòng', icon: ThumbsUp, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+    facility: { label: language === 'en' ? 'Facilities' : 'Cơ sở vật chất', icon: Building2, color: 'text-purple-700 bg-purple-50 border-purple-200' },
+  }), [language]);
+
+  const CHANNEL_CONFIG: Record<FeedbackChannel, { label: string; icon: any }> = useMemo(() => ({
+    phone: { label: language === 'en' ? 'Phone Call' : 'Điện thoại', icon: Phone },
+    zalo: { label: 'Zalo', icon: MessageCircle },
+    in_person: { label: language === 'en' ? 'In-Person Meeting' : 'Gặp trực tiếp', icon: User },
+    app: { label: language === 'en' ? 'Parent App' : 'Ứng dụng phụ huynh', icon: Sparkles },
+    email: { label: 'Email', icon: Mail },
+  }), [language]);
+
+  const STATUS_CONFIG: Record<FeedbackStatus, { label: string; color: string; badge: string }> = useMemo(() => ({
+    open: { label: language === 'en' ? 'New Inquiry' : 'Mới tiếp nhận', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+    in_progress: { label: language === 'en' ? 'In Progress' : 'Đang xử lý', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+    resolved: { label: language === 'en' ? 'Resolved' : 'Đã giải quyết', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  }), [language]);
   const [feedbacks, setFeedbacks] = useState<ParentFeedback[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [staffs, setStaffs] = useState<UserProfile[]>([]);
@@ -250,7 +250,9 @@ export const FeedbackView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Tổng phản hồi</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'Total Inquiries' : 'Tổng phản hồi'}
+            </div>
           </div>
         </div>
 
@@ -260,7 +262,9 @@ export const FeedbackView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-amber-700">{stats.open}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Mới tiếp nhận</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'New Inquiries' : 'Mới tiếp nhận'}
+            </div>
           </div>
         </div>
 
@@ -270,7 +274,9 @@ export const FeedbackView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-indigo-700">{stats.inProgress}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Đang xử lý</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'In Progress' : 'Đang xử lý'}
+            </div>
           </div>
         </div>
 
@@ -280,7 +286,9 @@ export const FeedbackView: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-emerald-700">{stats.resolved}</div>
-            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Đã giải quyết</div>
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {language === 'en' ? 'Resolved' : 'Đã giải quyết'}
+            </div>
           </div>
         </div>
       </div>
@@ -292,7 +300,7 @@ export const FeedbackView: React.FC = () => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Tìm theo phụ huynh, học viên, SĐT, nội dung..."
+              placeholder={language === 'en' ? 'Search by parent, student, phone, content...' : 'Tìm theo phụ huynh, học viên, SĐT, nội dung...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
