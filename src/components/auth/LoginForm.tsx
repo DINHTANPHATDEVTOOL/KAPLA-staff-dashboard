@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { RoleBadgeIcon } from '../common/CustomIcons';
 import { AuthLayout } from './AuthLayout';
 
 export const LoginForm: React.FC = () => {
@@ -160,23 +161,25 @@ export const LoginForm: React.FC = () => {
           </p>
         </div>
 
-        {/* Quick Fill Test Accounts */}
-        <div className="pt-4 border-t border-dashed border-slate-200">
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+        {/* Quick Fill Test Accounts with Bespoke Role Badges */}
+        <div className="pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-between text-xs text-slate-500 mb-2.5">
             <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              {t('auth.demoAccountsHeader', 'Chọn nhanh tài khoản thử nghiệm:')}
+              <span className="w-2 h-2 rounded-full bg-[#026fd7] animate-pulse"></span>
+              {t('auth.demoAccountsHeader', 'Tài khoản thử nghiệm phân quyền nội bộ:')}
             </span>
-            <span className="text-[10px] text-slate-400 font-mono">PW: Kapla@2026</span>
+            <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+              PW: Kapla@2026
+            </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {[
-              { labelVi: '👑 Admin', labelEn: '👑 Admin', email: 'admin@kapla.edu.vn' },
-              { labelVi: '🏢 CM Phạm Hùng', labelEn: '🏢 CM Pham Hung', email: 'cm.phamhung@kapla.edu.vn' },
-              { labelVi: '🏢 CM Bình Tân', labelEn: '🏢 CM Binh Tan', email: 'cm.binhtan@kapla.edu.vn' },
-              { labelVi: '👩‍🏫 HRT Mai (A1)', labelEn: '👩‍🏫 HRT Mai (A1)', email: 'hrt.mai@kapla.edu.vn' },
-              { labelVi: '👩‍💼 HRT Linh (Riêng)', labelEn: '👩‍💼 HRT Linh (Special)', email: 'hrt.linh@kapla.edu.vn' },
-              { labelVi: '🧑‍🏫 Giáo viên chính', labelEn: '🧑‍🏫 Main Teacher', email: 'teacher.ph@kapla.edu.vn' },
+              { role: 'system_admin', labelVi: 'Admin Quản Trị', labelEn: 'System Admin', email: 'admin@kapla.edu.vn' },
+              { role: 'center_manager', labelVi: 'CM Phạm Hùng', labelEn: 'CM Pham Hung', email: 'cm.phamhung@kapla.edu.vn' },
+              { role: 'center_manager', labelVi: 'CM Bình Tân', labelEn: 'CM Binh Tan', email: 'cm.binhtan@kapla.edu.vn' },
+              { role: 'hrt', labelVi: 'HRT Mai (Starters)', labelEn: 'HRT Mai (Starters)', email: 'hrt.mai@kapla.edu.vn' },
+              { role: 'hrt', labelVi: 'HRT Linh (Movers)', labelEn: 'HRT Linh (Movers)', email: 'hrt.linh@kapla.edu.vn' },
+              { role: 'lead_teacher', labelVi: 'GV Chính Sarah', labelEn: 'Teacher Sarah', email: 'teacher.ph@kapla.edu.vn' },
             ].map((acc) => (
               <button
                 key={acc.email}
@@ -185,10 +188,18 @@ export const LoginForm: React.FC = () => {
                   setEmail(acc.email);
                   setPassword('Kapla@2026');
                 }}
-                className="text-left px-2.5 py-1.5 text-[11px] rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 border border-slate-200 transition-colors font-medium text-slate-700 truncate"
+                className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-white hover:border-[#026fd7]/50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200 hover:-translate-y-0.5 text-left group"
                 title={`${language === 'en' ? acc.labelEn : acc.labelVi} (${acc.email})`}
               >
-                {language === 'en' ? acc.labelEn : acc.labelVi}
+                <RoleBadgeIcon role={acc.role} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <span className="block text-[11px] font-semibold text-slate-800 group-hover:text-[#026fd7] transition-colors truncate">
+                    {language === 'en' ? acc.labelEn : acc.labelVi}
+                  </span>
+                  <span className="block text-[9px] text-slate-400 font-mono truncate">
+                    {acc.email.split('@')[0]}
+                  </span>
+                </div>
               </button>
             ))}
           </div>

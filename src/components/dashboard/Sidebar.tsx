@@ -22,6 +22,7 @@ import {
 import { DashboardNavSection } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { RoleBadgeIcon } from '../common/CustomIcons';
 
 interface SidebarProps {
   activeSection: DashboardNavSection;
@@ -132,14 +133,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onSelectSection(item.id);
                 onCloseMobile();
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl transition-all ${
+              className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-xl transition-all group ${
                 isActive
                   ? 'bg-[#026fd7] text-white shadow-sm shadow-[#026fd7]/30'
                   : 'text-slate-300 hover:bg-[#043264]/70 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                    isActive
+                      ? 'bg-white/20 text-white shadow-xs'
+                      : 'bg-white/5 text-slate-300 group-hover:bg-white/10 group-hover:text-white'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
                 <span className="truncate">{item.label}</span>
               </div>
 
@@ -156,28 +165,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* -------------------------------------------------------------------- */}
-      {/* Footer Profile & Logout Card */}
+      {/* Footer Profile & Logout Card with Bespoke Role Badge */}
       {/* -------------------------------------------------------------------- */}
       <div className="p-3 border-t border-[#043264] bg-[#001733]/60">
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-900/50 border border-slate-800">
-          <div className="w-8 h-8 rounded-lg bg-[#026fd7] text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-sm">
-            {profile?.full_name?.charAt(0) || 'K'}
-          </div>
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-900/50 border border-slate-800">
+          <RoleBadgeIcon role={profile?.system_role || 'customer_service'} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-white truncate leading-tight">
               {profile?.full_name || 'Nhân viên KAPLA'}
             </p>
-            <p className="text-[10px] text-sky-300 truncate mt-0.5">
+            <p className="text-[10px] text-sky-300 truncate mt-0.5 font-medium">
               {profile?.system_role === 'system_admin'
-                ? '👑 Quản trị hệ thống'
-                : activeRole || 'Nhân viên'}
+                ? t('auth.adminRole', 'Quản trị hệ thống')
+                : activeRole || t('auth.staffRole', 'Nhân viên')}
             </p>
           </div>
           <button
             type="button"
             onClick={() => signOut()}
             title={t('auth.logout', 'Đăng xuất')}
-            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>

@@ -304,27 +304,35 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   {/* 4 Skills Grid */}
                   <div className="grid grid-cols-4 gap-2 my-4">
                     <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
-                      <span className="text-[10px] font-semibold text-slate-500 block">Nghe</span>
+                      <span className="text-[10px] font-semibold text-slate-500 block">
+                        {language === 'en' ? 'Listening' : 'Nghe'}
+                      </span>
                       <span className={`text-sm font-bold ${a.listening_score < 3 ? 'text-rose-600' : 'text-slate-800'}`}>
-                        {a.listening_score} 🛡️
+                        {a.listening_score}/5
                       </span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
-                      <span className="text-[10px] font-semibold text-slate-500 block">Nói</span>
+                      <span className="text-[10px] font-semibold text-slate-500 block">
+                        {language === 'en' ? 'Speaking' : 'Nói'}
+                      </span>
                       <span className={`text-sm font-bold ${a.speaking_score < 3 ? 'text-rose-600' : 'text-slate-800'}`}>
-                        {a.speaking_score} 🛡️
+                        {a.speaking_score}/5
                       </span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
-                      <span className="text-[10px] font-semibold text-slate-500 block">Đọc</span>
+                      <span className="text-[10px] font-semibold text-slate-500 block">
+                        {language === 'en' ? 'Reading' : 'Đọc'}
+                      </span>
                       <span className={`text-sm font-bold ${a.reading_score < 3 ? 'text-rose-600' : 'text-slate-800'}`}>
-                        {a.reading_score} 🛡️
+                        {a.reading_score}/5
                       </span>
                     </div>
                     <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
-                      <span className="text-[10px] font-semibold text-slate-500 block">Viết</span>
+                      <span className="text-[10px] font-semibold text-slate-500 block">
+                        {language === 'en' ? 'Writing' : 'Viết'}
+                      </span>
                       <span className={`text-sm font-bold ${a.writing_score < 3 ? 'text-rose-600' : 'text-slate-800'}`}>
-                        {a.writing_score} 🛡️
+                        {a.writing_score}/5
                       </span>
                     </div>
                   </div>

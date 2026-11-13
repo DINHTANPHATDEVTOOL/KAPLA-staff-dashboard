@@ -3,6 +3,7 @@
 // ==============================================================================
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { VietnamFlag, USFlag } from '../components/common/CustomIcons';
 
 export type Language = 'vi' | 'en';
 
@@ -158,17 +159,26 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'overview.kpiInterventionsBadge': 'Cần xác minh',
     'overview.kpiInterventionsSub': '2 Đang xử lý, 1 Chờ CM duyệt',
     'overview.kpiFeedback': 'Phản hồi phụ huynh đang mở',
-    'overview.kpiFeedbackBadge': 'Kỳ vọng phát âm',
-    'overview.kpiFeedbackSub': '1 CSKH nhận, 1 HRT hỗ trợ',
+    'overview.kpiFeedbackBadge': 'Rèn luyện phát âm Oxford',
+    'overview.kpiFeedbackSub': '1 CSKH tiếp nhận, 1 HRT hỗ trợ',
     'overview.kpiRenewal': 'Học phí sắp hết hạn',
-    'overview.kpiRenewalBadge': 'Tái tục cần gọi',
+    'overview.kpiRenewalBadge': 'Chăm sóc gia hạn khóa',
     'overview.kpiRenewalSub': 'Đã lên lịch email nhắc HRT',
-    'overview.milestonesTitle': 'Tiến độ hoàn thành giai đoạn T01 & T02 (Nền tảng Auth & Phân quyền)',
-    'overview.milestonesBadge': 'Đã bàn giao code chạy được',
-    'overview.t01Title': 'Hoàn tất T01 — Nhận diện & Xác thực:',
-    'overview.t01Desc': 'Đăng nhập, Đăng ký, Xác thực email, Chờ duyệt, Quên mật khẩu. Bố cục 2 cột desktop với ảnh cơ sở thật và nhận diện màu chuẩn Oxford Quality.',
-    'overview.t02Title': 'Hoàn tất T02 — Tài khoản & Phân quyền:',
-    'overview.t02Desc': 'Mô hình RLS PostgreSQL Supabase: Profiles, Branch Memberships, Classes, Audit Logs. Màn hình duyệt tài khoản cấp quyền CM, Head Teacher, HRT.',
+    'overview.campusHeroTag': 'Cơ sở chuẩn Oxford Quality',
+    'overview.campusHeroStatus': 'Đang vận hành',
+    'overview.campusHeroAttendance': 'Chuyên cần: 96.8%',
+    'overview.campusHeroSatisfaction': 'Hài lòng: 4.9/5.0',
+    'overview.quickActionsTitle': 'Tác vụ tác nghiệp học vụ nhanh',
+    'overview.quickActionsSub': 'Truy cập tức thì các quy trình chăm sóc và can thiệp chuyên môn',
+    'overview.quickActionIntervention': 'Lập kế hoạch can thiệp học thuật',
+    'overview.quickActionInterventionDesc': 'Mở phiếu hỗ trợ học sinh có nguy cơ học vụ',
+    'overview.quickActionTutoring': 'Lên lịch phụ đạo 1:1 chuyên sâu',
+    'overview.quickActionTutoringDesc': 'Bổ trợ phát âm, ngữ điệu và phản xạ',
+    'overview.quickActionFeedback': 'Ghi nhận phản hồi phụ huynh',
+    'overview.quickActionFeedbackDesc': 'Tiếp nhận nguyện vọng và đồng hành cùng gia đình',
+    'overview.activityFeedTitle': 'Nhật ký tác nghiệp học thuật thời gian thực',
+    'overview.activityFeedSub': 'Cập nhật trực tiếp tiến độ can thiệp, phụ đạo và chăm sóc phụ huynh tại cơ sở',
+    'overview.activityFeedBadge': 'Hôm nay',
 
     // Student List View
     'students.title': 'Hồ sơ học viên',
@@ -513,17 +523,26 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
     'overview.kpiInterventionsBadge': 'Requires Verification',
     'overview.kpiInterventionsSub': '2 In Progress, 1 Pending CM Approval',
     'overview.kpiFeedback': 'Open Parent Inquiries',
-    'overview.kpiFeedbackBadge': 'Pronunciation Focus',
+    'overview.kpiFeedbackBadge': 'Oxford Pronunciation Goals',
     'overview.kpiFeedbackSub': '1 Support Received, 1 HRT Assigned',
     'overview.kpiRenewal': 'Expiring Tuitions',
-    'overview.kpiRenewalBadge': 'Retention Calls Needed',
+    'overview.kpiRenewalBadge': 'Retention Follow-up',
     'overview.kpiRenewalSub': 'HRT reminder email scheduled',
-    'overview.milestonesTitle': 'Completion Progress: Phase T01 & T02 (Auth & RBAC Foundation)',
-    'overview.milestonesBadge': 'Production Ready',
-    'overview.t01Title': 'Completed T01 — Identity & Authentication:',
-    'overview.t01Desc': 'Sign-in, Registration, Email Verification, Pending Approval, Password Reset. Responsive 2-column layout with authentic campus photos and Oxford Quality branding.',
-    'overview.t02Title': 'Completed T02 — Accounts & Permissions:',
-    'overview.t02Desc': 'Supabase PostgreSQL RLS: Profiles, Branch Memberships, Classes, Audit Logs. Approval management screen for CM, Head Teacher, HRT roles.',
+    'overview.campusHeroTag': 'Oxford Quality Campus',
+    'overview.campusHeroStatus': 'Fully Operational',
+    'overview.campusHeroAttendance': 'Attendance: 96.8%',
+    'overview.campusHeroSatisfaction': 'Satisfaction: 4.9/5.0',
+    'overview.quickActionsTitle': 'Academic Operations Quick Actions',
+    'overview.quickActionsSub': 'Immediate access to student intervention and care workflows',
+    'overview.quickActionIntervention': 'Create Academic Intervention',
+    'overview.quickActionInterventionDesc': 'Open action plan for students with academic risks',
+    'overview.quickActionTutoring': 'Schedule 1-on-1 Tutoring',
+    'overview.quickActionTutoringDesc': 'Oxford phonics, intonation and fluency support',
+    'overview.quickActionFeedback': 'Record Parent Feedback',
+    'overview.quickActionFeedbackDesc': 'Document family requests and coordinate response',
+    'overview.activityFeedTitle': 'Real-Time Academic Operations & Care Stream',
+    'overview.activityFeedSub': 'Live operational updates across interventions, tutoring, and HRT parent care',
+    'overview.activityFeedBadge': 'Live Today',
 
     // Student List View
     'students.title': 'Student Records',
@@ -800,7 +819,17 @@ export const LanguageToggle: React.FC<{ className?: string; compact?: boolean }>
             : 'bg-blue-50/80 border-blue-200 text-blue-900 hover:bg-blue-100'
         } ${className}`}
       >
-        <span>{language === 'vi' ? '🇻🇳 VI' : '🇺🇸 EN'}</span>
+        {language === 'vi' ? (
+          <>
+            <VietnamFlag className="w-4 h-3 shadow-2xs" />
+            <span>VI</span>
+          </>
+        ) : (
+          <>
+            <USFlag className="w-4 h-3 shadow-2xs" />
+            <span>EN</span>
+          </>
+        )}
       </button>
     );
   }
@@ -823,7 +852,7 @@ export const LanguageToggle: React.FC<{ className?: string; compact?: boolean }>
             : 'text-slate-500 hover:text-slate-800'
         }`}
       >
-        <span>🇻🇳</span>
+        <VietnamFlag className="w-4 h-3 shadow-2xs" />
         <span>Tiếng Việt</span>
       </button>
       <span className="text-slate-300 font-light mx-0.5">/</span>
@@ -838,7 +867,7 @@ export const LanguageToggle: React.FC<{ className?: string; compact?: boolean }>
             : 'text-slate-500 hover:text-slate-800'
         }`}
       >
-        <span>🇺🇸</span>
+        <USFlag className="w-4 h-3 shadow-2xs" />
         <span>English (US)</span>
       </button>
     </div>

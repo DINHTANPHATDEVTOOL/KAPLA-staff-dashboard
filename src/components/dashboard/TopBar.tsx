@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, LanguageToggle } from '../../context/LanguageContext';
+import { RoleBadgeIcon } from '../common/CustomIcons';
 import { DashboardNavSection } from '../../types';
 
 interface TopBarProps {
@@ -195,12 +196,12 @@ export const TopBar: React.FC<TopBarProps> = ({
           )}
         </div>
 
-        {/* Role Badge */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-medium">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+        {/* Role Badge with Bespoke Role Icon */}
+        <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200/90 text-slate-800 text-xs font-semibold shadow-2xs">
+          <RoleBadgeIcon role={profile?.system_role || 'customer_service'} size="sm" />
           <span>
             {profile?.system_role === 'system_admin'
-              ? (language === 'en' ? '👑 System Admin' : '👑 Quản trị hệ thống')
+              ? (language === 'en' ? 'System Admin' : 'Quản trị hệ thống')
               : activeRole || (language === 'en' ? 'Staff' : 'Nhân viên')}
           </span>
         </div>

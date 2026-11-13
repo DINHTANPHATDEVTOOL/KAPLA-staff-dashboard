@@ -514,7 +514,7 @@ export const StaffApprovalView: React.FC = () => {
                 className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-slate-700"
               >
                 <option value="all">Tất cả vai trò</option>
-                <option value="system_admin">👑 Quản trị hệ thống</option>
+                <option value="system_admin">Quản trị hệ thống (System Admin)</option>
                 {ALL_STAFF_ROLES.map((r) => (
                   <option key={r} value={r}>
                     {ROLE_LABELS[r]}
@@ -571,8 +571,9 @@ export const StaffApprovalView: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         {staff.system_role === 'system_admin' ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300">
-                            👑 Quản trị hệ thống
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <ShieldCheck className="w-3 h-3 text-indigo-600" />
+                            Quản trị hệ thống
                           </span>
                         ) : (
                           <span className="text-slate-500">Nhân viên</span>
@@ -749,7 +750,7 @@ export const StaffApprovalView: React.FC = () => {
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
                     <option value="staff">Nhân viên thông thường (Theo vai trò chi nhánh)</option>
-                    <option value="system_admin">👑 Quản trị viên hệ thống (Toàn quyền đa chi nhánh)</option>
+                    <option value="system_admin">Quản trị viên hệ thống (Toàn quyền đa chi nhánh)</option>
                   </select>
                 </div>
               )}
