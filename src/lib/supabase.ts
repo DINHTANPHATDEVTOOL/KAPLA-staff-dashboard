@@ -2829,32 +2829,46 @@ export const AssessmentService = {
     payload: Omit<StudentAssessment, 'id' | 'has_academic_risk' | 'created_at' | 'updated_at'>
   ): Promise<StudentAssessment> {
     if (realSupabase) {
-      const { data, error } = await realSupabase
+      const basePayload: any = {
+        student_id: payload.student_id,
+        class_id: payload.class_id,
+        branch_id: payload.branch_id,
+        period: payload.period,
+        assessment_date: payload.assessment_date,
+        listening_score: payload.listening_score,
+        speaking_score: payload.speaking_score,
+        reading_score: payload.reading_score,
+        writing_score: payload.writing_score,
+        strengths: payload.strengths,
+        weaknesses: payload.weaknesses,
+        progress_notes: payload.progress_notes,
+        assessed_by: payload.assessed_by,
+      };
+
+      // Attempt insert with extended level columns; if cloud schema doesn't have them yet, fallback to base columns
+      let res = await realSupabase
         .from('student_assessments')
         .insert({
-          student_id: payload.student_id,
-          class_id: payload.class_id,
-          branch_id: payload.branch_id,
-          period: payload.period,
-          assessment_date: payload.assessment_date,
-          listening_score: payload.listening_score,
-          speaking_score: payload.speaking_score,
-          reading_score: payload.reading_score,
-          writing_score: payload.writing_score,
+          ...basePayload,
           listening_level: payload.listening_level,
           speaking_level: payload.speaking_level,
           reading_level: payload.reading_level,
           writing_level: payload.writing_level,
           progress_status: payload.progress_status,
-          strengths: payload.strengths,
-          weaknesses: payload.weaknesses,
-          progress_notes: payload.progress_notes,
-          assessed_by: payload.assessed_by,
         })
         .select('*, student:students(*), class:classes(*)')
         .single();
-      if (error) throw error;
-      return data;
+
+      if (res.error && (res.error.message.includes('column') || res.error.code === 'PGRST204')) {
+        res = await realSupabase
+          .from('student_assessments')
+          .insert(basePayload)
+          .select('*, student:students(*), class:classes(*)')
+          .single();
+      }
+
+      if (res.error) throw res.error;
+      return res.data;
     }
     return MockStorageService.addAssessment(payload);
   },

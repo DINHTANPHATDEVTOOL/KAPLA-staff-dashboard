@@ -70,6 +70,14 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
   const [dateTo, setDateTo] = useState<string>('');
   const [monthFilter, setMonthFilter] = useState<string>('all');
 
+  // Customer Request: Month-by-month filtering & pending students detection
+  const currentMonthKey = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+  const [assessmentViewTab, setAssessmentViewTab] = useState<'completed' | 'pending'>('completed');
+  const [targetMonth, setTargetMonth] = useState<string>(currentMonthKey);
+
   // Modal Create 4-Skill Assessment state (Image 2)
   const [showModal, setShowModal] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -305,6 +313,23 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
     });
   }, [assessments, searchTerm, classFilter, riskFilter, progressFilter, dateFrom, dateTo, monthFilter]);
 
+  // Pending students for targetMonth (Customer Request: "lọc toàn bộ học sinh từng tháng để xem bé nào chưa được đánh giá cập nhật")
+  const pendingStudents = useMemo(() => {
+    return students.filter((s) => {
+      const hasAssessment = assessments.some((a) => {
+        if (targetMonth === 'all') return a.student_id === s.id;
+        return a.student_id === s.id && a.assessment_date && a.assessment_date.startsWith(targetMonth);
+      });
+      if (hasAssessment) return false;
+      if (classFilter !== 'all' && s.current_class_id !== classFilter) return false;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        return s.full_name.toLowerCase().includes(q) || s.student_code.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [students, assessments, targetMonth, classFilter, searchTerm]);
+
   // Overall stats
   const stats = useMemo(() => {
     const total = assessments.length;
@@ -431,6 +456,54 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
         </div>
       </div>
 
+      {/* Primary Tab Selector (Completed Assessments vs Pending Students for Target Month) */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setAssessmentViewTab('completed')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+              assessmentViewTab === 'completed'
+                ? 'bg-white text-[#043264] shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <ClipboardCheck className="w-4 h-4 text-[#043264]" />
+            <span>Completed Assessments ({filteredAssessments.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAssessmentViewTab('pending')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${
+              assessmentViewTab === 'pending'
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-amber-700 hover:bg-amber-50'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span>⚠️ Pending Students to Assess ({pendingStudents.length})</span>
+          </button>
+        </div>
+
+        {/* Month Selector for Pending Students */}
+        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+          <Calendar className="w-4 h-4 text-slate-500" />
+          <span className="text-xs font-semibold text-slate-600">Target Month:</span>
+          <select
+            value={targetMonth}
+            onChange={(e) => setTargetMonth(e.target.value)}
+            className="bg-transparent text-xs font-bold text-[#043264] focus:outline-none cursor-pointer"
+          >
+            <option value={currentMonthKey}>This Month ({currentMonthKey})</option>
+            <option value="2026-10">October 2026 (2026-10)</option>
+            <option value="2026-09">September 2026 (2026-09)</option>
+            <option value="2026-08">August 2026 (2026-08)</option>
+            <option value="all">All Months</option>
+          </select>
+        </div>
+      </div>
+
       {/* ==================================================================== */}
       {/* FILTER CONTROLS (DotB style: Date Range, Class, Risky, Progress) */}
       {/* ==================================================================== */}
@@ -549,9 +622,123 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
       </div>
 
       {/* ==================================================================== */}
-      {/* VIEW MODE 1: LOG / TABLE VIEW (DOTB STYLE - FAST SCAN FOR 300+ STUDENTS) */}
+      {/* VIEW: PENDING STUDENTS FOR TARGET MONTH (Image 2) */}
       {/* ==================================================================== */}
-      {viewMode === 'table' ? (
+      {assessmentViewTab === 'pending' ? (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+          <div className="p-4 bg-amber-50/70 border-b border-amber-200/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="text-xs font-bold text-amber-900">
+                Pending Monthly Evaluation • {targetMonth === 'all' ? 'All Months' : targetMonth} ({pendingStudents.length} Students)
+              </span>
+            </div>
+            <span className="text-[11px] text-amber-700">
+              Click &quot;Assess Student&quot; to submit Cambridge &amp; Oxford competency report
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="p-12 text-center text-xs text-slate-500">Loading student list...</div>
+          ) : pendingStudents.length === 0 ? (
+            <div className="p-12 text-center">
+              <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
+              <h4 className="text-sm font-semibold text-slate-800">
+                All Students Evaluated for {targetMonth}!
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Zero pending assessments remaining. All enrolled students have their Cambridge evaluations recorded.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-3 px-4">Student ID &amp; Name</th>
+                    <th className="py-3 px-4">Class &amp; Level</th>
+                    <th className="py-3 px-4">Parent Contact</th>
+                    <th className="py-3 px-4">Assigned HRT</th>
+                    <th className="py-3 px-4">Tuition Status</th>
+                    <th className="py-3 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {pendingStudents.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStudentForProfile(s)}
+                            className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold text-xs flex items-center justify-center hover:scale-105 transition-transform"
+                          >
+                            {s.full_name.charAt(0)}
+                          </button>
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedStudentForProfile(s)}
+                              className="font-semibold text-slate-900 hover:text-[#026fd7] hover:underline text-left block"
+                            >
+                              {s.full_name}
+                            </button>
+                            <span className="font-mono text-[11px] text-slate-500">{s.student_code}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        {s.current_class ? (
+                          <div>
+                            <span className="font-semibold text-slate-800">{s.current_class.name}</span>
+                            <div className="text-[11px] text-slate-500">{s.current_class.level}</div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Unassigned</span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-slate-800">{tDb(s.parent_name)}</div>
+                        <span className="font-mono text-[11px] text-slate-500">{s.parent_phone}</span>
+                      </td>
+
+                      <td className="py-3 px-4 text-slate-700">
+                        {s.assigned_hrt?.full_name || s.effective_hrt_name || 'Class Default'}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="font-mono text-[11px] text-slate-700">{s.tuition_expiry_date}</span>
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm((prev) => ({
+                              ...prev,
+                              student_id: s.id,
+                              class_id: s.current_class_id || '',
+                              assessment_date: targetMonth !== 'all' ? `${targetMonth}-15` : new Date().toISOString().split('T')[0],
+                              period: targetMonth !== 'all' ? `Monthly Eval ${targetMonth}` : 'Monthly Evaluation',
+                            }));
+                            setShowModal(true);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#043264] hover:bg-[#012147] text-white transition-all shadow-xs cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Assess Student</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : viewMode === 'table' ? (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
           {loading ? (
             <div className="p-12 text-center text-xs text-slate-500">
