@@ -5,7 +5,7 @@ import os from 'node:os';
 import fs from 'node:fs';
 
 const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const CHROME_PORT = 9238;
+const CHROME_PORT = 9245;
 
 class CDPClient {
   private ws: WebSocket | null = null;
@@ -121,38 +121,8 @@ async function main() {
 
   const artifactDir = 'C:\\Users\\phatd\\.gemini\\antigravity\\brain\\77ba75ed-6481-4e36-9bb5-1d93d9f37f2d';
 
-  // 1. Navigate to Parent Feedback view
-  console.log('Navigating to Parent Feedback...');
-  await cdp.eval(`
-    (() => {
-      const btns = Array.from(document.querySelectorAll('button, a'));
-      const fbBtn = btns.find(b => b.innerText && (b.innerText.includes('Feedback') || b.innerText.includes('Phản hồi')));
-      if (fbBtn) fbBtn.click();
-    })()
-  `);
-  await sleep(2000);
-
-  const screenFeedback = path.join(artifactDir, 'customer_feedback_grouped_by_student.png');
-  await cdp.captureScreenshot(screenFeedback);
-  console.log('Saved screenshot 1:', screenFeedback);
-
-  // 2. Navigate to Renewal View & Test Month Filter
-  console.log('Navigating to Renewal Tracking...');
-  await cdp.eval(`
-    (() => {
-      const btns = Array.from(document.querySelectorAll('button, a'));
-      const renBtn = btns.find(b => b.innerText && (b.innerText.includes('Renewal') || b.innerText.includes('Tái tục')));
-      if (renBtn) renBtn.click();
-    })()
-  `);
-  await sleep(2000);
-
-  const screenRenewal = path.join(artifactDir, 'customer_renewal_monthly_filter.png');
-  await cdp.captureScreenshot(screenRenewal);
-  console.log('Saved screenshot 2:', screenRenewal);
-
-  // 3. Navigate to Student Directory & Test Sort on-time & Permissions
-  console.log('Navigating to Students Directory...');
+  // 1. Navigate to Student Directory (Images 1 & 2)
+  console.log('Navigating to Student Records Directory...');
   await cdp.eval(`
     (() => {
       const btns = Array.from(document.querySelectorAll('button, a'));
@@ -162,28 +132,67 @@ async function main() {
   `);
   await sleep(2500);
 
-  const screenStudents = path.join(artifactDir, 'customer_students_sorted_ontime.png');
-  await cdp.captureScreenshot(screenStudents);
-  console.log('Saved screenshot 3:', screenStudents);
+  // Click open the Date filter dropdown to demonstrate matching Customer Image 1
+  await cdp.eval(`
+    (() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const filterBtn = btns.find(b => b.innerText && b.innerText.includes('Filter:'));
+      if (filterBtn) filterBtn.click();
+    })()
+  `);
+  await sleep(1000);
 
-  // 4. Navigate to Activity Logs & Test Protected Trail
-  console.log('Navigating to Activity Logs...');
+  const screenDateFilter = path.join(artifactDir, 'customer_students_date_filter_dropdown.png');
+  await cdp.captureScreenshot(screenDateFilter);
+  console.log('Saved screenshot 1 (Date filter dropdown matching Image 1):', screenDateFilter);
+
+  // Close dropdown and filter for "Pending Evaluation" (Matching Customer Image 2)
+  await cdp.eval(`
+    (() => {
+      const chips = Array.from(document.querySelectorAll('button'));
+      const pendingChip = chips.find(c => c.innerText && c.innerText.includes('Pending Evaluation'));
+      if (pendingChip) pendingChip.click();
+    })()
+  `);
+  await sleep(1500);
+
+  const screenPendingEvaluations = path.join(artifactDir, 'customer_students_monthly_evaluation_tracker.png');
+  await cdp.captureScreenshot(screenPendingEvaluations);
+  console.log('Saved screenshot 2 (Monthly assessment tracker matching Image 2):', screenPendingEvaluations);
+
+  // 2. Navigate to Parent Feedback (Matching Customer Image 3)
+  console.log('Navigating to Parent Feedback...');
   await cdp.eval(`
     (() => {
       const btns = Array.from(document.querySelectorAll('button, a'));
-      const logBtn = btns.find(b => b.innerText && b.innerText.includes('Activity Logs'));
-      if (logBtn) logBtn.click();
+      const fbBtn = btns.find(b => b.innerText && b.innerText.includes('Feedback'));
+      if (fbBtn) fbBtn.click();
     })()
   `);
-  await sleep(2500);
+  await sleep(2000);
 
-  const screenLogs = path.join(artifactDir, 'customer_activity_logs_protected.png');
-  await cdp.captureScreenshot(screenLogs);
-  console.log('Saved screenshot 4:', screenLogs);
+  const screenFeedback = path.join(artifactDir, 'customer_feedback_grouped_by_student.png');
+  await cdp.captureScreenshot(screenFeedback);
+  console.log('Saved screenshot 3 (Parent Feedback grouped by student matching Image 3 in 100% English):', screenFeedback);
+
+  // 3. Navigate to Renewal View & Test Month Filter
+  console.log('Navigating to Renewal Tracking...');
+  await cdp.eval(`
+    (() => {
+      const btns = Array.from(document.querySelectorAll('button, a'));
+      const renBtn = btns.find(b => b.innerText && b.innerText.includes('Renewals'));
+      if (renBtn) renBtn.click();
+    })()
+  `);
+  await sleep(2000);
+
+  const screenRenewal = path.join(artifactDir, 'customer_renewal_monthly_filter.png');
+  await cdp.captureScreenshot(screenRenewal);
+  console.log('Saved screenshot 4 (Renewal monthly filter):', screenRenewal);
 
   cdp.close();
   chromeProc.kill();
-  console.log('🎉 All 4 screenshots captured successfully!');
+  console.log('🎉 All visual verification screenshots captured successfully!');
 }
 
 main().catch((err) => {

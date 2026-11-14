@@ -1,5 +1,5 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — T04: Quản lý Phản hồi & Khiếu nại Phụ huynh
+// KAPLA Staff Dashboard — T04: Parent Feedback & Inquiries
 // ==============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -46,25 +46,25 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
   const { language, t, tDb } = useLanguage();
 
   const TYPE_CONFIG: Record<FeedbackType, { label: string; icon: any; color: string }> = useMemo(() => ({
-    academic_concern: { label: language === 'en' ? 'Academic Concern' : 'Băn khoăn học vụ', icon: HelpCircle, color: 'text-amber-700 bg-amber-50 border-amber-200' },
-    complaint: { label: language === 'en' ? 'Complaint / Escalation' : 'Khiếu nại / Phàn nàn', icon: AlertTriangle, color: 'text-rose-700 bg-rose-50 border-rose-200' },
-    inquiry: { label: language === 'en' ? 'Inquiry' : 'Hỏi thông tin', icon: MessageCircle, color: 'text-blue-700 bg-blue-50 border-blue-200' },
-    compliment: { label: language === 'en' ? 'Commendation' : 'Khen ngợi / Hài lòng', icon: ThumbsUp, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-    facility: { label: language === 'en' ? 'Facilities' : 'Cơ sở vật chất', icon: Building2, color: 'text-purple-700 bg-purple-50 border-purple-200' },
+    academic_concern: { label: 'Academic Concern', icon: HelpCircle, color: 'text-amber-700 bg-amber-50 border-amber-200' },
+    complaint: { label: 'Complaint / Escalation', icon: AlertTriangle, color: 'text-rose-700 bg-rose-50 border-rose-200' },
+    inquiry: { label: 'Inquiry', icon: MessageCircle, color: 'text-blue-700 bg-blue-50 border-blue-200' },
+    compliment: { label: 'Commendation', icon: ThumbsUp, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+    facility: { label: 'Facilities', icon: Building2, color: 'text-purple-700 bg-purple-50 border-purple-200' },
   }), [language]);
 
   const CHANNEL_CONFIG: Record<FeedbackChannel, { label: string; icon: any }> = useMemo(() => ({
-    phone: { label: language === 'en' ? 'Phone Call' : 'Điện thoại', icon: Phone },
+    phone: { label: 'Phone Call', icon: Phone },
     zalo: { label: 'Zalo', icon: MessageCircle },
-    in_person: { label: language === 'en' ? 'In-Person Meeting' : 'Gặp trực tiếp', icon: User },
-    app: { label: language === 'en' ? 'Parent App' : 'Ứng dụng phụ huynh', icon: Sparkles },
+    in_person: { label: 'In-Person Meeting', icon: User },
+    app: { label: 'Parent App', icon: Sparkles },
     email: { label: 'Email', icon: Mail },
   }), [language]);
 
   const STATUS_CONFIG: Record<FeedbackStatus, { label: string; color: string; badge: string }> = useMemo(() => ({
-    open: { label: language === 'en' ? 'New Inquiry' : 'Mới tiếp nhận', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-    in_progress: { label: language === 'en' ? 'In Progress' : 'Đang xử lý', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-    resolved: { label: language === 'en' ? 'Resolved' : 'Đã giải quyết', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    open: { label: 'New Inquiry', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+    in_progress: { label: 'In Progress', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+    resolved: { label: 'Resolved', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   }), [language]);
   const [feedbacks, setFeedbacks] = useState<ParentFeedback[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -173,7 +173,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
         setStaffs(MockStorageService.getProfiles());
       }
     } catch (err: any) {
-      console.error('Lỗi tải dữ liệu phản hồi:', err);
+      console.error('Error loading feedback data:', err);
     } finally {
       setLoading(false);
     }
@@ -342,7 +342,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
 
     filteredFeedbacks.forEach((f) => {
       const s = f.student || students.find((st) => st.id === f.student_id);
-      const studentName = s?.full_name || f.student?.full_name || f.parent_name || 'Học viên';
+      const studentName = s?.full_name || f.student?.full_name || f.parent_name || 'Student';
       // Group key by student id, or fallback to normalized student name or parent phone
       const groupKey = f.student_id || studentName.toLowerCase().trim() || f.parent_phone;
 
@@ -458,7 +458,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
           <div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Total Inquiries' : 'Tổng phản hồi'}
+              {'Total Inquiries'}
             </div>
           </div>
         </div>
@@ -470,7 +470,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
           <div>
             <div className="text-2xl font-bold text-amber-700">{stats.open}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'New Inquiries' : 'Mới tiếp nhận'}
+              {'New Inquiries'}
             </div>
           </div>
         </div>
@@ -482,7 +482,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
           <div>
             <div className="text-2xl font-bold text-indigo-700">{stats.inProgress}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'In Progress' : 'Đang xử lý'}
+              {'In Progress'}
             </div>
           </div>
         </div>
@@ -494,7 +494,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
           <div>
             <div className="text-2xl font-bold text-emerald-700">{stats.resolved}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Resolved' : 'Đã giải quyết'}
+              {'Resolved'}
             </div>
           </div>
         </div>
@@ -507,7 +507,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder={language === 'en' ? 'Search by parent, student, phone, content...' : 'Tìm theo phụ huynh, học viên, SĐT, nội dung...'}
+              placeholder={'Search by parent, student, phone, content...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
@@ -521,7 +521,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               onChange={(e) => setTypeFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">{language === 'en' ? 'All Categories' : 'Tất cả phân loại'}</option>
+              <option value="all">{'All Categories'}</option>
               {Object.entries(TYPE_CONFIG).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
@@ -534,10 +534,10 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">{language === 'en' ? 'All Statuses' : 'Tất cả trạng thái'}</option>
-              <option value="open">{language === 'en' ? 'New Inquiry' : 'Mới tiếp nhận'}</option>
-              <option value="in_progress">{language === 'en' ? 'In Progress' : 'Đang xử lý'}</option>
-              <option value="resolved">{language === 'en' ? 'Resolved' : 'Đã giải quyết'}</option>
+              <option value="all">{'All Statuses'}</option>
+              <option value="open">{'New Inquiry'}</option>
+              <option value="in_progress">{'In Progress'}</option>
+              <option value="resolved">{'Resolved'}</option>
             </select>
           </div>
 
@@ -553,7 +553,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>{language === 'en' ? 'Group by Student' : 'Gộp theo học viên'}</span>
+              <span>{'Group by Student'}</span>
               <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-[#043264] font-bold">
                 {groupedFeedbacks.length}
               </span>
@@ -568,7 +568,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>{language === 'en' ? 'All Feedbacks' : 'Tất cả phản hồi'}</span>
+              <span>{'All Feedbacks'}</span>
               <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700 font-bold">
                 {filteredFeedbacks.length}
               </span>
@@ -582,7 +582,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
           className="w-full md:w-auto px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>{language === 'en' ? 'Record Parent Feedback' : 'Ghi nhận phản hồi mới'}</span>
+          <span>{'Record Parent Feedback'}</span>
         </button>
       </div>
 
@@ -590,18 +590,16 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-500 text-sm">
-            {language === 'en' ? 'Loading parent feedback...' : 'Đang tải danh sách phản hồi...'}
+            {'Loading parent feedback...'}
           </div>
         ) : filteredFeedbacks.length === 0 ? (
           <div className="p-12 text-center">
             <MessageSquareHeart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <div className="text-slate-700 font-semibold">
-              {language === 'en' ? 'No Matching Feedback Found' : 'Chưa có phản hồi nào phù hợp'}
+              {'No Matching Feedback Found'}
             </div>
             <div className="text-slate-400 text-sm mt-1">
-              {language === 'en'
-                ? 'Logged phone calls, messages, and parent feedback will appear here.'
-                : 'Các cuộc gọi, tin nhắn Zalo hoặc phản hồi từ phụ huynh sẽ được lưu vết tại đây.'}
+              {'Logged phone calls, messages, and parent feedback will appear here.'}
             </div>
           </div>
         ) : viewMode === 'grouped' ? (
@@ -684,7 +682,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                         className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#043264] bg-white hover:bg-blue-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>{language === 'en' ? 'Add Feedback' : 'Thêm phản hồi'}</span>
+                        <span>{'Add Feedback'}</span>
                       </button>
                     </div>
                   </div>
@@ -724,14 +722,14 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                                 {dueTomorrow && (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
                                     <Timer className="w-3 h-3 text-amber-700" />
-                                    <span>{language === 'en' ? '⏰ Due Tomorrow (1-Day Reminder)' : '⏰ Nhắc hẹn: Hạn ngày mai'}</span>
+                                    <span>{'⏰ Due Tomorrow (1-Day Reminder)'}</span>
                                   </span>
                                 )}
 
                                 {overdue && (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                                     <AlertTriangle className="w-3 h-3" />
-                                    <span>{language === 'en' ? 'Overdue' : 'Quá hạn'}</span>
+                                    <span>{'Overdue'}</span>
                                   </span>
                                 )}
 
@@ -754,7 +752,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                                 className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 self-start sm:self-auto cursor-pointer"
                               >
                                 <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                <span>{language === 'en' ? 'Update Progress' : 'Cập nhật tiến độ'}</span>
+                                <span>{'Update Progress'}</span>
                               </button>
                             </div>
 
@@ -767,7 +765,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                                 <div>
                                   <strong className="block text-emerald-900">
-                                    {language === 'en' ? 'Resolution Notes:' : 'Kết quả xử lý:'}
+                                    {'Resolution Notes:'}
                                   </strong>
                                   {tDb(f.resolution_notes)}
                                 </div>
@@ -863,7 +861,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                         <span className="text-slate-400 font-normal">({f.parent_phone})</span>
                         <span className="text-slate-300">•</span>
                         <span className="text-slate-600 font-normal">
-                          {language === 'en' ? 'Student: ' : 'Học viên: '}
+                          {'Student: '}
                           <button
                             type="button"
                             onClick={() => {
@@ -886,7 +884,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                           <div>
                             <strong className="block text-emerald-900">
-                              {language === 'en' ? 'Resolution Notes:' : 'Kết quả xử lý:'}
+                              {'Resolution Notes:'}
                             </strong>
                             {tDb(f.resolution_notes)}
                           </div>
@@ -903,7 +901,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                           <Users className="w-3.5 h-3.5 text-slate-400" />
                           <span>Assigned to:</span>
                           <strong className="text-slate-700 font-medium">
-                            {f.assigned_staff_name || (language === 'en' ? 'Unassigned' : 'Chưa phân công')}
+                            {f.assigned_staff_name || ('Unassigned')}
                           </strong>
                         </span>
                         <span className="flex items-center gap-1">
@@ -928,7 +926,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                         className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
                         <Clock className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{language === 'en' ? 'Update Progress' : 'Cập nhật tiến độ'}</span>
+                        <span>{'Update Progress'}</span>
                       </button>
                     </div>
                   </div>
@@ -939,7 +937,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
         )}
       </div>
 
-      {/* Modal: Ghi nhận phản hồi mới */}
+      {/* Modal: Record New Feedback */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -947,7 +945,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               <div className="flex items-center gap-2">
                 <MessageSquareHeart className="w-5 h-5 text-[#043264]" />
                 <h3 className="font-semibold text-slate-900 text-base">
-                  {language === 'en' ? 'Record Parent Feedback' : 'Ghi nhận phản hồi phụ huynh'}
+                  {'Record Parent Feedback'}
                 </h3>
               </div>
               <button
@@ -962,7 +960,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
             <form onSubmit={handleCreateFeedback} className="p-5 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Select Student *' : 'Chọn học viên liên quan *'}
+                  {'Select Student *'}
                 </label>
                 <select
                   value={newFeedback.student_id}
@@ -970,10 +968,10 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   required
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:border-[#043264]"
                 >
-                  <option value="">{language === 'en' ? '-- Select student --' : '-- Chọn học viên --'}</option>
+                  <option value="">{'-- Select student --'}</option>
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.student_code} - {s.full_name} ({s.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa vào lớp')})
+                      {s.student_code} - {s.full_name} ({s.current_class?.name || ('Unassigned')})
                     </option>
                   ))}
                 </select>
@@ -982,7 +980,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Parent Full Name' : 'Họ tên phụ huynh'}
+                    {'Parent Full Name'}
                   </label>
                   <input
                     type="text"
@@ -994,7 +992,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Phone Number' : 'Số điện thoại'}
+                    {'Phone Number'}
                   </label>
                   <input
                     type="text"
@@ -1009,7 +1007,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Category' : 'Phân loại phản hồi'}
+                    {'Category'}
                   </label>
                   <select
                     value={newFeedback.feedback_type}
@@ -1025,7 +1023,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Channel' : 'Kênh tiếp nhận'}
+                    {'Channel'}
                   </label>
                   <select
                     value={newFeedback.channel}
@@ -1043,7 +1041,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Feedback / Request Details *' : 'Nội dung phản hồi / Ý kiến phụ huynh *'}
+                  {'Feedback / Request Details *'}
                 </label>
                 <textarea
                   rows={3}
@@ -1051,9 +1049,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   onChange={(e) => setNewFeedback({ ...newFeedback, content: e.target.value })}
                   required
                   placeholder={
-                    language === 'en'
-                      ? 'Describe parent concerns, feedback, or inquiries in detail...'
-                      : 'Ghi rõ chi tiết nguyện vọng, thắc mắc hoặc phàn nàn của phụ huynh...'
+                    'Describe parent concerns, feedback, or inquiries in detail...'
                   }
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
                 />
@@ -1062,14 +1058,14 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Assigned Staff' : 'Nhân sự phụ trách'}
+                    {'Assigned Staff'}
                   </label>
                   <select
                     value={newFeedback.assigned_staff_id}
                     onChange={(e) => setNewFeedback({ ...newFeedback, assigned_staff_id: e.target.value })}
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:border-[#043264]"
                   >
-                    <option value="">{language === 'en' ? '-- Select staff --' : '-- Chọn nhân viên --'}</option>
+                    <option value="">{'-- Select staff --'}</option>
                     {staffs.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.full_name}
@@ -1079,7 +1075,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Due Date' : 'Hạn phản hồi phụ huynh'}
+                    {'Due Date'}
                   </label>
                   <input
                     type="date"
@@ -1097,7 +1093,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1105,8 +1101,8 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   className="px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Save Feedback' : 'Lưu phản hồi')}
+                    ? ('Saving...')
+                    : ('Save Feedback')}
                 </button>
               </div>
             </form>
@@ -1114,13 +1110,13 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Modal: Cập nhật tiến độ giải quyết */}
+      {/* Modal: Update Resolution Progress */}
       {selectedFeedbackForResolve && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <h3 className="font-semibold text-slate-900 text-base">
-                {language === 'en' ? 'Update Resolution Progress' : 'Cập nhật tiến độ xử lý'}
+                {'Update Resolution Progress'}
               </h3>
               <button
                 type="button"
@@ -1134,7 +1130,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
             <form onSubmit={handleResolveFeedback} className="p-5 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'New Status' : 'Trạng thái mới'}
+                  {'New Status'}
                 </label>
                 <select
                   value={resolveStatus}
@@ -1142,29 +1138,27 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:border-[#043264]"
                 >
                   <option value="in_progress">
-                    {language === 'en' ? 'In Progress (Awaiting info / Action plan)' : 'Đang xử lý (Chờ thông tin / Lên kế hoạch)'}
+                    {'In Progress (Awaiting info / Action plan)'}
                   </option>
                   <option value="resolved">
-                    {language === 'en' ? 'Resolved (Communicated with parent)' : 'Đã giải quyết (Đã trao đổi xong với phụ huynh)'}
+                    {'Resolved (Communicated with parent)'}
                   </option>
                   <option value="open">
-                    {language === 'en' ? 'Reopen (Pending review)' : 'Mở lại (Chờ tiếp nhận)'}
+                    {'Reopen (Pending review)'}
                   </option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Resolution Notes & Contact Log' : 'Kết quả xử lý & Ghi chú liên hệ'}
+                  {'Resolution Notes & Contact Log'}
                 </label>
                 <textarea
                   rows={4}
                   value={resolutionNotes}
                   onChange={(e) => setResolutionNotes(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'Describe phone call outcome, agreed action plan with parent...'
-                      : 'Ghi rõ nội dung đã gọi điện trao đổi, phương án thống nhất cùng phụ huynh...'
+                    'Describe phone call outcome, agreed action plan with parent...'
                   }
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
                 />
@@ -1176,7 +1170,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   onClick={() => setSelectedFeedbackForResolve(null)}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1184,8 +1178,8 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                   className="px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Updating...' : 'Đang cập nhật...')
-                    : (language === 'en' ? 'Update' : 'Cập nhật')}
+                    ? ('Updating...')
+                    : ('Update')}
                 </button>
               </div>
             </form>

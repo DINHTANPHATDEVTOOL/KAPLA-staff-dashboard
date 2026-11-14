@@ -63,14 +63,10 @@ export const BranchesClassesView: React.FC = () => {
           <div>
             <h3 className="font-display text-sm font-bold text-slate-900 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-[#026fd7]" />
-              {language === 'en'
-                ? `System Campuses (${availableBranches.length})`
-                : `Chi nhánh trong hệ thống (${availableBranches.length})`}
+              {`System Campuses (${availableBranches.length})`}
             </h3>
             <p className="text-xs text-slate-500">
-              {language === 'en'
-                ? 'Centralized multi-branch architecture with autonomous campus operations and isolated data scopes.'
-                : 'Kiến trúc đa chi nhánh tập trung, vận hành phân quyền độc lập theo từng cơ sở.'}
+              {'Centralized multi-branch architecture with autonomous campus operations and isolated data scopes.'}
             </p>
           </div>
         </div>
@@ -98,7 +94,7 @@ export const BranchesClassesView: React.FC = () => {
                   </div>
                   {isCurrent && (
                     <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">
-                      {language === 'en' ? 'Active' : 'Đang chọn'}
+                      'Active'
                     </span>
                   )}
                 </div>
@@ -106,7 +102,7 @@ export const BranchesClassesView: React.FC = () => {
                 <div className="mt-3 space-y-1.5 text-xs text-slate-600">
                   <div className="flex items-start gap-2">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                    <span className="text-[11px] leading-relaxed">{branch.address ? tDb(branch.address) : (language === 'en' ? 'Address pending update' : 'Đang cập nhật địa chỉ')}</span>
+                    <span className="text-[11px] leading-relaxed">{branch.address ? tDb(branch.address) : ('Address pending update')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -127,14 +123,10 @@ export const BranchesClassesView: React.FC = () => {
           <div>
             <h3 className="font-display text-sm font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-[#026fd7]" />
-              {language === 'en'
-                ? `Classroom Cohorts at ${currentBranch?.name ? tDb(currentBranch.name) : 'Active Campus'} (${filteredClasses.length})`
-                : `Danh sách lớp học tại ${currentBranch?.name ? tDb(currentBranch.name) : 'Chi nhánh hiện tại'} (${filteredClasses.length})`}
+              {`Classroom Cohorts at ${currentBranch?.name ? tDb(currentBranch.name) : 'Active Campus'} (${filteredClasses.length})`}
             </h3>
             <p className="text-xs text-slate-500">
-              {language === 'en'
-                ? 'Cohort setup, default HRT designation, and schedule management for tutoring and intervention routing.'
-                : 'Thiết lập lớp học và phân công HRT mặc định phục vụ luồng nhắc phí và can thiệp học thuật.'}
+              {'Cohort setup, default HRT designation, and schedule management for tutoring and intervention routing.'}
             </p>
           </div>
         </div>
@@ -142,19 +134,19 @@ export const BranchesClassesView: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
           {filteredClasses.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-500">
-              {language === 'en' ? 'No class records found for this campus.' : 'Chưa có dữ liệu lớp học tại chi nhánh này.'}
+              {'No class records found for this campus.'}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                    <th className="py-3 px-5">{t('branches.colClassName', 'Tên lớp học')}</th>
-                    <th className="py-3 px-4">{t('branches.colLevel', 'Cấp độ (Level)')}</th>
-                    <th className="py-3 px-4">{t('branches.colDefaultHrt', 'Giáo viên chủ nhiệm (HRT mặc định)')}</th>
-                    <th className="py-3 px-4">{t('branches.colMainTeacher', 'Giáo viên chính (Main Teacher)')}</th>
-                    <th className="py-3 px-4">{t('branches.colSchedule', 'Lịch học')}</th>
-                    <th className="py-3 px-4">{t('branches.colStatus', 'Trạng thái')}</th>
+                    <th className="py-3 px-5">{t('branches.colClassName', 'Class Name')}</th>
+                    <th className="py-3 px-4">{t('branches.colLevel', 'Level')}</th>
+                    <th className="py-3 px-4">{t('branches.colDefaultHrt', 'Default Homeroom Teacher (HRT)')}</th>
+                    <th className="py-3 px-4">{t('branches.colMainTeacher', 'Main Teacher')}</th>
+                    <th className="py-3 px-4">{t('branches.colSchedule', 'Schedule')}</th>
+                    <th className="py-3 px-4">{t('branches.colStatus', 'Status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -168,23 +160,23 @@ export const BranchesClassesView: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="font-medium text-slate-800">
-                          {cls.default_hrt_name || 'Võ Thị Tuyết Mai'}
+                          {cls.default_hrt_name || 'Tuyet Mai'}
                         </span>
                         <span className="block text-[10px] text-slate-400">
-                          {language === 'en' ? 'Class Default HRT' : 'HRT mặc định của lớp'}
+                          {'Class Default HRT'}
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-slate-700">
                         {cls.main_teacher_name
-                          ? (language === 'en' ? cls.main_teacher_name.replace('Bản ngữ', 'Native') : cls.main_teacher_name)
-                          : (language === 'en' ? 'Teacher Alex (Native)' : 'Teacher Alex (Bản ngữ)')}
+                          ? cls.main_teacher_name
+                          : ('Teacher Alex (Native)')}
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
                         {cls.schedule ? tDb(cls.schedule) : '—'}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {language === 'en' ? 'Active' : 'Đang hoạt động'}
+                          {'Active'}
                         </span>
                       </td>
                     </tr>

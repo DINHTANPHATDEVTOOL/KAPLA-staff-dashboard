@@ -42,7 +42,7 @@ const GLOBAL_ACCREDITATIONS: AccreditationCert[] = [
   {
     id: 'oxford',
     title: 'Oxford Quality Programme',
-    subtitleVi: 'Chứng nhận kiểm định độc quyền từ Nhà xuất bản Đại học Oxford (Oxford University Press) 2025–2028.',
+    subtitleVi: 'Exclusive Oxford Quality Certification by Oxford University Press (2025–2028).',
     subtitleEn: 'Exclusive Oxford Quality Certification by Oxford University Press (2025–2028).',
     short: 'Oxford Quality',
     year: '2025 – 2028',
@@ -54,7 +54,7 @@ const GLOBAL_ACCREDITATIONS: AccreditationCert[] = [
   {
     id: 'cambridge',
     title: 'Cambridge English Qualifications',
-    subtitleVi: 'Trung tâm luyện thi Cambridge Bronze Preparation Centre — Chuẩn hóa YLE 15/15 khiên & KET/PET.',
+    subtitleVi: 'Cambridge Bronze Preparation Centre — Standardized YLE 15/15 shields & KET/PET.',
     subtitleEn: 'Cambridge Bronze Preparation Centre — Standardized YLE 15/15 shields & KET/PET.',
     short: 'Cambridge English',
     year: 'Bronze Centre',
@@ -66,7 +66,7 @@ const GLOBAL_ACCREDITATIONS: AccreditationCert[] = [
   {
     id: 'natgeo',
     title: 'Partner of Emerging Excellence',
-    subtitleVi: 'Đối tác học thuật quốc tế cùng National Geographic Learning và Oxford University Press.',
+    subtitleVi: 'Global Academic Partner with National Geographic Learning & Oxford University Press.',
     subtitleEn: 'Global Academic Partner with National Geographic Learning & Oxford University Press.',
     short: 'NatGeo Learning',
     year: 'Emerging Excellence',
@@ -78,9 +78,9 @@ const GLOBAL_ACCREDITATIONS: AccreditationCert[] = [
 ];
 
 const BACKGROUND_OPTIONS = [
-  { id: 'pham_hung', nameVi: 'KAPLA Phạm Hùng', nameEn: 'Pham Hung Campus', src: '/assets/kapla-pham-hung.png' },
-  { id: 'binh_tan', nameVi: 'KAPLA Bình Tân', nameEn: 'Binh Tan Campus', src: '/assets/kapla-binh-tan.jpg' },
-  { id: 'oxford_room', nameVi: 'Phòng học Oxford', nameEn: 'Oxford Classroom', src: '/assets/kapla-english-room.jpg' },
+  { id: 'pham_hung', nameVi: 'Pham Hung Campus', nameEn: 'Pham Hung Campus', src: '/assets/kapla-pham-hung.png' },
+  { id: 'binh_tan', nameVi: 'Binh Tan Campus', nameEn: 'Binh Tan Campus', src: '/assets/kapla-binh-tan.jpg' },
+  { id: 'oxford_room', nameVi: 'Oxford Classroom', nameEn: 'Oxford Classroom', src: '/assets/kapla-english-room.jpg' },
 ];
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle }) => {
@@ -120,7 +120,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                 Staff Portal
               </span>
               <span className="text-[11px] text-sky-200 font-medium tracking-wide">
-                {t('brand.portalSubtitle', 'Cổng Thông Tin Học Vụ & Quản Trị Trung Tâm')}
+                {t('brand.portalSubtitle', 'Academic Administration & Staff Operations Portal')}
               </span>
             </div>
           </div>
@@ -154,31 +154,20 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
           {/* Oxford Quality Accreditation Pill */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-200 text-xs font-semibold tracking-wide backdrop-blur-md shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>{t('brand.oxfordBadge', 'Chứng nhận Oxford Quality 2025–2028 • Oxford University Press')}</span>
+            <span>{t('brand.oxfordBadge', 'Certified Oxford Quality 2025–2028 • Oxford University Press')}</span>
           </div>
 
           <div>
             <h1 className="font-display text-2xl xl:text-3.5xl font-extrabold leading-tight text-white tracking-tight drop-shadow-sm">
-              {language === 'en' ? (
-                <>
-                  KAPLA — American Creative English{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-amber-200 to-amber-400 block mt-0.5">
-                    with Oxford Quality Standards
-                  </span>
-                </>
-              ) : (
-                <>
-                  KAPLA — Tiếng Anh Sáng Tạo Mỹ{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-amber-200 to-amber-400 block mt-0.5">
-                    chuẩn Oxford Quality
-                  </span>
-                </>
-              )}
+              KAPLA — American Creative English{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 via-amber-200 to-amber-400 block mt-0.5">
+                with Oxford Quality Standards
+              </span>
             </h1>
             <p className="text-slate-200 text-xs xl:text-sm leading-relaxed font-normal mt-2 drop-shadow-xs">
               {t(
                 'brand.heroDesc',
-                'Hệ thống tiếng Anh duy nhất tại Việt Nam đạt 03 chứng nhận uy tín toàn cầu: Oxford Quality, Emerging Excellence và Cambridge English Qualifications. Chương trình phát triển toàn diện chuẩn CCSS & NGSS của Mỹ kết hợp Lập trình Robotics.'
+                'The only English education system in Vietnam accredited by 03 prestigious global institutions: Oxford Quality, Emerging Excellence, and Cambridge English Qualifications. Comprehensive US CCSS & NGSS curriculum integrated with STEAM Robotics.'
               )}
             </p>
           </div>
@@ -188,11 +177,11 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
               <span className="text-[11px] font-bold tracking-wider text-amber-300 uppercase flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5 text-amber-400" />
-                {language === 'en' ? '03 Global Accreditations (Hover to Preview)' : '03 Chứng Nhận Học Thuật Toàn Cầu'}
+                {'03 Global Academic Accreditations (Click to Preview)'}
               </span>
               <span className="text-[10px] text-sky-200 font-medium flex items-center gap-1">
                 <ZoomIn className="w-3 h-3 text-sky-300" />
-                {language === 'en' ? 'Hover to Zoom / Click to Expand' : 'Rê chuột để phóng to • Bấm để xem'}
+                {'Hover to Zoom / Click to Expand'}
               </span>
             </div>
 
@@ -215,7 +204,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                         />
                         <div className="absolute top-2 right-2 bg-slate-950/85 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-amber-300 border border-amber-400/40 flex items-center gap-1">
                           <Maximize2 className="w-3 h-3" />
-                          <span>{language === 'en' ? 'Click to open' : 'Bấm phóng to'}</span>
+                          <span>Click to zoom</span>
                         </div>
                       </div>
                       <div className="p-2 pt-2.5">
@@ -263,7 +252,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <div className="p-3 rounded-xl bg-[#001733]/65 border border-white/15 backdrop-blur-md hover:bg-[#001733]/85 transition-all">
               <div className="font-display text-2xl font-black text-amber-300 tracking-tight">03</div>
               <div className="text-xs font-semibold text-white mt-0.5">
-                {t('brand.statAccreditationLabel', 'Chứng nhận Toàn cầu')}
+                {t('brand.statAccreditationLabel', 'Global Accreditations')}
               </div>
               <div className="text-[10px] text-slate-300 mt-0.5">
                 {t('brand.statAccreditationSub', 'Oxford • Cambridge • NatGeo')}
@@ -273,7 +262,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <div className="p-3 rounded-xl bg-[#001733]/65 border border-white/15 backdrop-blur-md hover:bg-[#001733]/85 transition-all">
               <div className="font-display text-2xl font-black text-sky-300 tracking-tight">15/15</div>
               <div className="text-xs font-semibold text-white mt-0.5">
-                {t('brand.statCambridgeLabel', 'Khiên Cambridge')}
+                {t('brand.statCambridgeLabel', 'Cambridge Shields')}
               </div>
               <div className="text-[10px] text-slate-300 mt-0.5">
                 {t('brand.statCambridgeSub', 'Starters • Movers • Flyers')}
@@ -283,20 +272,20 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <div className="p-3 rounded-xl bg-[#001733]/65 border border-white/15 backdrop-blur-md hover:bg-[#001733]/85 transition-all">
               <div className="font-display text-2xl font-black text-emerald-300 tracking-tight">11</div>
               <div className="text-xs font-semibold text-white mt-0.5">
-                {t('brand.statCentresLabel', 'Trung tâm Hoạt động')}
+                {t('brand.statCentresLabel', 'Active Campuses')}
               </div>
               <div className="text-[10px] text-slate-300 mt-0.5">
-                {t('brand.statCentresSub', 'TP.HCM & Bình Dương')}
+                {t('brand.statCentresSub', 'HCMC & Binh Duong')}
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-[#001733]/65 border border-white/15 backdrop-blur-md hover:bg-[#001733]/85 transition-all">
               <div className="font-display text-2xl font-black text-indigo-300 tracking-tight">100%</div>
               <div className="text-xs font-semibold text-white mt-0.5">
-                {t('brand.statSteamLabel', 'Chuẩn CCSS & NGSS Mỹ')}
+                {t('brand.statSteamLabel', 'US CCSS & NGSS')}
               </div>
               <div className="text-[10px] text-slate-300 mt-0.5">
-                {t('brand.statSteamSub', 'Tích hợp Lập trình Robotics')}
+                {t('brand.statSteamSub', 'Integrated STEAM Robotics')}
               </div>
             </div>
           </div>
@@ -309,12 +298,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-white truncate">
-                  {t('brand.featureOxfordTitle', 'Lớp học không bàn ghế chuẩn Oxford Quality')}
+                  {t('brand.featureOxfordTitle', 'Chair-free Classrooms Oxford Standard')}
                 </p>
                 <p className="text-[11px] text-slate-300 truncate">
                   {t(
                     'brand.featureOxfordDesc',
-                    'Phương pháp Big Question Learning — kích hoạt tư duy chủ động và rèn luyện kỹ năng 4C.'
+                    'Big Question Learning Methodology — activates proactive critical thinking and trains 4C skills.'
                   )}
                 </p>
               </div>
@@ -326,12 +315,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-white truncate">
-                  {t('brand.featureSteamTitle', 'Hệ sinh thái STEAM & Robotics chuẩn Mỹ')}
+                  {t('brand.featureSteamTitle', 'US STEAM & Robotics Ecosystem')}
                 </p>
                 <p className="text-[11px] text-slate-300 truncate">
                   {t(
                     'brand.featureSteamDesc',
-                    'Phòng Lab lập trình hiện đại, tích hợp Khoa học máy tính & Toán Kangaroo (IKMC).'
+                    'Modern coding lab integrating computer science, Kangaroo Math (IKMC), and FIDE Chess.'
                   )}
                 </p>
               </div>
@@ -344,7 +333,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <span className="truncate">
               {t(
                 'brand.campusTicker',
-                'Mạng lưới 11 trung tâm: KAPLA Phạm Hùng • Bình Tân • Tân Kỳ Tân Quý • Bàu Cát • Nguyễn Văn Lượng • Dĩ An...'
+                'Network of 11 campuses: KAPLA Pham Hung, Binh Tan, Tan Ky Tan Quy, Bau Cat, Nguyen Van Luong, Di An...'
               )}
             </span>
           </p>
@@ -357,7 +346,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <span>KAPLA Education Systems © 2026</span>
           </div>
           <span className="text-[11px] bg-slate-800/80 px-2.5 py-1 rounded-md text-slate-300 font-mono">
-            {t('brand.footerVersion', 'Phiên bản 2.1 (RLS Secured)')}
+            {t('brand.footerVersion', 'Version 2.1 (RLS Secured)')}
           </span>
         </div>
       </div>
@@ -391,7 +380,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                 type="button"
                 onClick={() => setSelectedCert(null)}
                 className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700 transition-colors"
-                title="Đóng"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -410,14 +399,14 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
               <div className="flex items-center gap-1.5 text-emerald-400">
                 <ShieldCheck className="w-4 h-4" />
-                <span>{language === 'en' ? 'Official Academic Accreditation • Verified' : 'Chứng nhận đào tạo chính thức • Đã xác thực'}</span>
+                <span>Official Academic Accreditation • Verified</span>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedCert(null)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
               >
-                {language === 'en' ? 'Close Viewer' : 'Đóng cửa sổ'}
+                Close Viewer
               </button>
             </div>
           </div>

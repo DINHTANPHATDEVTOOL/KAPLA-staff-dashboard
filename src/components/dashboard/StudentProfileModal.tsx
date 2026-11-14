@@ -154,7 +154,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
       return {
         days: diffDays,
         status: 'expired',
-        label: language === 'en' ? `Expired ${Math.abs(diffDays)}d ago` : `Đã quá hạn ${Math.abs(diffDays)} ngày`,
+        label: `Expired ${Math.abs(diffDays)}d ago`,
         color: 'bg-rose-50 text-rose-700 border-rose-200',
       };
     }
@@ -162,14 +162,14 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
       return {
         days: diffDays,
         status: 'warning',
-        label: language === 'en' ? `Due in ${diffDays}d` : `Sắp hết hạn (${diffDays} ngày)`,
+        label: `Due in ${diffDays}d`,
         color: 'bg-amber-50 text-amber-700 border-amber-200',
       };
     }
     return {
       days: diffDays,
       status: 'safe',
-      label: language === 'en' ? `${diffDays}d remaining` : `Còn ${diffDays} ngày`,
+      label: `${diffDays}d remaining`,
       color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     };
   }, [student, language]);
@@ -211,17 +211,17 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         id: `as-${a.id}`,
         type: 'assessment',
         date: a.assessment_date,
-        title: `${language === 'en' ? '4-Skill Assessment' : 'Đánh giá năng lực 4 kỹ năng'} — ${tDb(a.period)}`,
-        subtitle: a.assessed_by_name ? `${language === 'en' ? 'Assessed by' : 'Đánh giá bởi'}: ${a.assessed_by_name}` : undefined,
-        content: a.strengths ? `${language === 'en' ? 'Strengths' : 'Điểm mạnh'}: ${tDb(a.strengths)}` : undefined,
-        secondaryContent: a.weaknesses ? `${language === 'en' ? 'Areas for Growth' : 'Kỹ năng cần cải thiện'}: ${tDb(a.weaknesses)}` : undefined,
+        title: `${'4-Skill Assessment'} — ${tDb(a.period)}`,
+        subtitle: a.assessed_by_name ? `${'Assessed by'}: ${a.assessed_by_name}` : undefined,
+        content: a.strengths ? `${'Strengths'}: ${tDb(a.strengths)}` : undefined,
+        secondaryContent: a.weaknesses ? `${'Areas for Growth'}: ${tDb(a.weaknesses)}` : undefined,
         statusBadge: a.has_academic_risk
           ? {
-              label: language === 'en' ? 'Academic Risk' : 'Nguy cơ học thuật',
+              label: 'Academic Risk',
               color: 'bg-rose-100 text-rose-800 border-rose-200',
             }
           : {
-              label: a.progress_status || (language === 'en' ? 'On Track' : 'Tiến độ tốt'),
+              label: a.progress_status || ('On Track'),
               color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
             },
         metaBadge: a.progress_status
@@ -242,16 +242,16 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         id: `fb-${f.id}`,
         type: 'feedback',
         date: f.created_at ? f.created_at.split('T')[0] : f.due_date,
-        title: `${language === 'en' ? 'Parent Log Call / Feedback' : 'Cuộc gọi & Phản hồi PH'} (${channelLabel})`,
-        subtitle: `${f.parent_name} • ${f.parent_phone} • ${language === 'en' ? 'Staff' : 'Nhân sự'}: ${f.assigned_staff_name || 'HRT'}`,
+        title: `${'Parent Log Call / Feedback'} (${channelLabel})`,
+        subtitle: `${f.parent_name} • ${f.parent_phone} • ${'Staff'}: ${f.assigned_staff_name || 'HRT'}`,
         content: tDb(f.content),
-        secondaryContent: f.resolution_notes ? `${language === 'en' ? 'Resolution' : 'Xử lý'}: ${tDb(f.resolution_notes)}` : undefined,
+        secondaryContent: f.resolution_notes ? `${'Resolution'}: ${tDb(f.resolution_notes)}` : undefined,
         statusBadge:
           f.status === 'resolved'
-            ? { label: language === 'en' ? 'Resolved' : 'Đã xử lý', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
+            ? { label: 'Resolved', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
             : f.status === 'in_progress'
-            ? { label: language === 'en' ? 'In Progress' : 'Đang xử lý', color: 'bg-blue-100 text-blue-800 border-blue-200' }
-            : { label: language === 'en' ? 'Open / Pending' : 'Chưa xử lý', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+            ? { label: 'In Progress', color: 'bg-blue-100 text-blue-800 border-blue-200' }
+            : { label: 'Open / Pending', color: 'bg-amber-100 text-amber-800 border-amber-200' },
         metaBadge: {
           label: f.feedback_type.replace('_', ' ').toUpperCase(),
           color: f.feedback_type === 'complaint' ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-purple-100 text-purple-800 border-purple-200',
@@ -267,18 +267,18 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         id: `it-${i.id}`,
         type: 'intervention',
         date: i.created_at ? i.created_at.split('T')[0] : i.due_date,
-        title: `${language === 'en' ? 'Academic Intervention Plan' : 'Phiếu can thiệp học thuật'}`,
-        subtitle: `${language === 'en' ? 'Assigned to' : 'Phân công'}: ${i.assigned_staff_name || 'HRT'} • ${language === 'en' ? 'Due' : 'Hạn'}: ${i.due_date}`,
-        content: `${language === 'en' ? 'Issue' : 'Vấn đề'}: ${tDb(i.issue_description)}`,
-        secondaryContent: `${language === 'en' ? 'Action Plan' : 'Kế hoạch can thiệp'}: ${tDb(i.action_plan)}${
-          i.verification_notes ? ` | ${language === 'en' ? 'Verification' : 'Duyệt'}: ${tDb(i.verification_notes)}` : ''
+        title: `${'Academic Intervention Plan'}`,
+        subtitle: `${'Assigned to'}: ${i.assigned_staff_name || 'HRT'} • ${'Due'}: ${i.due_date}`,
+        content: `${'Issue'}: ${tDb(i.issue_description)}`,
+        secondaryContent: `${'Action Plan'}: ${tDb(i.action_plan)}${
+          i.verification_notes ? ` | ${'Verification'}: ${tDb(i.verification_notes)}` : ''
         }`,
         statusBadge:
           i.status === 'verified'
-            ? { label: language === 'en' ? 'Verified by CM/HT' : 'Đã xác minh (Đạt)', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
+            ? { label: 'Verified by CM/HT', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
             : i.status === 'resolved'
-            ? { label: language === 'en' ? 'Resolved (Awaiting Verification)' : 'Chờ HT duyệt', color: 'bg-blue-100 text-blue-800 border-blue-200' }
-            : { label: language === 'en' ? 'Open Ticket' : 'Đang can thiệp', color: 'bg-rose-100 text-rose-800 border-rose-200' },
+            ? { label: 'Resolved (Awaiting Verification)', color: 'bg-blue-100 text-blue-800 border-blue-200' }
+            : { label: 'Open Ticket', color: 'bg-rose-100 text-rose-800 border-rose-200' },
         rawItem: i,
         actorName: i.assigned_staff_name,
       });
@@ -290,13 +290,13 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         id: `ct-${t.id}`,
         type: 'care_task',
         date: t.due_date,
-        title: `${language === 'en' ? 'Care Task' : 'Nhiệm vụ chăm sóc'}: ${tDb(t.title)}`,
-        subtitle: `${language === 'en' ? 'Due Date' : 'Hạn hoàn thành'}: ${t.due_date}`,
+        title: `${'Care Task'}: ${tDb(t.title)}`,
+        subtitle: `${'Due Date'}: ${t.due_date}`,
         content: t.notes ? tDb(t.notes) : undefined,
         statusBadge:
           t.status === 'completed'
-            ? { label: language === 'en' ? 'Completed' : 'Hoàn tất', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
-            : { label: language === 'en' ? 'Pending' : 'Chưa xong', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+            ? { label: 'Completed', color: 'bg-emerald-100 text-emerald-800 border-emerald-200' }
+            : { label: 'Pending', color: 'bg-amber-100 text-amber-800 border-amber-200' },
         rawItem: t,
       });
     });
@@ -308,21 +308,21 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         id: `ts-${s.id}`,
         type: 'tutor',
         date: s.session_date,
-        title: `${language === 'en' ? 'Supplementary Tutor Session' : 'Buổi kèm bổ trợ 1:1 / Lớp phụ'}: ${tDb(s.title)}`,
-        subtitle: `${s.start_time} - ${s.end_time} • ${language === 'en' ? 'Teacher' : 'Giáo viên'}: ${s.teacher_name || 'Lead Teacher'}`,
-        content: `${language === 'en' ? 'Topic' : 'Chủ đề'}: ${tDb(s.topic)} • ${language === 'en' ? 'Objective' : 'Mục tiêu'}: ${tDb(s.target_objective)}`,
+        title: `${'Supplementary Tutor Session'}: ${tDb(s.title)}`,
+        subtitle: `${s.start_time} - ${s.end_time} • ${'Teacher'}: ${s.teacher_name || 'Lead Teacher'}`,
+        content: `${'Topic'}: ${tDb(s.topic)} • ${'Objective'}: ${tDb(s.target_objective)}`,
         secondaryContent: attendeeRecord?.teacher_feedback
-          ? `${language === 'en' ? 'Tutor Feedback' : 'Nhận xét buổi kèm'}: ${tDb(attendeeRecord.teacher_feedback)}`
+          ? `${'Tutor Feedback'}: ${tDb(attendeeRecord.teacher_feedback)}`
           : undefined,
         statusBadge: {
           label:
             attendeeRecord?.attendance_status === 'attended' || attendeeRecord?.attendance_status === 'present'
-              ? (language === 'en' ? 'Attended' : 'Đã tham gia')
+              ? ('Attended')
               : attendeeRecord?.attendance_status === 'absent'
-              ? (language === 'en' ? 'Absent' : 'Vắng mặt')
+              ? ('Absent')
               : attendeeRecord?.attendance_status === 'excused'
-              ? (language === 'en' ? 'Excused' : 'Có phép')
-              : (language === 'en' ? 'Scheduled' : 'Đã lên lịch'),
+              ? ('Excused')
+              : ('Scheduled'),
           color:
             attendeeRecord?.attendance_status === 'attended' || attendeeRecord?.attendance_status === 'present'
               ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -341,11 +341,11 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         id: `tr-${tr.id}`,
         type: 'transfer',
         date: tr.transfer_date,
-        title: `${language === 'en' ? 'Class Transfer' : 'Điều chuyển lớp học'}: ${tr.from_class_name || 'Lớp cũ'} → ${tr.to_class_name || 'Lớp mới'}`,
-        subtitle: tr.transferred_by_name ? `${language === 'en' ? 'Transferred by' : 'Thực hiện bởi'}: ${tr.transferred_by_name}` : undefined,
-        content: `${language === 'en' ? 'Reason' : 'Lý do'}: ${tDb(tr.reason)}`,
+        title: `${'Class Transfer'}: ${tr.from_class_name || 'Previous Class'} → ${tr.to_class_name || 'New Class'}`,
+        subtitle: tr.transferred_by_name ? `${'Transferred by'}: ${tr.transferred_by_name}` : undefined,
+        content: `${'Reason'}: ${tDb(tr.reason)}`,
         statusBadge: {
-          label: language === 'en' ? 'Transferred' : 'Đã chuyển lớp',
+          label: 'Transferred',
           color: 'bg-indigo-100 text-indigo-800 border-indigo-200',
         },
         rawItem: tr,
@@ -415,12 +415,12 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   {hasAcademicRisk ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/25 border border-rose-400 text-rose-200 text-xs font-semibold">
                       <AlertTriangle className="w-3 h-3 text-rose-300" />
-                      {language === 'en' ? 'Academic Attention' : 'Nguy cơ học thuật'}
+                      {'Academic Attention'}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/25 border border-emerald-400 text-emerald-200 text-xs font-semibold">
                       <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                      {language === 'en' ? 'Good Standing' : 'Học lực chuẩn'}
+                      {'Good Standing'}
                     </span>
                   )}
                 </div>
@@ -428,11 +428,11 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-sky-100 mt-1.5 font-light">
                   <span className="flex items-center gap-1">
                     <GraduationCap className="w-3.5 h-3.5 text-sky-300" />
-                    <strong>{student.current_class?.name || (language === 'en' ? 'Unassigned Class' : 'Chưa có lớp')}</strong>
+                    <strong>{student.current_class?.name || ('Unassigned Class')}</strong>
                     {student.current_class?.level && ` (${student.current_class.level})`}
                   </span>
                   <span>•</span>
-                  <span>{language === 'en' ? 'Main Teacher' : 'GV Chính'}: {student.current_class?.main_teacher_name || 'Jamie William'}</span>
+                  <span>{'Main Teacher'}: {student.current_class?.main_teacher_name || 'Jamie William'}</span>
                   <span>•</span>
                   <span>
                     HRT: {student.assigned_hrt?.full_name || student.effective_hrt_name || 'Minh'}
@@ -453,7 +453,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-[#043264] hover:bg-sky-50 font-semibold text-xs transition-colors shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  {language === 'en' ? '+ Assessment' : '+ Đánh giá 4KN'}
+                  {'+ Assessment'}
                 </button>
               )}
 
@@ -467,7 +467,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs border border-white/20 transition-colors"
                 >
                   <PhoneCall className="w-3.5 h-3.5 text-sky-300" />
-                  {language === 'en' ? '+ Log Call' : '+ Ghi nhận gọi PH'}
+                  {'+ Log Call'}
                 </button>
               )}
 
@@ -481,7 +481,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/30 hover:bg-rose-500/40 text-rose-100 font-semibold text-xs border border-rose-400/40 transition-colors"
                 >
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  {language === 'en' ? 'Intervention' : 'Can thiệp'}
+                  {'Intervention'}
                 </button>
               )}
             </div>
@@ -491,7 +491,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           <div className="mt-4 pt-3 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div className="bg-white/10 rounded-xl px-3 py-1.5 backdrop-blur-xs">
               <span className="text-[10px] text-sky-200 block uppercase font-medium">
-                {language === 'en' ? 'Parent & Phone' : 'Phụ huynh'}
+                {'Parent & Phone'}
               </span>
               <span className="font-semibold text-white truncate block">
                 {student.parent_name} • {student.parent_phone}
@@ -499,7 +499,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             </div>
             <div className="bg-white/10 rounded-xl px-3 py-1.5 backdrop-blur-xs">
               <span className="text-[10px] text-sky-200 block uppercase font-medium">
-                {language === 'en' ? 'Tuition Expiry' : 'Hạn học phí'}
+                {'Tuition Expiry'}
               </span>
               <span className="font-semibold text-white font-mono block">
                 {student.tuition_expiry_date} ({tuitionInfo.label})
@@ -507,18 +507,18 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             </div>
             <div className="bg-white/10 rounded-xl px-3 py-1.5 backdrop-blur-xs">
               <span className="text-[10px] text-sky-200 block uppercase font-medium">
-                {language === 'en' ? 'Open Interventions' : 'Phiếu can thiệp mở'}
+                {'Open Interventions'}
               </span>
               <span className={`font-semibold ${openInterventionCount > 0 ? 'text-amber-300' : 'text-emerald-300'}`}>
-                {openInterventionCount} {language === 'en' ? 'active' : 'đang xử lý'}
+                {openInterventionCount} {'active'}
               </span>
             </div>
             <div className="bg-white/10 rounded-xl px-3 py-1.5 backdrop-blur-xs">
               <span className="text-[10px] text-sky-200 block uppercase font-medium">
-                {language === 'en' ? 'Pending Feedback' : 'Phản hồi chờ xử lý'}
+                {'Pending Feedback'}
               </span>
               <span className={`font-semibold ${pendingFeedbackCount > 0 ? 'text-amber-300' : 'text-emerald-300'}`}>
-                {pendingFeedbackCount} {language === 'en' ? 'pending' : 'chưa đóng'}
+                {pendingFeedbackCount} {'pending'}
               </span>
             </div>
           </div>
@@ -532,14 +532,14 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#043264]" />
               <span className="font-bold text-slate-800">
-                {language === 'en' ? 'Latest 4-Skill Competency' : 'Năng lực 4 kỹ năng mới nhất'} ({tDb(latestAssessment.period)} - {latestAssessment.assessment_date}):
+                {'Latest 4-Skill Competency'} ({tDb(latestAssessment.period)} - {latestAssessment.assessment_date}):
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {renderSkillLevelBadge(language === 'en' ? 'Listening' : 'Nghe', latestAssessment.listening_level, latestAssessment.listening_score)}
-              {renderSkillLevelBadge(language === 'en' ? 'Speaking' : 'Nói', latestAssessment.speaking_level, latestAssessment.speaking_score)}
-              {renderSkillLevelBadge(language === 'en' ? 'Reading' : 'Đọc', latestAssessment.reading_level, latestAssessment.reading_score)}
-              {renderSkillLevelBadge(language === 'en' ? 'Writing' : 'Viết', latestAssessment.writing_level, latestAssessment.writing_score)}
+              {renderSkillLevelBadge('Listening', latestAssessment.listening_level, latestAssessment.listening_score)}
+              {renderSkillLevelBadge('Speaking', latestAssessment.speaking_level, latestAssessment.speaking_score)}
+              {renderSkillLevelBadge('Reading', latestAssessment.reading_level, latestAssessment.reading_score)}
+              {renderSkillLevelBadge('Writing', latestAssessment.writing_level, latestAssessment.writing_score)}
             </div>
           </div>
         )}
@@ -558,7 +558,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {language === 'en' ? 'All Activities (Log Call)' : 'Nhật ký tương tác (Logcall)'} ({unifiedTimeline.length})
+              {'All Activities (Log Call)'} ({unifiedTimeline.length})
             </button>
             <button
               type="button"
@@ -569,7 +569,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {language === 'en' ? '4-Skill Assessments' : 'Đánh giá 4KN'} ({assessments.length})
+              {'4-Skill Assessments'} ({assessments.length})
             </button>
             <button
               type="button"
@@ -580,7 +580,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {language === 'en' ? 'Parent Feedback & Calls' : 'Phản hồi PH'} ({feedbacks.length})
+              {'Parent Feedback & Calls'} ({feedbacks.length})
             </button>
             <button
               type="button"
@@ -591,7 +591,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {language === 'en' ? 'Interventions & Tutor' : 'Can thiệp & Tutor'} ({interventions.length + tutorSessions.length})
+              {'Interventions & Tutor'} ({interventions.length + tutorSessions.length})
             </button>
             <button
               type="button"
@@ -602,7 +602,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              {language === 'en' ? 'Enrollment & Tasks' : 'Lớp & Nhiệm vụ'} ({transfers.length + careTasks.length})
+              {'Enrollment & Tasks'} ({transfers.length + careTasks.length})
             </button>
           </div>
 
@@ -612,7 +612,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={language === 'en' ? 'Filter log notes...' : 'Tìm trong lịch sử...'}
+              placeholder={'Filter log notes...'}
               className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
             />
           </div>
@@ -624,18 +624,16 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-slate-50/50">
           {loading ? (
             <div className="p-12 text-center text-xs text-slate-500">
-              {language === 'en' ? 'Loading student complete log history...' : 'Đang tải hồ sơ tương tác...'}
+              {'Loading student complete log history...'}
             </div>
           ) : filteredTimeline.length === 0 ? (
             <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
               <History className="w-10 h-10 text-slate-400 mx-auto mb-2" />
               <h4 className="text-sm font-semibold text-slate-800">
-                {language === 'en' ? 'No Log Activity Found' : 'Chưa có nhật ký hoạt động nào'}
+                {'No Log Activity Found'}
               </h4>
               <p className="text-xs text-slate-500 mt-1">
-                {language === 'en'
-                  ? 'Record assessments, parent care calls, or tutor interventions to track student growth.'
-                  : 'Nhập đánh giá năng lực hoặc ghi nhận cuộc gọi phụ huynh để theo dõi tiến trình.'}
+                {'Record assessments, parent care calls, or tutor interventions to track student growth.'}
               </p>
             </div>
           ) : (
@@ -707,10 +705,10 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                       {/* 4-Skill breakdown if assessment */}
                       {item.type === 'assessment' && item.rawItem && (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-2.5">
-                          {renderSkillLevelBadge(language === 'en' ? 'Listening' : 'Nghe', item.rawItem.listening_level, item.rawItem.listening_score)}
-                          {renderSkillLevelBadge(language === 'en' ? 'Speaking' : 'Nói', item.rawItem.speaking_level, item.rawItem.speaking_score)}
-                          {renderSkillLevelBadge(language === 'en' ? 'Reading' : 'Đọc', item.rawItem.reading_level, item.rawItem.reading_score)}
-                          {renderSkillLevelBadge(language === 'en' ? 'Writing' : 'Viết', item.rawItem.writing_level, item.rawItem.writing_score)}
+                          {renderSkillLevelBadge('Listening', item.rawItem.listening_level, item.rawItem.listening_score)}
+                          {renderSkillLevelBadge('Speaking', item.rawItem.speaking_level, item.rawItem.speaking_score)}
+                          {renderSkillLevelBadge('Reading', item.rawItem.reading_level, item.rawItem.reading_score)}
+                          {renderSkillLevelBadge('Writing', item.rawItem.writing_level, item.rawItem.writing_score)}
                         </div>
                       )}
 
@@ -736,16 +734,14 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         {/* Modal Footer */}
         <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <span>
-            {language === 'en'
-              ? `Showing comprehensive log record for student ID ${student.student_code}`
-              : `Hồ sơ nhật ký toàn diện cho học viên ${student.full_name} (${student.student_code})`}
+            {`Showing comprehensive log record for student ID ${student.student_code}`}
           </span>
           <button
             type="button"
             onClick={onClose}
             className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
           >
-            {language === 'en' ? 'Close Profile' : 'Đóng hồ sơ'}
+            {'Close Profile'}
           </button>
         </div>
       </div>

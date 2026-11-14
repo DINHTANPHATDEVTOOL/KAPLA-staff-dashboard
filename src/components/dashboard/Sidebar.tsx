@@ -58,25 +58,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const navItems: NavItem[] = useMemo(
     () => [
-      { id: 'overview', label: t('nav.overview', 'Tổng quan học vụ'), icon: LayoutDashboard },
-      { id: 'students', label: t('nav.students', 'Hồ sơ học viên'), icon: Users },
-      { id: 'care_tasks', label: t('nav.care_tasks', 'Công việc HRT'), icon: ClipboardList },
-      { id: 'assessments', label: t('nav.assessments', 'Đánh giá năng lực'), icon: ClipboardCheck },
-      { id: 'interventions', label: t('nav.interventions', 'Phiếu can thiệp'), icon: AlertTriangle },
-      { id: 'feedback', label: t('nav.feedback', 'Phản hồi phụ huynh'), icon: MessageSquareHeart },
-      { id: 'supplementary', label: t('nav.supplementary', 'Lớp học bổ trợ'), icon: BookOpenCheck },
-      { id: 'renewal', label: t('nav.renewal', 'Quản lý tái tục'), icon: CalendarClock },
-      { id: 'logs', label: t('nav.logs', 'Nhật ký tác nghiệp'), icon: History },
+      { id: 'overview', label: t('nav.overview', 'Academic Overview'), icon: LayoutDashboard },
+      { id: 'students', label: t('nav.students', 'Student Records'), icon: Users },
+      { id: 'care_tasks', label: t('nav.care_tasks', 'HRT Care Tasks'), icon: ClipboardList },
+      { id: 'assessments', label: t('nav.assessments', 'Skill Assessments'), icon: ClipboardCheck },
+      { id: 'interventions', label: t('nav.interventions', 'Academic Interventions'), icon: AlertTriangle },
+      { id: 'feedback', label: t('nav.feedback', 'Parent Feedback'), icon: MessageSquareHeart },
+      { id: 'supplementary', label: t('nav.supplementary', 'Supplementary Sessions'), icon: BookOpenCheck },
+      { id: 'renewal', label: t('nav.renewal', 'Renewals & Tuition'), icon: CalendarClock },
+      { id: 'logs', label: t('nav.logs', 'Activity Logs'), icon: History },
       {
         id: 'staff_roles',
-        label: t('nav.staff_roles', 'Nhân sự & Phân quyền'),
+        label: t('nav.staff_roles', 'Staff & Permissions'),
         icon: ShieldCheck,
         badge: pendingCount,
         adminOrCmOnly: true,
       },
       {
         id: 'branches_classes',
-        label: t('nav.branches_classes', 'Chi nhánh & Lớp học'),
+        label: t('nav.branches_classes', 'Campuses & Classes'),
         icon: Building2,
         adminOrCmOnly: true,
       },
@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Staff Portal
             </span>
             <span className="text-[10px] text-sky-300 font-medium tracking-wide truncate block max-w-[130px]">
-              {currentBranch?.name ? tDb(currentBranch.name) : tDb('Hệ Thống KAPLA')}
+              {currentBranch?.name ? tDb(currentBranch.name) : tDb('KAPLA System')}
             </span>
           </div>
         </div>
@@ -116,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           type="button"
           onClick={onCloseMobile}
           className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-          aria-label="Đóng thanh điều hướng"
+          aria-label="Close navigation sidebar"
         >
           <X className="w-5 h-5" />
         </button>
@@ -178,18 +178,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <RoleBadgeIcon role={profile?.system_role || 'customer_service'} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-white truncate leading-tight">
-              {profile?.full_name || 'Nhân viên KAPLA'}
+              {profile?.full_name || 'KAPLA Staff'}
             </p>
             <p className="text-[10px] text-sky-300 truncate mt-0.5 font-medium">
               {profile?.system_role === 'system_admin'
-                ? t('auth.adminRole', 'Quản trị hệ thống')
-                : activeRole || t('auth.staffRole', 'Nhân viên')}
+                ? t('auth.adminRole', 'System Administrator')
+                : activeRole || t('auth.staffRole', 'Staff')}
             </p>
           </div>
           <button
             type="button"
             onClick={() => signOut()}
-            title={t('auth.logout', 'Đăng xuất')}
+            title={t('auth.logout', 'Sign Out')}
             className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors shrink-0"
           >
             <LogOut className="w-4 h-4" />

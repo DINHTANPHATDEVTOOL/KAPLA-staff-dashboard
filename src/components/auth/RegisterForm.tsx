@@ -25,19 +25,19 @@ export const RegisterForm: React.FC = () => {
     setFormError(null);
 
     if (!fullName.trim()) {
-      setFormError(t('auth.nameError', 'Vui lòng nhập họ và tên đầy đủ.'));
+      setFormError(t('auth.nameError', 'Please enter your full name.'));
       return;
     }
     if (!email.trim() || !email.includes('@')) {
-      setFormError(t('auth.emailInvalidError', 'Vui lòng nhập địa chỉ email hợp lệ.'));
+      setFormError(t('auth.emailInvalidError', 'Please enter a valid work email address.'));
       return;
     }
     if (password.length < 6) {
-      setFormError(t('auth.passwordLengthError', 'Mật khẩu phải có độ dài tối thiểu 6 ký tự.'));
+      setFormError(t('auth.passwordLengthError', 'Password must be at least 6 characters.'));
       return;
     }
     if (password !== confirmPassword) {
-      setFormError(t('auth.passwordMismatchError', 'Mật khẩu xác nhận không khớp với mật khẩu đã nhập.'));
+      setFormError(t('auth.passwordMismatchError', 'Confirmation password does not match.'));
       return;
     }
 
@@ -54,8 +54,8 @@ export const RegisterForm: React.FC = () => {
 
   return (
     <AuthLayout
-      title={t('auth.registerTitle', 'Đăng ký tài khoản nhân viên')}
-      subtitle={t('auth.registerSubtitle', 'Đăng ký tài khoản tác nghiệp nội bộ tại các chi nhánh thuộc hệ thống KAPLA.')}
+      title={t('auth.registerTitle', 'Staff Account Registration')}
+      subtitle={t('auth.registerSubtitle', 'Register an internal staff account across KAPLA educational campuses.')}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {formError && (
@@ -69,10 +69,10 @@ export const RegisterForm: React.FC = () => {
         <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
           <Info className="w-4 h-4 shrink-0 text-blue-600 mt-0.5" />
           <div className="leading-relaxed">
-            <span className="font-semibold">{t('auth.workflowLabel', 'Quy trình cấp quyền:')}</span>{' '}
+            <span className="font-semibold">{t('auth.workflowLabel', 'Role Provisioning Workflow:')}</span>{' '}
             {t(
               'auth.workflowDesc',
-              'Sau khi đăng ký, bạn cần xác thực email. Quản lý cơ sở (CM) sẽ xem xét chi nhánh mong muốn và cấp vai trò nghiệp vụ tương ứng.'
+              'After registration and email verification, the Center Manager (CM) will review your campus preference and assign operational roles.'
             )}
           </div>
         </div>
@@ -80,7 +80,7 @@ export const RegisterForm: React.FC = () => {
         {/* Full Name */}
         <div>
           <label htmlFor="reg-fullname" className="block text-xs font-semibold text-slate-700 mb-1">
-            {t('auth.fullNameLabel', 'Họ và tên nhân viên')} <span className="text-red-500">*</span>
+            {t('auth.fullNameLabel', 'Staff Full Name')} <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -92,7 +92,7 @@ export const RegisterForm: React.FC = () => {
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder={t('auth.fullNamePlaceholder', 'Ví dụ: Nguyễn Văn An')}
+              placeholder={t('auth.fullNamePlaceholder', 'E.g., Alexander William')}
               className="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all placeholder:text-slate-400"
             />
           </div>
@@ -102,7 +102,7 @@ export const RegisterForm: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label htmlFor="reg-email" className="block text-xs font-semibold text-slate-700 mb-1">
-              {t('auth.emailLabel', 'Email công việc')} <span className="text-red-500">*</span>
+              {t('auth.emailLabel', 'Work Email')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -122,7 +122,7 @@ export const RegisterForm: React.FC = () => {
 
           <div>
             <label htmlFor="reg-phone" className="block text-xs font-semibold text-slate-700 mb-1">
-              {t('auth.phoneLabel', 'Số điện thoại')}
+              {t('auth.phoneLabel', 'Phone Number')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -143,8 +143,8 @@ export const RegisterForm: React.FC = () => {
         {/* Preferred Branch */}
         <div>
           <label htmlFor="reg-branch" className="block text-xs font-semibold text-slate-700 mb-1">
-            {t('auth.preferredBranchLabel', 'Cơ sở công tác mong muốn')}{' '}
-            <span className="text-slate-400 font-normal">({t('auth.branchHint', 'thông tin cho người duyệt')})</span>
+            {t('auth.preferredBranchLabel', 'Preferred Campus')}{' '}
+            <span className="text-slate-400 font-normal">({t('auth.branchHint', 'for reviewer reference')})</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -156,7 +156,7 @@ export const RegisterForm: React.FC = () => {
               onChange={(e) => setPreferredBranchId(e.target.value)}
               className="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all text-slate-800"
             >
-              <option value="">{t('auth.selectBranchOption', '-- Chọn chi nhánh công tác dự kiến --')}</option>
+              <option value="">{t('auth.selectBranchOption', '-- Select Preferred Campus --')}</option>
               {availableBranches.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name} ({b.code})
@@ -170,7 +170,7 @@ export const RegisterForm: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label htmlFor="reg-pass" className="block text-xs font-semibold text-slate-700 mb-1">
-              {t('auth.passwordLabel', 'Mật khẩu')} <span className="text-red-500">*</span>
+              {t('auth.passwordLabel', 'Password')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -182,7 +182,7 @@ export const RegisterForm: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('auth.passwordRule', 'Tối thiểu 6 ký tự')}
+                placeholder={t('auth.passwordRule', 'Minimum 6 characters')}
                 className="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all placeholder:text-slate-400"
               />
             </div>
@@ -190,7 +190,7 @@ export const RegisterForm: React.FC = () => {
 
           <div>
             <label htmlFor="reg-confirm-pass" className="block text-xs font-semibold text-slate-700 mb-1">
-              {t('auth.confirmPasswordLabel', 'Xác nhận mật khẩu')} <span className="text-red-500">*</span>
+              {t('auth.confirmPasswordLabel', 'Confirm Password')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -202,7 +202,7 @@ export const RegisterForm: React.FC = () => {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={t('auth.confirmPasswordPlaceholder', 'Nhập lại mật khẩu')}
+                placeholder={t('auth.confirmPasswordPlaceholder', 'Re-enter password')}
                 className="w-full pl-10 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all placeholder:text-slate-400"
               />
             </div>
@@ -218,12 +218,12 @@ export const RegisterForm: React.FC = () => {
           {submitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              {t('auth.registering', 'Đang tạo hồ sơ...')}
+              {t('auth.registering', 'Creating profile...')}
             </>
           ) : (
             <>
               <UserPlus className="w-4 h-4" />
-              {t('auth.registerBtn', 'Đăng ký tài khoản')}
+              {t('auth.registerBtn', 'Register Account')}
             </>
           )}
         </button>
@@ -231,13 +231,13 @@ export const RegisterForm: React.FC = () => {
         {/* Back to Login */}
         <div className="pt-3 border-t border-slate-200 text-center">
           <p className="text-xs text-slate-600">
-            {t('auth.alreadyHaveAccount', 'Đã có tài khoản nhân viên?')}{' '}
+            {t('auth.alreadyHaveAccount', 'Already have a staff account?')}{' '}
             <button
               type="button"
               onClick={() => setAuthScreen('login')}
               className="font-semibold text-[#026fd7] hover:text-[#043264] underline underline-offset-2 transition-colors"
             >
-              {t('auth.backToLogin', 'Đăng nhập ngay')}
+              {t('auth.backToLogin', 'Sign In Now')}
             </button>
           </p>
         </div>

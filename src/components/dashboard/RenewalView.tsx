@@ -1,5 +1,5 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — T04 & T05: Quản lý Tái tục & Cấu hình Cảnh báo Học phí
+// KAPLA Staff Dashboard — T04 & T05: Tuition Renewals & Warning Thresholds
 // ==============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -39,11 +39,11 @@ const getStatusConfig = (lang: 'vi' | 'en'): Record<RenewalStatus, { label: stri
     };
   }
   return {
-    monitoring: { label: 'Đang theo dõi', color: 'text-slate-700', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
-    contacted: { label: 'Đã liên hệ PH', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-    committed: { label: 'Phụ huynh đã chốt', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-    renewed: { label: 'Đã tái tục thành công', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    churned: { label: 'Dừng học / Không tái tục', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+    monitoring: { label: 'Monitoring', color: 'text-slate-700', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
+    contacted: { label: 'Contacted Parent', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+    committed: { label: 'Committed by Parent', color: 'text-amber-700', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+    renewed: { label: 'Successfully Renewed', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    churned: { label: 'Dropped / Not Renewed', color: 'text-rose-700', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
   };
 };
 
@@ -56,9 +56,9 @@ const getRiskConfig = (lang: 'vi' | 'en'): Record<RenewalRisk, { label: string; 
     };
   }
   return {
-    high: { label: 'Rủi ro cao', badge: 'bg-rose-100 text-rose-800 border-rose-300' },
-    medium: { label: 'Trung bình', badge: 'bg-amber-100 text-amber-800 border-amber-300' },
-    low: { label: 'Thấp', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+    high: { label: 'High Risk', badge: 'bg-rose-100 text-rose-800 border-rose-300' },
+    medium: { label: 'Medium', badge: 'bg-amber-100 text-amber-800 border-amber-300' },
+    low: { label: 'Low', badge: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
   };
 };
 
@@ -109,7 +109,7 @@ export const RenewalView: React.FC = () => {
       setConfig(cfg);
       setAdminDaysThreshold(cfg.tuition_warning_days_threshold);
     } catch (err: any) {
-      console.error('Lỗi tải dữ liệu tái tục:', err);
+      console.error('Error loading renewal data:', err);
     } finally {
       setLoading(false);
     }
@@ -129,10 +129,10 @@ export const RenewalView: React.FC = () => {
       setConfig(updated);
       setMessage({
         type: 'success',
-        text: `Đã cập nhật ngưỡng cảnh báo học phí thành công: ${adminDaysThreshold} ngày (Áp dụng đồng bộ cho Dashboard & Tác vụ Email)!`,
+        text: `Updated tuition warning threshold successfully: ${adminDaysThreshold} days (Applied across Dashboard & Email alerts)!`,
       });
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Không thể cập nhật cấu hình.' });
+      setMessage({ type: 'error', text: err.message || 'Could not update configuration.' });
     } finally {
       setSavingConfig(false);
     }
@@ -146,10 +146,10 @@ export const RenewalView: React.FC = () => {
       setEmailSimulationResults(results);
       setMessage({
         type: 'success',
-        text: `Đã tìm thấy người nhận dự kiến: Tìm thấy ${results.length} học viên trong cửa sổ nhắc trước hạn (từ hôm nay đến ${config.tuition_warning_days_threshold} ngày tới). Toàn bộ thông báo sẽ được chuyển đến đúng HRT phụ trách!`,
+        text: `Found expected recipients: ${results.length} students in warning window. Alerts routed to assigned HRT!`,
       });
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Không thể kiểm tra tác vụ email.' });
+      setMessage({ type: 'error', text: err.message || 'Could not test email tasks.' });
     } finally {
       setSimulatingEmail(false);
     }
@@ -184,11 +184,11 @@ export const RenewalView: React.FC = () => {
         }
       }
 
-      setMessage({ type: 'success', text: 'Cập nhật tiến trình tái tục thành công!' });
+      setMessage({ type: 'success', text: 'Updated renewal progress successfully!' });
       setSelectedRecord(null);
       loadData();
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Cập nhật thất bại.' });
+      setMessage({ type: 'error', text: err.message || 'Update failed.' });
     } finally {
       setSubmitting(false);
     }
@@ -254,24 +254,20 @@ export const RenewalView: React.FC = () => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-400/20 text-sky-200 border border-sky-300/30">
-                {language === 'en' ? 'System Policy Configuration' : 'Cấu hình Chính sách Hệ thống'}
+                {'System Policy Configuration'}
               </span>
               <span className="text-xs text-slate-300">
-                • {language === 'en' ? 'Unified for Dashboard & Automated Email Reminders' : 'Đồng bộ cho Dashboard & Tác vụ Email Tự động'}
+                • {'Unified for Dashboard & Automated Email Reminders'}
               </span>
             </div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Settings className="w-5 h-5 text-sky-300" />
               <span>
-                {language === 'en'
-                  ? `Tuition Reminder Threshold: ${config.tuition_warning_days_threshold} days`
-                  : `Ngưỡng cảnh báo học phí: ${config.tuition_warning_days_threshold} ngày`}
+                {`Tuition Reminder Threshold: ${config.tuition_warning_days_threshold} days`}
               </span>
             </h3>
             <p className="text-xs text-sky-100 max-w-2xl">
-              {language === 'en'
-                ? `Students whose tuition expires within ${config.tuition_warning_days_threshold} days are automatically flagged on the Dashboard and routed via email alert to their designated individual HRT.`
-                : `Học viên có ngày hết hạn học phí trong vòng ${config.tuition_warning_days_threshold} ngày sẽ tự động được gắn cờ cảnh báo trên Dashboard và định tuyến thông báo email đến đúng HRT phụ trách.`}
+              {`Students whose tuition expires within ${config.tuition_warning_days_threshold} days are automatically flagged on the Dashboard and routed via email alert to their designated individual HRT.`}
             </p>
           </div>
 
@@ -279,18 +275,18 @@ export const RenewalView: React.FC = () => {
             <div className="flex items-center gap-3 bg-white/10 p-2.5 rounded-xl border border-white/15 shrink-0 flex-wrap">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-sky-200 font-medium">
-                  {language === 'en' ? 'Admin Threshold:' : 'Admin cài đặt ngưỡng:'}
+                  {'Admin Threshold:'}
                 </span>
                 <select
                   value={adminDaysThreshold}
                   onChange={(e) => setAdminDaysThreshold(Number(e.target.value))}
                   className="bg-white text-slate-900 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:outline-none"
                 >
-                  <option value={7}>{language === 'en' ? '7 days (1 week)' : '7 ngày (1 tuần)'}</option>
-                  <option value={14}>{language === 'en' ? '14 days (2 weeks)' : '14 ngày (2 tuần)'}</option>
-                  <option value={21}>{language === 'en' ? '21 days (3 weeks)' : '21 ngày (3 tuần)'}</option>
-                  <option value={30}>{language === 'en' ? '30 days (1 month)' : '30 ngày (1 tháng)'}</option>
-                  <option value={45}>{language === 'en' ? '45 days (1.5 months)' : '45 ngày (1.5 tháng)'}</option>
+                  <option value={7}>{'7 days (1 week)'}</option>
+                  <option value={14}>{'14 days (2 weeks)'}</option>
+                  <option value={21}>{'21 days (3 weeks)'}</option>
+                  <option value={30}>{'30 days (1 month)'}</option>
+                  <option value={45}>{'45 days (1.5 months)'}</option>
                 </select>
                 <button
                   type="button"
@@ -299,8 +295,8 @@ export const RenewalView: React.FC = () => {
                   className="px-3 py-1.5 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                 >
                   {savingConfig
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Save Threshold' : 'Lưu ngưỡng')}
+                    ? ('Saving...')
+                    : ('Save Threshold')}
                 </button>
               </div>
 
@@ -309,13 +305,13 @@ export const RenewalView: React.FC = () => {
                 onClick={handleSimulateEmailAlerts}
                 disabled={simulatingEmail}
                 className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                title={language === 'en' ? 'Preview expected email recipients' : 'Xem trước danh sách người nhận dự kiến'}
+                title={'Preview expected email recipients'}
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>
                   {simulatingEmail
-                    ? (language === 'en' ? 'Checking...' : 'Đang kiểm tra...')
-                    : (language === 'en' ? 'Preview Recipients' : 'Xem trước người nhận')}
+                    ? ('Checking...')
+                    : ('Preview Recipients')}
                 </span>
               </button>
             </div>
@@ -328,16 +324,14 @@ export const RenewalView: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="font-semibold text-sky-200 flex items-center gap-1.5">
                 <Check className="w-4 h-4 text-emerald-400" />
-                {language === 'en'
-                  ? `Scheduled Tuition Reminder Recipients (${emailSimulationResults.length} students):`
-                  : `Danh sách người nhận thông báo Email định kỳ tại thời điểm hiện tại (${emailSimulationResults.length} học viên):`}
+                {`Scheduled Tuition Reminder Recipients (${emailSimulationResults.length} students):`}
               </span>
               <button
                 type="button"
                 onClick={() => setEmailSimulationResults(null)}
                 className="text-slate-400 hover:text-white"
               >
-                {language === 'en' ? 'Close' : 'Đóng'}
+                {'Close'}
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -355,19 +349,19 @@ export const RenewalView: React.FC = () => {
                       }`}
                     >
                       {item.days_remaining === 0
-                        ? (language === 'en' ? 'Expires today' : 'Hết hạn hôm nay')
+                        ? ('Expires today')
                         : item.days_remaining > 0
-                        ? (language === 'en' ? `${item.days_remaining}d remaining` : `Còn ${item.days_remaining} ngày`)
-                        : (language === 'en' ? `Overdue by ${Math.abs(item.days_remaining)}d` : `Đã quá hạn ${Math.abs(item.days_remaining)} ngày`)}
+                        ? (`${item.days_remaining}d remaining`)
+                        : (`Overdue by ${Math.abs(item.days_remaining)}d`)}
                     </span>
                   </div>
                   <div className="text-sky-200 text-[11px] mt-0.5">
-                    {language === 'en' ? 'Expiry: ' : 'Hạn phí: '}{item.tuition_expiry_date} • {language === 'en' ? 'Cohort: ' : 'Lớp: '}
-                    {item.class_name || (language === 'en' ? 'Unassigned' : 'Chưa xếp')}
+                    {'Expiry: '}{item.tuition_expiry_date} • {'Cohort: '}
+                    {item.class_name || ('Unassigned')}
                   </div>
                   <div className="text-emerald-300 font-medium text-[11px] mt-1">
-                    {language === 'en' ? 'Recipient: ' : 'Email gửi đến: '}
-                    {item.effective_hrt_email || item.effective_hrt_name || (language === 'en' ? 'Designated HRT' : 'HRT phụ trách')}
+                    {'Recipient: '}
+                    {item.effective_hrt_email || item.effective_hrt_name || ('Designated HRT')}
                   </div>
                 </div>
               ))}
@@ -385,7 +379,7 @@ export const RenewalView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Total Tracked Students' : 'Tổng học viên theo dõi'}
+              {'Total Tracked Students'}
             </div>
           </div>
         </div>
@@ -397,7 +391,7 @@ export const RenewalView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-rose-700">{stats.urgent}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Urgent Renewal (≤ 7 days)' : 'Cần tái tục gấp (≤ 7 ngày)'}
+              {'Urgent Renewal (≤ 7 days)'}
             </div>
           </div>
         </div>
@@ -409,9 +403,7 @@ export const RenewalView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-amber-700">{stats.warning}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en'
-                ? `Within Threshold (${config.tuition_warning_days_threshold} days)`
-                : `Trong ngưỡng (${config.tuition_warning_days_threshold} ngày)`}
+              {`Within Threshold (${config.tuition_warning_days_threshold} days)`}
             </div>
           </div>
         </div>
@@ -423,7 +415,7 @@ export const RenewalView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-emerald-700">{stats.renewed}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Successfully Renewed' : 'Đã tái tục thành công'}
+              {'Successfully Renewed'}
             </div>
           </div>
         </div>
@@ -437,9 +429,7 @@ export const RenewalView: React.FC = () => {
             <input
               type="text"
               placeholder={
-                language === 'en'
-                  ? 'Search by student code, name, parent phone...'
-                  : 'Tìm theo mã học viên, tên, SĐT phụ huynh...'
+                'Search by student code, name, parent phone...'
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -454,12 +444,12 @@ export const RenewalView: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">{language === 'en' ? 'All Statuses' : 'Tất cả trạng thái'}</option>
-              <option value="monitoring">{language === 'en' ? 'Monitoring' : 'Đang theo dõi'}</option>
-              <option value="contacted">{language === 'en' ? 'Contacted Parent' : 'Đã liên hệ PH'}</option>
-              <option value="committed">{language === 'en' ? 'Payment Committed' : 'Phụ huynh đã chốt'}</option>
-              <option value="renewed">{language === 'en' ? 'Renewed' : 'Đã tái tục'}</option>
-              <option value="churned">{language === 'en' ? 'Discontinued' : 'Không tái tục'}</option>
+              <option value="all">{'All Statuses'}</option>
+              <option value="monitoring">{'Monitoring'}</option>
+              <option value="contacted">{'Contacted Parent'}</option>
+              <option value="committed">{'Payment Committed'}</option>
+              <option value="renewed">{'Renewed'}</option>
+              <option value="churned">{'Discontinued'}</option>
             </select>
 
             <select
@@ -467,10 +457,10 @@ export const RenewalView: React.FC = () => {
               onChange={(e) => setRiskFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">{language === 'en' ? 'All Risk Levels' : 'Tất cả mức rủi ro'}</option>
-              <option value="high">{language === 'en' ? 'High Risk' : 'Rủi ro cao'}</option>
-              <option value="medium">{language === 'en' ? 'Medium Risk' : 'Trung bình'}</option>
-              <option value="low">{language === 'en' ? 'Low Risk' : 'Thấp'}</option>
+              <option value="all">{'All Risk Levels'}</option>
+              <option value="high">{'High Risk'}</option>
+              <option value="medium">{'Medium Risk'}</option>
+              <option value="low">{'Low Risk'}</option>
             </select>
 
             <select
@@ -478,13 +468,13 @@ export const RenewalView: React.FC = () => {
               onChange={(e) => setMonthFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">{language === 'en' ? 'All Expiry Months' : 'Tất cả các tháng'}</option>
-              <option value="2026-10">{language === 'en' ? 'October 2026 (10/2026)' : 'Tháng 10/2026'}</option>
-              <option value="2026-11">{language === 'en' ? 'November 2026 (11/2026)' : 'Tháng 11/2026'}</option>
-              <option value="2026-12">{language === 'en' ? 'December 2026 (12/2026)' : 'Tháng 12/2026'}</option>
-              <option value="2027-01">{language === 'en' ? 'January 2027 (01/2027)' : 'Tháng 01/2027'}</option>
-              <option value="2027-02">{language === 'en' ? 'February 2027 (02/2027)' : 'Tháng 02/2027'}</option>
-              <option value="2027-03">{language === 'en' ? 'March 2027 (03/2027)' : 'Tháng 03/2027'}</option>
+              <option value="all">{'All Expiry Months'}</option>
+              <option value="2026-10">{'October 2026 (10/2026)'}</option>
+              <option value="2026-11">{'November 2026 (11/2026)'}</option>
+              <option value="2026-12">{'December 2026 (12/2026)'}</option>
+              <option value="2027-01">{'January 2027 (01/2027)'}</option>
+              <option value="2027-02">{'February 2027 (02/2027)'}</option>
+              <option value="2027-03">{'March 2027 (03/2027)'}</option>
             </select>
           </div>
         </div>
@@ -496,29 +486,27 @@ export const RenewalView: React.FC = () => {
           <table className="w-full text-left text-sm text-slate-700">
             <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="px-4 py-3">{language === 'en' ? 'Student & Cohort' : 'Học viên & Lớp'}</th>
-                <th className="px-4 py-3">{language === 'en' ? 'Tuition Expiry' : 'Ngày hết hạn'}</th>
-                <th className="px-4 py-3">{language === 'en' ? 'Days Remaining' : 'Số ngày còn lại'}</th>
-                <th className="px-4 py-3">{language === 'en' ? 'Risk Level' : 'Mức rủi ro'}</th>
-                <th className="px-4 py-3">{language === 'en' ? 'Designated HRT' : 'HRT phụ trách'}</th>
-                <th className="px-4 py-3">{language === 'en' ? 'Outreach Progress' : 'Tiến trình liên hệ'}</th>
-                <th className="px-4 py-3">{language === 'en' ? 'Notes & Target Package' : 'Ghi chú & Gói dự kiến'}</th>
-                <th className="px-4 py-3 text-right">{language === 'en' ? 'Actions' : 'Thao tác'}</th>
+                <th className="px-4 py-3">{'Student & Cohort'}</th>
+                <th className="px-4 py-3">{'Tuition Expiry'}</th>
+                <th className="px-4 py-3">{'Days Remaining'}</th>
+                <th className="px-4 py-3">{'Risk Level'}</th>
+                <th className="px-4 py-3">{'Designated HRT'}</th>
+                <th className="px-4 py-3">{'Outreach Progress'}</th>
+                <th className="px-4 py-3">{'Notes & Target Package'}</th>
+                <th className="px-4 py-3 text-right">{'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-500 text-sm">
-                    {language === 'en' ? 'Loading renewal records...' : 'Đang tải dữ liệu tái tục...'}
+                    {'Loading renewal records...'}
                   </td>
                 </tr>
               ) : filteredRecords.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-12 text-center text-slate-500 text-sm">
-                    {language === 'en'
-                      ? 'No students found due for tuition renewal.'
-                      : 'Không tìm thấy học viên nào trong danh sách tái tục.'}
+                    {'No students found due for tuition renewal.'}
                   </td>
                 </tr>
               ) : (
@@ -558,15 +546,15 @@ export const RenewalView: React.FC = () => {
                             }`}
                           >
                             {r.days_remaining === 0
-                              ? (language === 'en' ? 'Expires today' : 'Hết hạn hôm nay')
+                              ? ('Expires today')
                               : r.days_remaining > 0
-                              ? (language === 'en' ? `${r.days_remaining}d remaining` : `Còn ${r.days_remaining} ngày`)
-                              : (language === 'en' ? `Overdue by ${Math.abs(r.days_remaining)}d` : `Đã quá hạn ${Math.abs(r.days_remaining)} ngày`)}
+                              ? (`${r.days_remaining}d remaining`)
+                              : (`Overdue by ${Math.abs(r.days_remaining)}d`)}
                           </span>
 
                           {r.days_remaining === 1 && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
-                              {language === 'en' ? '⏰ Due Tomorrow (1-Day Reminder)' : '⏰ Hạn ngày mai (Nhắc trước 1 ngày)'}
+                              {'⏰ Due Tomorrow (1-Day Reminder)'}
                             </span>
                           )}
                         </div>
@@ -581,7 +569,7 @@ export const RenewalView: React.FC = () => {
                       <td className="px-4 py-3 text-xs">
                         <div className="font-medium text-slate-800">{r.assigned_hrt_name}</div>
                         <div className="text-[11px] text-slate-400">
-                          {language === 'en' ? 'Individual HRT Priority' : 'Ưu tiên HRT riêng'}
+                          {'Individual HRT Priority'}
                         </div>
                       </td>
 
@@ -590,20 +578,18 @@ export const RenewalView: React.FC = () => {
                           {statusCfg.label}
                         </span>
                         <div className="text-[11px] text-slate-400 mt-0.5">
-                          {language === 'en'
-                            ? `Contacted: ${r.contact_count} times`
-                            : `Đã liên hệ: ${r.contact_count} lần`}
+                          {`Contacted: ${r.contact_count} times`}
                           {r.last_contact_date &&
-                            (language === 'en' ? ` (last: ${r.last_contact_date})` : ` (lần cuối: ${r.last_contact_date})`)}
+                            (` (last: ${r.last_contact_date})`)}
                         </div>
                       </td>
 
                       <td className="px-4 py-3 text-xs max-w-[200px] truncate">
                         <div className="text-slate-800 font-medium truncate">
-                          {r.tuition_package ? tDb(r.tuition_package) : (language === 'en' ? 'No package selected' : 'Chưa chọn gói')}
+                          {r.tuition_package ? tDb(r.tuition_package) : ('No package selected')}
                         </div>
                         <div className="text-slate-500 truncate">
-                          {r.notes ? tDb(r.notes) : (language === 'en' ? 'No notes' : 'Chưa có ghi chú')}
+                          {r.notes ? tDb(r.notes) : ('No notes')}
                         </div>
                       </td>
 
@@ -619,7 +605,7 @@ export const RenewalView: React.FC = () => {
                           }}
                           className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                         >
-                          {language === 'en' ? 'Update' : 'Cập nhật'}
+                          {'Update'}
                         </button>
                       </td>
                     </tr>
@@ -631,7 +617,7 @@ export const RenewalView: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal: Cập nhật tiến trình tái tục */}
+      {/* Modal: Update Renewal Progress */}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -639,7 +625,7 @@ export const RenewalView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <CalendarClock className="w-5 h-5 text-[#043264]" />
                 <h3 className="font-semibold text-slate-900 text-base">
-                  {language === 'en' ? 'Update Renewal & Retention Progress' : 'Cập nhật tiến trình tái tục'}
+                  {'Update Renewal & Retention Progress'}
                 </h3>
               </div>
               <button
@@ -654,26 +640,24 @@ export const RenewalView: React.FC = () => {
             <form onSubmit={handleUpdateRecord} className="p-5 space-y-4">
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs space-y-1">
                 <div>
-                  <strong>{language === 'en' ? 'Student: ' : 'Học viên: '}</strong>
+                  <strong>{'Student: '}</strong>
                   {selectedRecord.student?.full_name} ({selectedRecord.student?.student_code})
                 </div>
                 <div>
-                  <strong>{language === 'en' ? 'Current Expiry: ' : 'Hạn hiện tại: '}</strong>
+                  <strong>{'Current Expiry: '}</strong>
                   {selectedRecord.current_expiry_date} (
-                  {language === 'en'
-                    ? `${selectedRecord.days_remaining}d remaining`
-                    : `Còn ${selectedRecord.days_remaining} ngày`}
+                  {`${selectedRecord.days_remaining}d remaining`}
                   )
                 </div>
                 <div>
-                  <strong>{language === 'en' ? 'Designated HRT: ' : 'HRT chịu trách nhiệm: '}</strong>
+                  <strong>{'Designated HRT: '}</strong>
                   {selectedRecord.assigned_hrt_name}
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Renewal Status' : 'Trạng thái tái tục'}
+                  {'Renewal Status'}
                 </label>
                 <select
                   value={editStatus}
@@ -681,39 +665,33 @@ export const RenewalView: React.FC = () => {
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:border-[#043264]"
                 >
                   <option value="monitoring">
-                    {language === 'en' ? 'Monitoring (Not yet contacted)' : 'Đang theo dõi (Chưa liên hệ)'}
+                    {'Monitoring (Not yet contacted)'}
                   </option>
                   <option value="contacted">
-                    {language === 'en'
-                      ? 'Contacted Parent (Discussing learning path)'
-                      : 'Đã liên hệ PH (Đang trao đổi lộ trình)'}
+                    {'Contacted Parent (Discussing learning path)'}
                   </option>
                   <option value="committed">
-                    {language === 'en'
-                      ? 'Payment Committed (Scheduled payment)'
-                      : 'Phụ huynh đã chốt (Hẹn thanh toán)'}
+                    {'Payment Committed (Scheduled payment)'}
                   </option>
                   <option value="renewed">
-                    {language === 'en' ? 'Successfully Renewed' : 'Đã tái tục thành công'}
+                    {'Successfully Renewed'}
                   </option>
                   <option value="churned">
-                    {language === 'en' ? 'Discontinued / Not Renewing' : 'Dừng học / Không tái tục'}
+                    {'Discontinued / Not Renewing'}
                   </option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Target Tuition Package' : 'Gói học phí dự kiến'}
+                  {'Target Tuition Package'}
                 </label>
                 <input
                   type="text"
                   value={editPackage}
                   onChange={(e) => setEditPackage(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Cambridge Starters Pro Package (6 months)'
-                      : 'Ví dụ: Gói Cambridge Starters Pro (6 tháng)'
+                    'e.g. Cambridge Starters Pro Package (6 months)'
                   }
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
                 />
@@ -722,7 +700,7 @@ export const RenewalView: React.FC = () => {
               {editStatus === 'renewed' && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'New Tuition Expiry Date *' : 'Ngày hết hạn học phí mới *'}
+                    {'New Tuition Expiry Date *'}
                   </label>
                   <input
                     type="date"
@@ -736,16 +714,14 @@ export const RenewalView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Parent Communication Notes' : 'Ghi chú trao đổi cùng phụ huynh'}
+                  {'Parent Communication Notes'}
                 </label>
                 <textarea
                   rows={3}
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'Details on parent feedback, promotion agreements, or scheduled payment date...'
-                      : 'Ghi rõ ý kiến phụ huynh, thỏa thuận giảm giá hoặc ngày hẹn đóng phí...'
+                    'Details on parent feedback, promotion agreements, or scheduled payment date...'
                   }
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
                 />
@@ -757,7 +733,7 @@ export const RenewalView: React.FC = () => {
                   onClick={() => setSelectedRecord(null)}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -765,8 +741,8 @@ export const RenewalView: React.FC = () => {
                   className="px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Save Changes' : 'Lưu cập nhật')}
+                    ? ('Saving...')
+                    : ('Save Changes')}
                 </button>
               </div>
             </form>

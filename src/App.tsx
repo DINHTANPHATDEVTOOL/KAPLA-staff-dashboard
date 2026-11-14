@@ -28,7 +28,7 @@ export function AppContent() {
         />
         <div className="flex items-center gap-2 text-sky-200 text-sm font-medium">
           <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
-          <span>Đang kết nối hệ thống phân quyền KAPLA...</span>
+          <span>Connecting to KAPLA authorization system...</span>
         </div>
       </div>
     );

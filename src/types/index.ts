@@ -349,14 +349,14 @@ export interface RenewalRecord {
 }
 
 export interface SystemConfig {
-  tuition_warning_days_threshold: number; // Mốc cảnh báo học phí cấu hình được (Admin)
+  tuition_warning_days_threshold: number; // Configurable tuition warning threshold (Admin)
   auto_email_alerts_enabled: boolean;
-  cambridge_scale_max: number; // 5.0 khiên
-  academic_risk_threshold: number; // < 3.0 khiên
+  cambridge_scale_max: number; // 5.0 shields
+  academic_risk_threshold: number; // < 3.0 shields
 }
 
 // -----------------------------------------------------------------------------
-// Role Labels & Metadata in Vietnamese
+// Role Labels & Metadata
 // -----------------------------------------------------------------------------
 
 export const ALL_STAFF_ROLES: StaffRole[] = [
@@ -400,17 +400,17 @@ export const ROLE_DESCRIPTIONS: Record<StaffRole, string> = {
 
 export const STATUS_LABELS: Record<AccountStatus, { label: string; color: string; badge: string }> = {
   pending: {
-    label: 'Chờ phê duyệt',
+    label: 'Pending Approval',
     color: 'text-amber-700 bg-amber-50 border-amber-200',
     badge: 'bg-amber-100 text-amber-800 border-amber-300',
   },
   active: {
-    label: 'Đang hoạt động',
+    label: 'Active',
     color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
     badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
   },
   inactive: {
-    label: 'Đã vô hiệu hóa',
+    label: 'Disabled',
     color: 'text-rose-700 bg-rose-50 border-rose-200',
     badge: 'bg-rose-100 text-rose-800 border-rose-300',
   },

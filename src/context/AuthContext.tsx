@@ -24,7 +24,7 @@ interface AuthContextType {
   memberships: BranchMembership[];
   currentBranch: Branch | null;
   availableBranches: Branch[];
-  activeRole: StaffRole | 'Quản trị hệ thống' | null;
+  activeRole: StaffRole | 'System Administrator' | null;
   authScreen: AuthScreen;
   loading: boolean;
   error: string | null;
@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return data;
         }
       } catch (e) {
-        console.warn('[KAPLA Branches] Không thể tải chi nhánh từ Supabase Cloud:', e);
+        console.warn('[KAPLA Branches] Unable to load branches from Supabase Cloud:', e);
       }
     }
     try {
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('status', 'active');
         userMemberships = mData || [];
       } catch (e) {
-        console.warn('[KAPLA Sync] Lỗi đồng bộ tài khoản từ Supabase Cloud:', e);
+        console.warn('[KAPLA Sync] Supabase Cloud profile sync error:', e);
       }
     }
 
@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }));
         }
       } catch (e) {
-        console.warn('[KAPLA Sync] Lỗi nạp mock profile:', e);
+        console.warn('[KAPLA Sync] Mock profile load error:', e);
       }
     }
 
@@ -240,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             unsubAuth = () => subscription.unsubscribe();
           } catch (supaErr) {
-            console.warn('[KAPLA Auth] Không thể kết nối session từ Supabase Cloud, chuyển sang kiểm tra Local Session:', supaErr);
+            console.warn('[KAPLA Auth] Could not connect session from Supabase Cloud, checking local session:', supaErr);
             await checkStoredMockSession();
           }
         } else {
@@ -248,7 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await checkStoredMockSession();
         }
       } catch (err) {
-        console.error('[KAPLA Init] Lỗi trong quá trình khởi tạo:', err);
+        console.error('[KAPLA Init] Error during initialization:', err);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -289,7 +289,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profiles = MockStorageService.getProfiles();
         const found = profiles.find((p) => p.email.toLowerCase() === email.trim().toLowerCase());
         if (!found) {
-          throw new Error('Email hoặc mật khẩu không chính xác.');
+          throw new Error('Incorrect email or password.');
         }
 
         const authUser: AuthUser = {
@@ -302,9 +302,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await syncUserData(authUser.id, authUser.email, authUser.emailConfirmed);
         return { success: true };
       }
-      return { success: false, error: 'Đăng nhập không thành công.' };
+      return { success: false, error: 'Sign in failed.' };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi hệ thống khi đăng nhập.';
+      const msg = err instanceof Error ? err.message : 'System error during sign in.';
       setError(msg);
       return { success: false, error: msg };
     } finally {
@@ -351,7 +351,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Mock Sign-up
         const profiles = MockStorageService.getProfiles();
         if (profiles.some((p) => p.email.toLowerCase() === email.trim().toLowerCase())) {
-          throw new Error('Email này đã được đăng ký trong hệ thống.');
+          throw new Error('This email is already registered in the system.');
         }
 
         const newId = 'u-' + Math.random().toString(36).substring(2, 10);
@@ -389,9 +389,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthScreen('verify-email');
         return { success: true };
       }
-      return { success: false, error: 'Đăng ký không thành công.' };
+      return { success: false, error: 'Registration failed.' };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi hệ thống khi đăng ký.';
+      const msg = err instanceof Error ? err.message : 'System error during registration.';
       setError(msg);
       return { success: false, error: msg };
     } finally {
@@ -404,7 +404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const activeEmail = targetEmail || user?.email;
-      if (!activeEmail) throw new Error('Không xác định được địa chỉ email.');
+      if (!activeEmail) throw new Error('Could not identify email address.');
 
       if (realSupabase) {
         // In real Supabase, user clicks email link with token.
@@ -434,7 +434,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: true };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Xác thực email thất bại.';
+      const msg = err instanceof Error ? err.message : 'Email verification failed.';
       setError(msg);
       return { success: false, error: msg };
     } finally {
@@ -471,7 +471,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: true };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể gửi email đặt lại mật khẩu.';
+      const msg = err instanceof Error ? err.message : 'Unable to send password reset email.';
       return { success: false, error: msg };
     }
   };
@@ -485,7 +485,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: true };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Cập nhật mật khẩu thất bại.';
+      const msg = err instanceof Error ? err.message : 'Password update failed.';
       return { success: false, error: msg };
     }
   };
@@ -519,9 +519,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Determine active role label
-  const activeRole: StaffRole | 'Quản trị hệ thống' | null =
+  const activeRole: StaffRole | 'System Administrator' | null =
     profile?.system_role === 'system_admin'
-      ? 'Quản trị hệ thống'
+      ? 'System Administrator'
       : currentBranch && memberships.find((m) => m.branch_id === currentBranch.id)?.role
       ? (memberships.find((m) => m.branch_id === currentBranch.id)!.role as StaffRole)
       : null;

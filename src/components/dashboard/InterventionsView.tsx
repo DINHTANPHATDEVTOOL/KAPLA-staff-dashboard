@@ -1,5 +1,5 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — T04: Academic Interventions (Phiếu can thiệp 4 bước)
+// KAPLA Staff Dashboard — T04: 4-Step Academic Interventions Workflow
 // ==============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -61,31 +61,31 @@ const getStatusMeta = (status: InterventionStatus, lang: 'vi' | 'en') => {
   switch (status) {
     case 'open':
       return {
-        label: '1. Mở (Open)',
+        label: '1. Open',
         badge: 'bg-rose-100 text-rose-800 border-rose-300',
         color: 'border-l-rose-500',
-        desc: 'Mới phát hiện nguy cơ học thuật, cần lập kế hoạch xử lý',
+        desc: 'Academic risk detected, requiring action plan',
       };
     case 'in_progress':
       return {
-        label: '2. Đang xử lý (In Progress)',
+        label: '2. In Progress',
         badge: 'bg-amber-100 text-amber-800 border-amber-300',
         color: 'border-l-amber-500',
-        desc: 'Đang triển khai các buổi kèm bổ trợ học thuật',
+        desc: 'Conducting supplementary tutoring sessions',
       };
     case 'resolved':
       return {
-        label: '3. Đã xử lý (Resolved)',
+        label: '3. Resolved',
         badge: 'bg-blue-100 text-blue-800 border-blue-300',
         color: 'border-l-blue-500',
-        desc: 'Đã hoàn tất bổ trợ và có kết quả đánh giá lại, chờ xác minh',
+        desc: 'Supplementary sessions completed with reassessment results, awaiting verification',
       };
     case 'verified':
       return {
-        label: '4. Đã xác minh (Verified)',
+        label: '4. Verified',
         badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
         color: 'border-l-emerald-500',
-        desc: 'Đã được Head Teacher hoặc CM phê duyệt đạt chuẩn',
+        desc: 'Approved and verified to standard by Head Teacher or CM',
       };
   }
 };
@@ -170,7 +170,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
         setTeachers(profs.filter((p) => p.status === 'active'));
       }
     } catch (err) {
-      console.error('Lỗi tải phiếu can thiệp:', err);
+      console.error('Error loading intervention tickets:', err);
     } finally {
       setLoading(false);
     }
@@ -208,7 +208,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
         due_date: newForm.due_date,
         created_by: profile?.id,
       });
-      setActionAlert({ type: 'success', text: 'Tạo phiếu can thiệp học thuật thành công!' });
+      setActionAlert({ type: 'success', text: 'Academic intervention ticket created successfully!' });
       setShowCreateModal(false);
       setNewForm({
         student_id: '',
@@ -221,7 +221,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
       });
       await loadData();
     } catch (err: any) {
-      setActionAlert({ type: 'error', text: err.message || 'Lỗi khi tạo phiếu' });
+      setActionAlert({ type: 'error', text: err.message || 'Error creating ticket' });
     } finally {
       setSubmitting(false);
     }
@@ -232,7 +232,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
       await InterventionService.updateStatus(id, 'in_progress');
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Lỗi cập nhật');
+      alert(err.message || 'Update error');
     }
   };
 
@@ -244,10 +244,10 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
       await InterventionService.updateStatus(selectedForResolve.id, 'resolved', reassessmentResult.trim());
       setSelectedForResolve(null);
       setReassessmentResult('');
-      setActionAlert({ type: 'success', text: 'Đã hoàn tất can thiệp và nộp kết quả đánh giá lại!' });
+      setActionAlert({ type: 'success', text: 'Intervention completed and reassessment submitted!' });
       await loadData();
     } catch (err: any) {
-      setActionAlert({ type: 'error', text: err.message || 'Lỗi cập nhật' });
+      setActionAlert({ type: 'error', text: err.message || 'Update error' });
     } finally {
       setSubmitting(false);
     }
@@ -267,10 +267,10 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
       );
       setSelectedForVerify(null);
       setVerificationNotes('');
-      setActionAlert({ type: 'success', text: 'Đã xác minh phiếu can thiệp học thuật thành công!' });
+      setActionAlert({ type: 'success', text: 'Academic intervention ticket verified successfully!' });
       await loadData();
     } catch (err: any) {
-      setActionAlert({ type: 'error', text: err.message || 'Lỗi xác minh' });
+      setActionAlert({ type: 'error', text: err.message || 'Verification error' });
     } finally {
       setSubmitting(false);
     }
@@ -305,13 +305,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
               <AlertTriangle className="w-5 h-5" />
             </span>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              {language === 'en' ? 'Academic Interventions' : 'Phiếu can thiệp học thuật'}
+              {'Academic Interventions'}
             </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            {language === 'en'
-              ? `4-step intervention workflow: Open → In Progress → Resolved → Verified by Head Teacher / CM at ${currentBranch?.name || 'KAPLA'}`
-              : `Quy trình can thiệp 4 bước: Mở → Đang xử lý → Đã xử lý → Head Teacher / CM xác minh tại ${currentBranch?.name || 'KAPLA'}`}
+            {`4-step intervention workflow: Open → In Progress → Resolved → Verified by Head Teacher / CM at ${currentBranch?.name || 'KAPLA'}`}
           </p>
         </div>
 
@@ -321,7 +319,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
         >
           <Plus className="w-4 h-4" />
-          {language === 'en' ? 'Create Intervention Ticket' : 'Tạo phiếu can thiệp'}
+          {'Create Intervention Ticket'}
         </button>
       </div>
 
@@ -349,11 +347,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
           }`}
         >
           <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
-            {language === 'en' ? '1. Open' : '1. Mở (Open)'}
+            {'1. Open'}
           </span>
           <div className="text-2xl font-bold text-rose-800 mt-1">{stats.open}</div>
           <span className="text-[10px] text-slate-400">
-            {language === 'en' ? 'Newly flagged risk' : 'Mới phát hiện rủi ro'}
+            {'Newly flagged risk'}
           </span>
         </div>
 
@@ -364,11 +362,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
           }`}
         >
           <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
-            {language === 'en' ? '2. In Progress' : '2. Đang xử lý'}
+            {'2. In Progress'}
           </span>
           <div className="text-2xl font-bold text-amber-800 mt-1">{stats.inProgress}</div>
           <span className="text-[10px] text-slate-400">
-            {language === 'en' ? 'Tutoring underway' : 'Đang kèm bổ trợ'}
+            {'Tutoring underway'}
           </span>
         </div>
 
@@ -379,11 +377,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
           }`}
         >
           <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">
-            {language === 'en' ? '3. Pending Verification' : '3. Chờ xác minh'}
+            {'3. Pending Verification'}
           </span>
           <div className="text-2xl font-bold text-blue-800 mt-1">{stats.resolved}</div>
           <span className="text-[10px] text-slate-400">
-            {language === 'en' ? 'Re-assessment submitted' : 'Đã nộp kết quả lại'}
+            {'Re-assessment submitted'}
           </span>
         </div>
 
@@ -394,11 +392,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
           }`}
         >
           <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
-            {language === 'en' ? '4. Verified' : '4. Đã xác minh'}
+            {'4. Verified'}
           </span>
           <div className="text-2xl font-bold text-emerald-800 mt-1">{stats.verified}</div>
           <span className="text-[10px] text-emerald-600">
-            {language === 'en' ? 'HT / CM approved' : 'HT / CM đã duyệt'}
+            {'HT / CM approved'}
           </span>
         </div>
       </div>
@@ -412,9 +410,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={
-              language === 'en'
-                ? 'Search by student name, issue description...'
-                : 'Tìm theo tên học sinh, mô tả vấn đề học tập...'
+              'Search by student name, issue description...'
             }
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           />
@@ -426,11 +422,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">{language === 'en' ? 'All Stages' : 'Tất cả giai đoạn'}</option>
-            <option value="open">{language === 'en' ? '1. Open' : '1. Mở (Open)'}</option>
-            <option value="in_progress">{language === 'en' ? '2. In Progress' : '2. Đang xử lý'}</option>
-            <option value="resolved">{language === 'en' ? '3. Pending Verification' : '3. Đã xử lý (Chờ xác minh)'}</option>
-            <option value="verified">{language === 'en' ? '4. Verified' : '4. Đã xác minh'}</option>
+            <option value="all">{'All Stages'}</option>
+            <option value="open">{'1. Open'}</option>
+            <option value="in_progress">{'2. In Progress'}</option>
+            <option value="resolved">{'3. Pending Verification'}</option>
+            <option value="verified">{'4. Verified'}</option>
           </select>
         </div>
       </div>
@@ -439,16 +435,16 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
       <div className="space-y-3">
         {loading ? (
           <div className="p-12 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200">
-            {language === 'en' ? 'Loading intervention tickets...' : 'Đang tải danh sách phiếu can thiệp...'}
+            {'Loading intervention tickets...'}
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center bg-white rounded-xl border border-slate-200">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
             <h4 className="text-sm font-semibold text-slate-800">
-              {language === 'en' ? 'No Matching Intervention Tickets' : 'Không có phiếu can thiệp nào phù hợp'}
+              {'No Matching Intervention Tickets'}
             </h4>
             <p className="text-xs text-slate-500 mt-1">
-              {language === 'en' ? 'All students are meeting academic expectations.' : 'Học viên đang duy trì tiến độ học tập tốt.'}
+              {'All students are meeting academic expectations.'}
             </p>
           </div>
         ) : (
@@ -470,10 +466,10 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                       }}
                       className="font-bold text-slate-900 text-sm hover:text-[#026fd7] hover:underline cursor-pointer text-left"
                     >
-                      {ticket.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
+                      {ticket.student?.full_name || ('Student')}
                     </button>
                     <span className="text-[11px] text-slate-500 font-mono">
-                      ({ticket.class?.name || (language === 'en' ? 'Class' : 'Lớp')})
+                      ({ticket.class?.name || ('Class')})
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -481,7 +477,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                       {meta.label}
                     </span>
                     <span className="text-[11px] text-slate-400 font-mono">
-                      {language === 'en' ? 'Due: ' : 'Hạn: '}{ticket.due_date}
+                      {'Due: '}{ticket.due_date}
                     </span>
                   </div>
                 </div>
@@ -489,24 +485,24 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="font-semibold text-rose-700 block mb-1">
-                      {language === 'en' ? 'Issue & Root Cause:' : 'Vấn đề & Nguyên nhân:'}
+                      {'Issue & Root Cause:'}
                     </span>
                     <p className="text-slate-800 font-medium">{tDb(ticket.issue_description)}</p>
                     {ticket.root_cause && (
                       <p className="text-slate-500 mt-1">
-                        {language === 'en' ? 'Root Cause: ' : 'Nguyên nhân: '}{tDb(ticket.root_cause)}
+                        {'Root Cause: '}{tDb(ticket.root_cause)}
                       </p>
                     )}
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="font-semibold text-blue-700 block mb-1">
-                      {language === 'en' ? 'Intervention Plan:' : 'Kế hoạch can thiệp:'}
+                      {'Intervention Plan:'}
                     </span>
                     <p className="text-slate-800">{tDb(ticket.action_plan)}</p>
                     <span className="text-[11px] text-slate-500 block mt-1">
-                      {language === 'en' ? 'Assigned to: ' : 'Phụ trách: '}
-                      <strong>{ticket.assigned_staff_name || (language === 'en' ? 'Unassigned' : 'Chưa gán')}</strong>
+                      {'Assigned to: '}
+                      <strong>{ticket.assigned_staff_name || ('Unassigned')}</strong>
                     </span>
                   </div>
                 </div>
@@ -514,7 +510,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                 {ticket.reassessment_result && (
                   <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-900">
                     <span className="font-bold block mb-0.5">
-                      {language === 'en' ? 'Re-assessment Result:' : 'Kết quả đánh giá lại:'}
+                      {'Re-assessment Result:'}
                     </span>
                     <p>{tDb(ticket.reassessment_result)}</p>
                   </div>
@@ -525,9 +521,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                     <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold">
-                        {language === 'en'
-                          ? `Verified by: ${ticket.verified_by_name || 'Head Teacher / CM'}`
-                          : `Đã xác minh bởi: ${ticket.verified_by_name || 'Head Teacher / CM'}`}
+                        {`Verified by: ${ticket.verified_by_name || 'Head Teacher / CM'}`}
                       </span>
                       {ticket.verification_notes && <p className="mt-0.5 italic">"{tDb(ticket.verification_notes)}"</p>}
                     </div>
@@ -542,7 +536,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                       onClick={() => handleStartProgress(ticket.id)}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200"
                     >
-                      {language === 'en' ? 'Start Tutoring (In Progress)' : 'Bắt đầu xử lý (In Progress)'}
+                      {'Start Tutoring (In Progress)'}
                     </button>
                   )}
 
@@ -555,7 +549,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                       }}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200"
                     >
-                      {language === 'en' ? 'Submit Re-assessment (Resolved)' : 'Nộp kết quả đánh giá lại (Resolved)'}
+                      {'Submit Re-assessment (Resolved)'}
                     </button>
                   )}
 
@@ -569,7 +563,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                       className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 shadow-xs flex items-center gap-1.5"
                     >
                       <FileCheck2 className="w-3.5 h-3.5" />
-                      {language === 'en' ? 'Verify Academic Standards (Head Teacher / CM)' : 'Xác minh đạt chuẩn (Head Teacher / CM)'}
+                      {'Verify Academic Standards (Head Teacher / CM)'}
                     </button>
                   )}
                 </div>
@@ -579,7 +573,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
         )}
       </div>
 
-      {/* Modal Tạo Phiếu Can Thiệp */}
+      {/* Modal: Create Intervention Ticket */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
@@ -589,7 +583,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   <AlertTriangle className="w-5 h-5" />
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  {language === 'en' ? 'Create Academic Intervention Ticket' : 'Lập phiếu can thiệp học thuật'}
+                  {'Create Academic Intervention Ticket'}
                 </h3>
               </div>
               <button
@@ -604,7 +598,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
             <form onSubmit={handleCreate} className="space-y-3 pt-4 text-xs">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Select Student *' : 'Chọn học sinh *'}
+                  {'Select Student *'}
                 </label>
                 <select
                   required
@@ -613,11 +607,11 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
                   <option value="">
-                    {language === 'en' ? '-- Select student requiring intervention --' : '-- Chọn học sinh cần can thiệp --'}
+                    {'-- Select student requiring intervention --'}
                   </option>
                   {students.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.full_name} ({s.student_code}) - {s.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')}
+                      {s.full_name} ({s.student_code}) - {s.current_class?.name || ('Unassigned')}
                     </option>
                   ))}
                 </select>
@@ -625,7 +619,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Academic Issue Description *' : 'Mô tả vấn đề học tập *'}
+                  {'Academic Issue Description *'}
                 </label>
                 <textarea
                   required
@@ -633,9 +627,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   value={newForm.issue_description}
                   onChange={(e) => setNewForm({ ...newForm, issue_description: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Weak writing skills (2.0 shields), confused with present simple structure...'
-                      : 'VD: Kỹ năng Viết yếu (2.0 khiên), nhầm lẫn cấu trúc câu hiện tại đơn...'
+                    'e.g. Weak writing skills (2.0 shields), confused with present simple structure...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
@@ -643,16 +635,14 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Root Cause' : 'Nguyên nhân cốt lõi'}
+                  {'Root Cause'}
                 </label>
                 <textarea
                   rows={2}
                   value={newForm.root_cause}
                   onChange={(e) => setNewForm({ ...newForm, root_cause: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Missed past 2 sessions, has not reviewed Unit 3 vocabulary...'
-                      : 'VD: Nghỉ học 2 buổi trước, chưa nắm từ vựng Unit 3...'
+                    'e.g. Missed past 2 sessions, has not reviewed Unit 3 vocabulary...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
@@ -660,7 +650,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Detailed Intervention Plan *' : 'Kế hoạch can thiệp chi tiết *'}
+                  {'Detailed Intervention Plan *'}
                 </label>
                 <textarea
                   required
@@ -668,9 +658,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   value={newForm.action_plan}
                   onChange={(e) => setNewForm({ ...newForm, action_plan: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. 1-on-1 tutoring every Thursday (30 min), Oxford-aligned home practice worksheets...'
-                      : 'VD: Kèm 1-1 mỗi thứ 5 (30 phút), giao phiếu bài tập về nhà theo chuẩn Oxford...'
+                    'e.g. 1-on-1 tutoring every Thursday (30 min), Oxford-aligned home practice worksheets...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
@@ -679,14 +667,14 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Assigned Educator' : 'Người phụ trách xử lý'}
+                    {'Assigned Educator'}
                   </label>
                   <select
                     value={newForm.assigned_staff_id}
                     onChange={(e) => setNewForm({ ...newForm, assigned_staff_id: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">{language === 'en' ? '-- Select Teacher --' : '-- Chọn giáo viên --'}</option>
+                    <option value="">{'-- Select Teacher --'}</option>
                     {teachers.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.full_name}
@@ -697,7 +685,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
 
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Due Date *' : 'Hạn xử lý (Due date) *'}
+                    {'Due Date *'}
                   </label>
                   <input
                     type="date"
@@ -715,7 +703,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -723,8 +711,8 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold disabled:opacity-50"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Creating...' : 'Đang tạo...')
-                    : (language === 'en' ? 'Create Intervention Ticket' : 'Tạo phiếu can thiệp')}
+                    ? ('Creating...')
+                    : ('Create Intervention Ticket')}
                 </button>
               </div>
             </form>
@@ -732,13 +720,13 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
         </div>
       )}
 
-      {/* Modal Nộp Kết Quả Đánh Giá Lại (Resolved) */}
+      {/* Modal: Submit Reassessment (Resolved) */}
       {selectedForResolve && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-900 text-sm">
-                {language === 'en' ? 'Submit Re-assessment Results' : 'Nộp kết quả đánh giá lại'}
+                {'Submit Re-assessment Results'}
               </h3>
               <button
                 type="button"
@@ -757,7 +745,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Post-Intervention Re-assessment Result *' : 'Kết quả đánh giá lại sau can thiệp *'}
+                  {'Post-Intervention Re-assessment Result *'}
                 </label>
                 <textarea
                   required
@@ -765,9 +753,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   value={reassessmentResult}
                   onChange={(e) => setReassessmentResult(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Student completed 4 tutoring sessions, re-evaluation scored 3.5/5 shields...'
-                      : 'VD: Học viên đã hoàn thành 4 buổi bổ trợ, bài kiểm tra lại đạt 3.5/5 khiên...'
+                    'e.g. Student completed 4 tutoring sessions, re-evaluation scored 3.5/5 shields...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
@@ -779,7 +765,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   onClick={() => setSelectedForResolve(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -787,8 +773,8 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   className="px-4 py-2 rounded-xl text-white bg-blue-700 hover:bg-blue-800 font-semibold disabled:opacity-50"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Submit for Verification' : 'Hoàn tất và chờ xác minh')}
+                    ? ('Saving...')
+                    : ('Submit for Verification')}
                 </button>
               </div>
             </form>
@@ -796,7 +782,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
         </div>
       )}
 
-      {/* Modal Xác Minh (Verified) Dành Riêng Cho Head Teacher / CM */}
+      {/* Modal: Head Teacher / CM Verification Sign-off */}
       {selectedForVerify && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
@@ -806,7 +792,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   <ShieldCheck className="w-5 h-5" />
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  {language === 'en' ? 'Verify Academic Intervention' : 'Xác minh can thiệp học thuật'}
+                  {'Verify Academic Intervention'}
                 </h3>
               </div>
               <button
@@ -822,16 +808,16 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                 <span className="font-semibold text-slate-800">{selectedForVerify.student?.full_name}</span>
                 <p className="text-[11px] text-slate-600">
-                  {language === 'en' ? 'Issue: ' : 'Vấn đề: '}{tDb(selectedForVerify.issue_description)}
+                  {'Issue: '}{tDb(selectedForVerify.issue_description)}
                 </p>
                 <p className="text-[11px] text-emerald-700 font-medium">
-                  {language === 'en' ? 'Result: ' : 'Kết quả: '}{tDb(selectedForVerify.reassessment_result)}
+                  {'Result: '}{tDb(selectedForVerify.reassessment_result)}
                 </p>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Verification Feedback (Head Teacher / CM) *' : 'Nhận xét xác minh của Head Teacher / CM *'}
+                  {'Verification Feedback (Head Teacher / CM) *'}
                 </label>
                 <textarea
                   required
@@ -839,9 +825,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   value={verificationNotes}
                   onChange={(e) => setVerificationNotes(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Re-tested assessment and tutoring worksheets. Student satisfies academic requirements...'
-                      : 'VD: Đã kiểm tra lại bài kiểm tra và phiếu bổ trợ. Học viên đạt chuẩn yêu cầu...'
+                    'e.g. Re-tested assessment and tutoring worksheets. Student satisfies academic requirements...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
@@ -853,7 +837,7 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   onClick={() => setSelectedForVerify(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -861,8 +845,8 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
                   className="px-4 py-2 rounded-xl text-white bg-purple-700 hover:bg-purple-800 font-semibold disabled:opacity-50"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Verifying...' : 'Đang xác minh...')
-                    : (language === 'en' ? 'Approve & Mark Verified' : 'Duyệt đạt chuẩn (Verified)')}
+                    ? ('Verifying...')
+                    : ('Approve & Mark Verified')}
                 </button>
               </div>
             </form>

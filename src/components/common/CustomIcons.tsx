@@ -22,7 +22,7 @@ export const VietnamFlag: React.FC<{ className?: string }> = ({ className = 'w-4
   <svg
     viewBox="0 0 30 20"
     className={`inline-block shrink-0 rounded-xs overflow-hidden shadow-2xs ${className}`}
-    aria-label="Cờ Việt Nam"
+    aria-label="Vietnam Flag"
   >
     <rect width="30" height="20" fill="#DA251D" />
     {/* 5-Pointed Star centered */}
@@ -107,7 +107,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-800 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="System Admin / Quản trị hệ thống"
+          title="System Administrator"
         >
           <Shield className={iconSizes} />
         </div>
@@ -118,7 +118,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-[#026fd7] to-[#012147] text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Center Manager / Giám đốc cơ sở"
+          title="Center Manager (CM)"
         >
           <Building2 className={iconSizes} />
         </div>
@@ -130,7 +130,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-amber-500 via-orange-500 to-amber-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Head Teacher / Trưởng bộ môn & Học thuật"
+          title="Head Teacher & Academics"
         >
           <Award className={iconSizes} />
         </div>
@@ -141,7 +141,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Lead Teacher / Giáo viên chính"
+          title="Lead Teacher"
         >
           <GraduationCap className={iconSizes} />
         </div>
@@ -151,7 +151,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-rose-500 via-pink-600 to-rose-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="HRT / Giáo viên chủ nhiệm & Chăm sóc"
+          title="HRT / Homeroom Teacher"
         >
           <HeartHandshake className={iconSizes} />
         </div>
@@ -161,7 +161,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="TA / Trợ giảng lớp học"
+          title="TA / Teaching Assistant"
         >
           <Sparkles className={iconSizes} />
         </div>
@@ -171,7 +171,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="Supplementary Teacher / Giáo viên bổ trợ"
+          title="Supplementary Teacher"
         >
           <GraduationCap className={iconSizes} />
         </div>
@@ -184,7 +184,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
       return (
         <div
           className={`rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
-          title="CSKH & Tái tục học phí"
+          title="CSKH & Tuition Renewal"
         >
           <UserCheck className={iconSizes} />
         </div>

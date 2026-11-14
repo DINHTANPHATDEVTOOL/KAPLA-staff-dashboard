@@ -1,5 +1,5 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — T04: Lớp Học Bổ Trợ Học Vụ (Supplementary Sessions)
+// KAPLA Staff Dashboard — T04: Supplementary Tutoring Sessions
 // ==============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -32,9 +32,9 @@ export const SupplementaryView: React.FC = () => {
   const { t, tDb, language } = useLanguage();
 
   const STATUS_CONFIG: Record<SessionStatus, { label: string; color: string; badge: string }> = useMemo(() => ({
-    scheduled: { label: language === 'en' ? 'Upcoming' : 'Sắp diễn ra', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-    completed: { label: language === 'en' ? 'Completed' : 'Đã hoàn thành', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    cancelled: { label: language === 'en' ? 'Cancelled' : 'Đã hủy', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200' },
+    scheduled: { label: 'Upcoming', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+    completed: { label: 'Completed', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    cancelled: { label: 'Cancelled', color: 'text-slate-500', badge: 'bg-slate-100 text-slate-600 border-slate-200' },
   }), [language]);
   const [sessions, setSessions] = useState<SupplementarySession[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
@@ -58,7 +58,7 @@ export const SupplementaryView: React.FC = () => {
     start_time: '17:30',
     end_time: '18:30',
     teacher_id: '',
-    room: 'Phòng Oxford 201',
+    room: 'Oxford Room 201',
     topic: '',
     target_objective: '',
     notes: '',
@@ -94,7 +94,7 @@ export const SupplementaryView: React.FC = () => {
         setTeachers(MockStorageService.getProfiles());
       }
     } catch (err: any) {
-      console.error('Lỗi tải dữ liệu lớp bổ trợ:', err);
+      console.error('Error loading supplementary data:', err);
     } finally {
       setLoading(false);
     }
@@ -117,7 +117,7 @@ export const SupplementaryView: React.FC = () => {
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSession.title.trim() || !newSession.topic.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng nhập tên buổi học và chủ đề bài học.' });
+      setMessage({ type: 'error', text: 'Please enter session title and lesson topic.' });
       return;
     }
 
@@ -139,7 +139,7 @@ export const SupplementaryView: React.FC = () => {
         notes: newSession.notes,
       });
 
-      setMessage({ type: 'success', text: 'Tạo buổi học bổ trợ thành công!' });
+      setMessage({ type: 'success', text: 'Created supplementary session successfully!' });
       setShowAddModal(false);
       setNewSession({
         title: '',
@@ -148,14 +148,14 @@ export const SupplementaryView: React.FC = () => {
         start_time: '17:30',
         end_time: '18:30',
         teacher_id: '',
-        room: 'Phòng Oxford 201',
+        room: 'Oxford Room 201',
         topic: '',
         target_objective: '',
         notes: '',
       });
       loadData();
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Không thể tạo buổi bổ trợ.' });
+      setMessage({ type: 'error', text: err.message || 'Unable to create supplementary session.' });
     } finally {
       setSubmitting(false);
     }
@@ -163,11 +163,11 @@ export const SupplementaryView: React.FC = () => {
 
   const handleCompleteSession = async (session: SupplementarySession) => {
     try {
-      await SupplementaryService.updateSessionStatus(session.id, 'completed', 'Hoàn tất buổi bổ trợ đúng mục tiêu.');
-      setMessage({ type: 'success', text: `Đã đánh dấu hoàn thành buổi học: ${session.title}` });
+      await SupplementaryService.updateSessionStatus(session.id, 'completed', 'Completed supplementary session according to targets.');
+      setMessage({ type: 'success', text: `Marked session as completed: ${session.title}` });
       loadData();
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Cập nhật thất bại.' });
+      setMessage({ type: 'error', text: err.message || 'Update failed.' });
     }
   };
 
@@ -230,7 +230,7 @@ export const SupplementaryView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-slate-900">{stats.total}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Total Sessions' : 'Tổng số buổi bổ trợ'}
+              {'Total Sessions'}
             </div>
           </div>
         </div>
@@ -242,7 +242,7 @@ export const SupplementaryView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-indigo-700">{stats.scheduled}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Upcoming' : 'Sắp diễn ra'}
+              {'Upcoming'}
             </div>
           </div>
         </div>
@@ -254,7 +254,7 @@ export const SupplementaryView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-emerald-700">{stats.completed}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Completed' : 'Đã hoàn thành'}
+              {'Completed'}
             </div>
           </div>
         </div>
@@ -266,7 +266,7 @@ export const SupplementaryView: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-amber-700">{stats.totalAttendees}</div>
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {language === 'en' ? 'Student Attendees' : 'Lượt học viên tham gia'}
+              {'Student Attendees'}
             </div>
           </div>
         </div>
@@ -279,7 +279,7 @@ export const SupplementaryView: React.FC = () => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder={language === 'en' ? 'Search by topic, teacher, room...' : 'Tìm theo chủ đề, giáo viên, phòng học...'}
+              placeholder={'Search by topic, teacher, room...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
@@ -293,10 +293,10 @@ export const SupplementaryView: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
             >
-              <option value="all">{language === 'en' ? 'All Statuses' : 'Tất cả trạng thái'}</option>
-              <option value="scheduled">{language === 'en' ? 'Upcoming' : 'Sắp diễn ra'}</option>
-              <option value="completed">{language === 'en' ? 'Completed' : 'Đã hoàn thành'}</option>
-              <option value="cancelled">{language === 'en' ? 'Cancelled' : 'Đã hủy'}</option>
+              <option value="all">{'All Statuses'}</option>
+              <option value="scheduled">{'Upcoming'}</option>
+              <option value="completed">{'Completed'}</option>
+              <option value="cancelled">{'Cancelled'}</option>
             </select>
           </div>
         </div>
@@ -307,7 +307,7 @@ export const SupplementaryView: React.FC = () => {
           className="w-full md:w-auto px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>{language === 'en' ? 'Schedule Tutoring Session' : 'Tạo buổi học bổ trợ'}</span>
+          <span>{'Schedule Tutoring Session'}</span>
         </button>
       </div>
 
@@ -315,18 +315,16 @@ export const SupplementaryView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {loading ? (
           <div className="col-span-2 p-8 text-center text-slate-500 text-sm">
-            {language === 'en' ? 'Loading tutoring sessions...' : 'Đang tải danh sách lớp bổ trợ...'}
+            {'Loading tutoring sessions...'}
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className="col-span-2 p-12 text-center bg-white rounded-xl border border-slate-200">
             <BookOpenCheck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <div className="text-slate-700 font-semibold">
-              {language === 'en' ? 'No Tutoring Sessions Scheduled' : 'Chưa có buổi học bổ trợ nào'}
+              {'No Tutoring Sessions Scheduled'}
             </div>
             <div className="text-slate-400 text-sm mt-1">
-              {language === 'en'
-                ? 'Schedule tutoring sessions to support students requiring academic intervention.'
-                : 'Tạo buổi bổ trợ để kèm cặp các học viên có nguy cơ học thuật theo phiếu can thiệp.'}
+              {'Schedule tutoring sessions to support students requiring academic intervention.'}
             </div>
           </div>
         ) : (
@@ -347,8 +345,8 @@ export const SupplementaryView: React.FC = () => {
                       <h4 className="text-base font-bold text-slate-900 mt-2">{tDb(session.title)}</h4>
                       <p className="text-xs text-slate-500">
                         {session.class
-                          ? `${language === 'en' ? 'Class: ' : 'Lớp: '}${session.class.name}`
-                          : (language === 'en' ? 'Cross-Class / 1-on-1 Tutoring' : 'Bổ trợ liên lớp / Cá nhân')}
+                          ? `${'Class: '}${session.class.name}`
+                          : ('Cross-Class / 1-on-1 Tutoring')}
                       </p>
                     </div>
 
@@ -366,13 +364,13 @@ export const SupplementaryView: React.FC = () => {
 
                   <div className="p-3 bg-slate-50 rounded-lg space-y-2 border border-slate-100 text-xs">
                     <div>
-                      <strong className="text-slate-800">{language === 'en' ? 'Topic:' : 'Chủ đề:'}</strong>{' '}
+                      <strong className="text-slate-800">{'Topic:'}</strong>{' '}
                       <span className="text-slate-700">{tDb(session.topic)}</span>
                     </div>
                     <div>
                       <strong className="text-slate-800 flex items-center gap-1">
                         <Target className="w-3.5 h-3.5 text-blue-600" />
-                        {language === 'en' ? 'Lesson Objective:' : 'Mục tiêu bài học:'}
+                        {'Lesson Objective:'}
                       </strong>
                       <span className="text-slate-700">{tDb(session.target_objective)}</span>
                     </div>
@@ -383,9 +381,7 @@ export const SupplementaryView: React.FC = () => {
                       <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-slate-500" />
                         <span>
-                          {language === 'en'
-                            ? `Participating Students (${session.attendees.length}):`
-                            : `Học viên tham gia (${session.attendees.length}):`}
+                          {`Participating Students (${session.attendees.length}):`}
                         </span>
                       </div>
                       <div className="space-y-1">
@@ -395,16 +391,16 @@ export const SupplementaryView: React.FC = () => {
                             className="flex items-center justify-between text-xs p-2 bg-white rounded border border-slate-200"
                           >
                             <span className="font-medium text-slate-800">
-                              {a.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
+                              {a.student?.full_name || ('Student')}
                             </span>
                             <div className="flex items-center gap-2">
                               {a.assessment_score && (
                                 <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-semibold">
-                                  {a.assessment_score}/5.0 {language === 'en' ? 'shields' : 'khiên'}
+                                  {a.assessment_score}/5.0 {'shields'}
                                 </span>
                               )}
                               <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[11px] font-medium">
-                                {language === 'en' ? 'Present' : 'Có mặt'}
+                                {'Present'}
                               </span>
                             </div>
                           </div>
@@ -416,12 +412,12 @@ export const SupplementaryView: React.FC = () => {
                   <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 flex-wrap gap-2">
                     <span className="flex items-center gap-1">
                       <User className="w-3.5 h-3.5 text-slate-400" />
-                      {language === 'en' ? 'Educator: ' : 'Giáo viên: '}
+                      {'Educator: '}
                       <strong className="text-slate-700">{session.teacher_name}</strong>
                     </span>
                     <span className="flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                      {session.room ? tDb(session.room) : (language === 'en' ? 'Main Classroom' : 'Phòng học chính')}
+                      {session.room ? tDb(session.room) : ('Main Classroom')}
                     </span>
                   </div>
                 </div>
@@ -434,7 +430,7 @@ export const SupplementaryView: React.FC = () => {
                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{language === 'en' ? 'Confirm Completion' : 'Xác nhận hoàn thành'}</span>
+                      <span>{'Confirm Completion'}</span>
                     </button>
                   )}
                 </div>
@@ -444,7 +440,7 @@ export const SupplementaryView: React.FC = () => {
         )}
       </div>
 
-      {/* Modal: Tạo buổi học bổ trợ */}
+      {/* Modal: Create Supplementary Session */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -452,7 +448,7 @@ export const SupplementaryView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <BookOpenCheck className="w-5 h-5 text-[#043264]" />
                 <h3 className="font-semibold text-slate-900 text-base">
-                  {language === 'en' ? 'Schedule New Tutoring Session' : 'Tạo buổi học bổ trợ mới'}
+                  {'Schedule New Tutoring Session'}
                 </h3>
               </div>
               <button
@@ -467,16 +463,14 @@ export const SupplementaryView: React.FC = () => {
             <form onSubmit={handleCreateSession} className="p-5 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Session Title *' : 'Tên buổi bổ trợ *'}
+                  {'Session Title *'}
                 </label>
                 <input
                   type="text"
                   value={newSession.title}
                   onChange={(e) => setNewSession({ ...newSession, title: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Starters Grammar & Sentence Writing Support'
-                      : 'Ví dụ: Bổ trợ Ngữ pháp & Viết câu Starters'
+                    'e.g. Starters Grammar & Sentence Writing Support'
                   }
                   required
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
@@ -486,7 +480,7 @@ export const SupplementaryView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Cohort / Class' : 'Lớp học liên quan'}
+                    {'Cohort / Class'}
                   </label>
                   <select
                     value={newSession.class_id}
@@ -494,7 +488,7 @@ export const SupplementaryView: React.FC = () => {
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:border-[#043264]"
                   >
                     <option value="">
-                      {language === 'en' ? '-- Open / 1-on-1 Tutoring --' : '-- Bổ trợ tự do / Cá nhân --'}
+                      {'-- Open / 1-on-1 Tutoring --'}
                     </option>
                     {classes.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -505,14 +499,14 @@ export const SupplementaryView: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Assigned Educator' : 'Giáo viên phụ trách'}
+                    {'Assigned Educator'}
                   </label>
                   <select
                     value={newSession.teacher_id}
                     onChange={(e) => setNewSession({ ...newSession, teacher_id: e.target.value })}
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:border-[#043264]"
                   >
-                    <option value="">{language === 'en' ? '-- Select Teacher --' : '-- Chọn giáo viên --'}</option>
+                    <option value="">{'-- Select Teacher --'}</option>
                     {teachers.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.full_name}
@@ -525,7 +519,7 @@ export const SupplementaryView: React.FC = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Date' : 'Ngày học'}
+                    {'Date'}
                   </label>
                   <input
                     type="date"
@@ -537,7 +531,7 @@ export const SupplementaryView: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Start Time' : 'Giờ bắt đầu'}
+                    {'Start Time'}
                   </label>
                   <input
                     type="time"
@@ -549,7 +543,7 @@ export const SupplementaryView: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'End Time' : 'Giờ kết thúc'}
+                    {'End Time'}
                   </label>
                   <input
                     type="time"
@@ -564,13 +558,13 @@ export const SupplementaryView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Classroom / Location' : 'Phòng học'}
+                    {'Classroom / Location'}
                   </label>
                   <input
                     type="text"
                     value={newSession.room}
                     onChange={(e) => setNewSession({ ...newSession, room: e.target.value })}
-                    placeholder="Phòng Oxford 201"
+                    placeholder="Oxford Room 201"
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
                   />
                 </div>
@@ -578,16 +572,14 @@ export const SupplementaryView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Topic & Content *' : 'Nội dung & Chủ đề buổi bổ trợ *'}
+                  {'Topic & Content *'}
                 </label>
                 <textarea
                   rows={2}
                   value={newSession.topic}
                   onChange={(e) => setNewSession({ ...newSession, topic: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Review 3rd-person singular verbs, practice writing 5 short picture-based sentences.'
-                      : 'Ví dụ: Ôn tập quy tắc chia động từ thêm s/es, luyện viết 5 câu ngắn theo tranh.'
+                    'e.g. Review 3rd-person singular verbs, practice writing 5 short picture-based sentences.'
                   }
                   required
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
@@ -596,16 +588,14 @@ export const SupplementaryView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Target Learning Objective' : 'Mục tiêu đạt được sau buổi học'}
+                  {'Target Learning Objective'}
                 </label>
                 <input
                   type="text"
                   value={newSession.target_objective}
                   onChange={(e) => setNewSession({ ...newSession, target_objective: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Score at least 80% on mini check-in quiz.'
-                      : 'Ví dụ: Đạt tối thiểu 80% câu đúng trong bài kiểm tra mini.'
+                    'e.g. Score at least 80% on mini check-in quiz.'
                   }
                   className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-[#043264]"
                 />
@@ -617,7 +607,7 @@ export const SupplementaryView: React.FC = () => {
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -625,8 +615,8 @@ export const SupplementaryView: React.FC = () => {
                   className="px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Scheduling...' : 'Đang tạo...')
-                    : (language === 'en' ? 'Schedule Session' : 'Tạo buổi học')}
+                    ? ('Scheduling...')
+                    : ('Schedule Session')}
                 </button>
               </div>
             </form>

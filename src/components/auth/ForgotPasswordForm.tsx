@@ -19,7 +19,7 @@ export const ForgotPasswordForm: React.FC = () => {
     setErrorMsg(null);
 
     if (!email.trim()) {
-      setErrorMsg('Vui lòng nhập địa chỉ email của bạn.');
+      setErrorMsg('Please enter your work email address.');
       return;
     }
 
@@ -29,7 +29,7 @@ export const ForgotPasswordForm: React.FC = () => {
       if (res.success) {
         setSentSuccess(true);
       } else {
-        setErrorMsg(res.error || 'Gửi yêu cầu thất bại.');
+        setErrorMsg(res.error || 'Failed to send request.');
       }
     } finally {
       setSubmitting(false);
@@ -38,8 +38,8 @@ export const ForgotPasswordForm: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Khôi phục mật khẩu"
-      subtitle="Nhập email tài khoản để nhận liên kết khôi phục mật khẩu bảo mật."
+      title="Recover Password"
+      subtitle="Enter your account email to receive a secure password recovery link."
     >
       {sentSuccess ? (
         <div className="text-center space-y-4 py-2">
@@ -47,10 +47,10 @@ export const ForgotPasswordForm: React.FC = () => {
             <CheckCircle2 className="w-7 h-7" />
           </div>
           <h3 className="font-display text-base font-bold text-slate-900">
-            Đã gửi liên kết khôi phục!
+            Recovery Link Sent!
           </h3>
           <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
-            Vui lòng kiểm tra hòm thư <span className="font-mono font-semibold">{email}</span> và làm theo hướng dẫn để đặt lại mật khẩu.
+            Please check your inbox <span className="font-mono font-semibold">{email}</span> and follow the instructions to reset your password.
           </p>
 
           <button
@@ -58,7 +58,7 @@ export const ForgotPasswordForm: React.FC = () => {
             onClick={() => setAuthScreen('login')}
             className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-all"
           >
-            Quay lại Đăng nhập
+            Back to Sign In
           </button>
         </div>
       ) : (
@@ -72,7 +72,7 @@ export const ForgotPasswordForm: React.FC = () => {
 
           <div>
             <label htmlFor="forgot-email" className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Email công việc <span className="text-red-500">*</span>
+              Work Email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -98,12 +98,12 @@ export const ForgotPasswordForm: React.FC = () => {
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Đang gửi...
+                Sending...
               </>
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                Gửi liên kết đặt lại mật khẩu
+                Send Password Reset Link
               </>
             )}
           </button>
@@ -115,7 +115,7 @@ export const ForgotPasswordForm: React.FC = () => {
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#026fd7] hover:text-[#043264] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Quay lại màn hình Đăng nhập
+              Return to Sign In screen
             </button>
           </div>
         </form>

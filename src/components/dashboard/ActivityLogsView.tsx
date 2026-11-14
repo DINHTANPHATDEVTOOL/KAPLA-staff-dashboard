@@ -152,12 +152,10 @@ export const ActivityLogsView: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                {language === 'en' ? 'Activity & Operational Audit Trail' : 'Nhật ký tác nghiệp & Kiểm toán hệ thống'}
+                'Activity & Operational Audit Trail'
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                {language === 'en'
-                  ? `Real-time activity logs, academic follow-ups, and role audit events for ${currentBranch?.name || 'KAPLA'}`
-                  : `Lịch sử theo dõi quá trình tương tác, thay đổi ngày hết hạn, phiếu can thiệp và kiểm toán quyền tại ${currentBranch?.name || 'KAPLA'}`}
+                {`Real-time activity logs, academic follow-ups, and role audit events for ${currentBranch?.name || 'KAPLA'}`}
               </p>
             </div>
           </div>
@@ -166,11 +164,11 @@ export const ActivityLogsView: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
             <Lock className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{language === 'en' ? 'Audit Protection: Deletion Prohibited' : 'Bảo vệ nhật ký: Nghiêm cấm xóa'}</span>
+            <span>Audit Protection: Deletion Prohibited</span>
           </div>
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-stretch sm:self-auto justify-center">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>{language === 'en' ? 'Row-Level Security Active' : 'Bảo vệ RLS đang hoạt động'}</span>
+            <span>{'Row-Level Security Active'}</span>
           </div>
         </div>
       </div>
@@ -200,9 +198,7 @@ export const ActivityLogsView: React.FC = () => {
           <input
             type="text"
             placeholder={
-              language === 'en'
-                ? 'Search by actor email, action code, target user or details...'
-                : 'Tìm theo email người thực hiện, mã thao tác, đối tượng hoặc chi tiết...'
+              'Search by actor email, action code, target user or details...'
             }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -217,10 +213,10 @@ export const ActivityLogsView: React.FC = () => {
             onChange={(e) => setActionFilter(e.target.value)}
             className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264] w-full md:w-auto"
           >
-            <option value="all">{language === 'en' ? 'All Operations' : 'Tất cả thao tác'}</option>
-            <option value="role">{language === 'en' ? 'Roles & Permissions' : 'Phân quyền & Phê duyệt'}</option>
-            <option value="tuition">{language === 'en' ? 'Tuition & Renewals' : 'Học phí & Tái tục'}</option>
-            <option value="academic">{language === 'en' ? 'Academic Interventions' : 'Học vụ & Can thiệp'}</option>
+            <option value="all">{'All Operations'}</option>
+            <option value="role">{'Roles & Permissions'}</option>
+            <option value="tuition">{'Tuition & Renewals'}</option>
+            <option value="academic">{'Academic Interventions'}</option>
           </select>
         </div>
       </div>
@@ -231,36 +227,36 @@ export const ActivityLogsView: React.FC = () => {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-5">{language === 'en' ? 'Timestamp' : 'Thời gian'}</th>
-                <th className="py-3 px-4">{language === 'en' ? 'Operator' : 'Người thực hiện'}</th>
-                <th className="py-3 px-4">{language === 'en' ? 'Action' : 'Hành động'}</th>
-                <th className="py-3 px-4">{language === 'en' ? 'Target Account' : 'Tài khoản đối tượng'}</th>
-                <th className="py-3 px-4">{language === 'en' ? 'Campus / Branch' : 'Chi nhánh'}</th>
-                <th className="py-3 px-5">{language === 'en' ? 'Recorded Details' : 'Chi tiết ghi nhận'}</th>
-                <th className="py-3 px-4 text-right">{language === 'en' ? 'Actions' : 'Thao tác'}</th>
+                <th className="py-3 px-5">'Timestamp'</th>
+                <th className="py-3 px-4">{'Operator'}</th>
+                <th className="py-3 px-4">{'Action'}</th>
+                <th className="py-3 px-4">{'Target Account'}</th>
+                <th className="py-3 px-4">{'Campus / Branch'}</th>
+                <th className="py-3 px-5">{'Recorded Details'}</th>
+                <th className="py-3 px-4 text-right">{'Actions'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-slate-500 text-sm">
-                    {language === 'en' ? 'Loading activity logs...' : 'Đang tải nhật ký tác nghiệp...'}
+                    {'Loading activity logs...'}
                   </td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-12 text-center text-slate-500 text-sm">
-                    {language === 'en' ? 'No operational logs found.' : 'Không có nhật ký nào phù hợp.'}
+                    {'No operational logs found.'}
                   </td>
                 </tr>
               ) : (
                 filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-5 font-mono text-slate-500 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}
+                      {new Date(log.created_at).toLocaleString('en-US')}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-slate-800">
-                      {log.actor_email || (language === 'en' ? 'System Process' : 'Hệ thống')}
+                      {log.actor_email || ('System Process')}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold border ${getActionBadge(log.action)}`}>
@@ -271,7 +267,7 @@ export const ActivityLogsView: React.FC = () => {
                       {log.target_user_email || '—'}
                     </td>
                     <td className="py-3.5 px-4 text-[#043264] font-medium">
-                      {log.branch_name ? tDb(log.branch_name) : (language === 'en' ? 'All Campuses' : 'Toàn hệ thống')}
+                      {log.branch_name ? tDb(log.branch_name) : ('All Campuses')}
                     </td>
                     <td className="py-3.5 px-5 text-slate-600 font-mono text-[11px] max-w-md truncate">
                       {JSON.stringify(log.details)}
@@ -281,10 +277,10 @@ export const ActivityLogsView: React.FC = () => {
                         type="button"
                         onClick={() => handleOpenEdit(log)}
                         className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-slate-100 hover:bg-blue-50 hover:text-[#043264] rounded-lg transition-colors border border-slate-200"
-                        title={language === 'en' ? 'Edit Activity Notes (Deletion Prohibited)' : 'Chỉnh sửa ghi chú (Không thể xóa)'}
+                        title={'Edit Activity Notes (Deletion Prohibited)'}
                       >
                         <Edit className="w-3.5 h-3.5" />
-                        <span>{language === 'en' ? 'Edit Note' : 'Sửa'}</span>
+                        <span>{'Edit Note'}</span>
                       </button>
                     </td>
                   </tr>
@@ -303,7 +299,7 @@ export const ActivityLogsView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Edit className="w-5 h-5" />
                 <h3 className="font-bold text-sm">
-                  {language === 'en' ? 'Edit Activity Details / Notes' : 'Chỉnh sửa ghi chú tác nghiệp'}
+                  {'Edit Activity Details / Notes'}
                 </h3>
               </div>
               <button
@@ -319,16 +315,14 @@ export const ActivityLogsView: React.FC = () => {
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
                 <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <strong>{language === 'en' ? 'Audit Protection Policy:' : 'Quy định bảo vệ nhật ký:'}</strong>{' '}
-                  {language === 'en'
-                    ? 'Activity notes and follow-up annotations may be edited for accuracy. Deletion of activity entries is strictly prohibited by center compliance.'
-                    : 'Nhật ký được phép chỉnh sửa ghi chú bổ sung để đảm bảo tính chính xác. Mọi hành vi xóa nhật ký đều bị nghiêm cấm theo quy chế.'}
+                  <strong>{'Audit Protection Policy:'}</strong>{' '}
+                  {'Activity notes and follow-up annotations may be edited for accuracy. Deletion of activity entries is strictly prohibited by center compliance.'}
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Action / Event Code' : 'Mã hành động'}
+                  {'Action / Event Code'}
                 </label>
                 <input
                   type="text"
@@ -340,13 +334,13 @@ export const ActivityLogsView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Operational Notes & Follow-up Details' : 'Ghi chú tác nghiệp & Chi tiết theo dõi'}
+                  {'Operational Notes & Follow-up Details'}
                 </label>
                 <textarea
                   rows={4}
                   value={editNoteText}
                   onChange={(e) => setEditNoteText(e.target.value)}
-                  placeholder={language === 'en' ? 'Enter updated activity notes or verification annotations...' : 'Nhập ghi chú cập nhật hoặc diễn giải nghiệp vụ...'}
+                  placeholder={'Enter updated activity notes or verification annotations...'}
                   className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
                   required
                 />
@@ -358,7 +352,7 @@ export const ActivityLogsView: React.FC = () => {
                   onClick={() => setEditingLog(null)}
                   className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -366,7 +360,7 @@ export const ActivityLogsView: React.FC = () => {
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#032042] rounded-xl shadow-xs disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{savingNote ? (language === 'en' ? 'Saving...' : 'Đang lưu...') : (language === 'en' ? 'Save Notes' : 'Lưu ghi chú')}</span>
+                  <span>{savingNote ? ('Saving...') : ('Save Notes')}</span>
                 </button>
               </div>
             </form>

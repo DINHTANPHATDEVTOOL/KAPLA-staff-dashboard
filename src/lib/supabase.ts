@@ -145,10 +145,10 @@ export function subscribeToTableChanges(
 
 if (!isDev) {
   if (hasValidSupabaseConfig) {
-    console.info('[KAPLA Production] Kết nối cơ sở dữ liệu Supabase Cloud:', rawSupabaseUrl);
+    console.info('[KAPLA Production] Connected to Supabase Cloud:', rawSupabaseUrl);
   } else {
     console.warn(
-      '[KAPLA Demo Preview] Chưa cấu hình Supabase Cloud hoặc URL cục bộ không hỗ trợ trên HTTPS. Hệ thống kích hoạt chế độ Demo Standalone với đầy đủ 8 vai trò và học viên thực tế.'
+      '[KAPLA Demo Preview] Supabase Cloud not configured. System activated Demo Standalone mode with full 8 roles and realistic student data.'
     );
   }
 }
@@ -176,13 +176,13 @@ const STORAGE_KEYS = {
   SYSTEM_CONFIG: 'kapla_system_config',
 };
 
-// Initial Seed Data with Single Branch (KAPLA Phạm Hùng Only)
+// Initial Seed Data with Single Branch (KAPLA Pham Hung Campus Only)
 const DEFAULT_BRANCHES: Branch[] = [
   {
     id: 'a0000000-0000-0000-0000-000000000001',
     code: 'PH',
-    name: 'KAPLA Phạm Hùng',
-    address: 'Tầng trệt & lửng, Topaz Elite, Phường 4, Quận 8, TP.HCM',
+    name: 'KAPLA Pham Hung Campus',
+    address: 'Ground & Mezzanine Floor, Topaz Elite, Ward 4, District 8, Ho Chi Minh City',
     phone: '028 7300 9088',
     status: 'active',
   },
@@ -202,7 +202,7 @@ const DEFAULT_PROFILES: UserProfile[] = [
   {
     id: 'u0000000-0000-0000-0000-000000000002',
     email: 'cm.nhi@kapla.edu.vn',
-    full_name: 'Phương Nhi',
+    full_name: 'Phuong Nhi',
     phone: '0912 345 678',
     preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
     system_role: 'staff',
@@ -232,7 +232,7 @@ const DEFAULT_PROFILES: UserProfile[] = [
   {
     id: 'u0000000-0000-0000-0000-000000000005',
     email: 'hrt.tram@kapla.edu.vn',
-    full_name: 'Trâm',
+    full_name: 'Tram',
     phone: '0915 678 901',
     preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
     system_role: 'staff',
@@ -311,7 +311,7 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
     default_hrt_name: 'Minh',
     main_teacher_name: 'Jamie',
-    schedule: 'Thứ 2 & 4 (17:30 - 19:00)',
+    schedule: 'Mon & Wed (17:30 - 19:00)',
     status: 'active',
   },
   {
@@ -322,7 +322,7 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
     default_hrt_name: 'Minh',
     main_teacher_name: 'Jamie',
-    schedule: 'Thứ 3 & 5 (17:30 - 19:00)',
+    schedule: 'Tue & Thu (17:30 - 19:00)',
     status: 'active',
   },
   {
@@ -331,9 +331,9 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     name: 'PH-Flyers-01',
     level: 'Flyers',
     default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
-    default_hrt_name: 'Trâm',
+    default_hrt_name: 'Tram',
     main_teacher_name: 'Jamie',
-    schedule: 'Thứ 7 & CN (09:00 - 10:30)',
+    schedule: 'Sat & Sun (09:00 - 10:30)',
     status: 'active',
   },
   {
@@ -344,7 +344,7 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     default_hrt_id: 'u0000000-0000-0000-0000-000000000006',
     default_hrt_name: 'Vy',
     main_teacher_name: 'Jamie',
-    schedule: 'Thứ 7 & CN (14:30 - 16:00)',
+    schedule: 'Sat & Sun (14:30 - 16:00)',
     status: 'active',
   },
   {
@@ -355,7 +355,7 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
     default_hrt_name: 'Minh',
     main_teacher_name: 'Jamie William',
-    schedule: 'Thứ 3 & 6 (18:00 - 19:30)',
+    schedule: 'Tue & Fri (18:00 - 19:30)',
     status: 'active',
   },
 ];
@@ -365,7 +365,7 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
     id: 'l0000000-0000-0000-0000-000000000001',
     actor_email: 'admin@kapla.edu.vn',
     action: 'INIT_SYSTEM',
-    details: { message: 'Khởi tạo hệ thống quản trị học vụ KAPLA Phạm Hùng' },
+    details: { message: 'Initialized KAPLA Pham Hung academic administration system' },
     created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
   },
   {
@@ -373,7 +373,7 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
     actor_email: 'admin@kapla.edu.vn',
     action: 'APPROVE_USER_ROLE',
     target_user_email: 'cm.nhi@kapla.edu.vn',
-    branch_name: 'KAPLA Phạm Hùng',
+    branch_name: 'KAPLA Pham Hung Campus',
     details: { role: 'CM', system_role: 'staff' },
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
   },
@@ -384,153 +384,153 @@ const DEFAULT_STUDENTS: Student[] = [
     id: 'b0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-001',
-    full_name: 'Nguyễn Bình An',
+    full_name: 'Nguyen Binh An',
     date_of_birth: '2017-05-10',
     gender: 'male',
-    parent_name: 'Nguyễn Văn Minh (Bố)',
+    parent_name: 'Nguyen Van Minh (Father)',
     parent_phone: '0901 112 223',
     parent_email: 'minh.nguyen@gmail.com',
     tuition_expiry_date: '2026-12-31',
     status: 'active',
     current_class_id: 'c0000000-0000-0000-0000-000000000001',
-    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000006', // Giao riêng HRT Vy
-    notes: 'Học viên có năng khiếu giao tiếp, tự tin nói chuyện với GV bản ngữ, đang được kèm bổ trợ viết câu.',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000006', // Designated HRT Vy
+    notes: 'Talented communicator, confident conversing with native teachers, currently receiving sentence writing tutoring.',
     created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-002',
-    full_name: 'Trần Thái Bình',
+    full_name: 'Tran Thai Binh',
     date_of_birth: '2017-08-20',
     gender: 'male',
-    parent_name: 'Trần Thị Hà (Mẹ)',
+    parent_name: 'Tran Thi Ha (Mother)',
     parent_phone: '0902 223 334',
     parent_email: 'ha.tran@gmail.com',
-    tuition_expiry_date: '2026-11-20', // Sắp hết hạn
+    tuition_expiry_date: '2026-11-20', // Due soon
     status: 'warning',
     current_class_id: 'c0000000-0000-0000-0000-000000000001',
-    assigned_hrt_id: undefined, // Mặc định theo lớp -> Minh
-    notes: 'Phụ huynh quan tâm tiến độ chuẩn Oxford, HRT Minh đã liên hệ tư vấn gói 6 tháng Starters 2.',
+    assigned_hrt_id: undefined, // Class default -> Minh
+    notes: 'Parents interested in Oxford standard progress; HRT Minh has reached out regarding the 6-month Starters 2 package.',
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-003',
-    full_name: 'Lê Quốc Cường',
+    full_name: 'Le Quoc Cuong',
     date_of_birth: '2016-03-15',
     gender: 'male',
-    parent_name: 'Lê Văn Sang (Bố)',
+    parent_name: 'Le Van Sang (Father)',
     parent_phone: '0903 334 445',
     parent_email: 'sang.le@gmail.com',
     tuition_expiry_date: '2027-02-28',
     status: 'active',
     current_class_id: 'c0000000-0000-0000-0000-000000000002',
-    assigned_hrt_id: undefined, // Mặc định theo lớp -> Minh
-    notes: 'Học lực xuất sắc, phát âm chuẩn Oxford, chuẩn bị thi Cambridge Movers.',
+    assigned_hrt_id: undefined, // Class default -> Minh
+    notes: 'Outstanding academic performance, authentic Oxford pronunciation, preparing for Cambridge Movers examination.',
     created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000004',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-004',
-    full_name: 'Đặng Bảo Nam',
+    full_name: 'Dang Bao Nam',
     date_of_birth: '2017-11-02',
     gender: 'male',
-    parent_name: 'Đặng Quốc Tuấn (Bố)',
+    parent_name: 'Dang Quoc Tuan (Father)',
     parent_phone: '0904 556 677',
     parent_email: 'tuan.dang@gmail.com',
-    tuition_expiry_date: '2026-11-10', // Đã quá hạn
+    tuition_expiry_date: '2026-11-10', // Overdue
     status: 'expired',
     current_class_id: 'c0000000-0000-0000-0000-000000000001',
-    assigned_hrt_id: undefined, // Mặc định theo lớp -> Minh
-    notes: 'Học phí quá hạn, HRT Minh đã liên hệ nhắc phụ huynh xếp lịch đóng phí.',
+    assigned_hrt_id: undefined, // Class default -> Minh
+    notes: 'Tuition overdue; HRT Minh has contacted parents to arrange fee payment.',
     created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000005',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-005',
-    full_name: 'Phạm Minh Khôi',
+    full_name: 'Pham Minh Khoi',
     date_of_birth: '2015-09-18',
     gender: 'male',
-    parent_name: 'Phạm Hải Đăng (Bố)',
+    parent_name: 'Pham Hai Dang (Father)',
     parent_phone: '0905 667 788',
     parent_email: 'dang.pham@gmail.com',
-    tuition_expiry_date: '2026-11-25', // Sắp hết hạn
+    tuition_expiry_date: '2026-11-25', // Due soon
     status: 'warning',
     current_class_id: 'c0000000-0000-0000-0000-000000000003',
-    assigned_hrt_id: undefined, // Mặc định theo lớp -> Trâm
-    notes: 'Cấp độ Flyers, gia đình có nguyện vọng thi lấy chứng chỉ quốc tế 15 khiên.',
+    assigned_hrt_id: undefined, // Class default -> Tram
+    notes: 'Flyers level; family aims for a perfect 15-shield Cambridge international certification.',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000006',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-006',
-    full_name: 'Hoàng Mai Chi',
+    full_name: 'Hoang Mai Chi',
     date_of_birth: '2016-07-25',
     gender: 'female',
-    parent_name: 'Hoàng Kim Loan (Mẹ)',
+    parent_name: 'Hoang Kim Loan (Mother)',
     parent_phone: '0906 778 899',
     parent_email: 'loan.hoang@gmail.com',
     tuition_expiry_date: '2027-01-15',
     status: 'active',
     current_class_id: 'c0000000-0000-0000-0000-000000000002',
-    assigned_hrt_id: undefined, // Mặc định theo lớp -> Minh
-    notes: 'Rất tích cực phát biểu, hoàn thành bài tập về nhà đầy đủ.',
+    assigned_hrt_id: undefined, // Class default -> Minh
+    notes: 'Highly participatory in class, consistently completes all homework assignments.',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000007',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-007',
-    full_name: 'Vũ Hải Yến',
+    full_name: 'Vu Hai Yen',
     date_of_birth: '2017-01-05',
     gender: 'female',
-    parent_name: 'Vũ Quốc Bảo (Bố)',
+    parent_name: 'Vu Quoc Bao (Father)',
     parent_phone: '0907 889 900',
     parent_email: 'bao.vu@gmail.com',
     tuition_expiry_date: '2026-12-25',
     status: 'active',
     current_class_id: 'c0000000-0000-0000-0000-000000000004',
-    assigned_hrt_id: undefined, // Mặc định theo lớp -> Vy
-    notes: 'Tiếp thu bài nhanh, đam mê học lập trình Robotics STEAM.',
+    assigned_hrt_id: undefined, // Class default -> Vy
+    notes: 'Fast learner, passionate about STEAM Robotics and coding.',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000008',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-008',
-    full_name: 'Đỗ Tuấn Kiệt',
+    full_name: 'Do Tuan Kiet',
     date_of_birth: '2015-12-14',
     gender: 'male',
-    parent_name: 'Đỗ Trọng Hiếu (Bố)',
+    parent_name: 'Do Trong Hieu (Father)',
     parent_phone: '0908 990 011',
     parent_email: 'hieu.do@gmail.com',
-    tuition_expiry_date: '2026-11-18', // Sắp hết hạn 5 ngày
+    tuition_expiry_date: '2026-11-18', // Due in 5 days
     status: 'warning',
     current_class_id: 'c0000000-0000-0000-0000-000000000003',
-    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // Giao riêng HRT Trâm
-    notes: 'Kỹ năng Đọc cần cải thiện, HRT Trâm đang theo dõi sát sao.',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // Designated HRT Tram
+    notes: 'Reading skills need improvement; HRT Tram is closely monitoring.',
     created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000009',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: '0003',
-    full_name: 'Nguyễn Tuấn Khải',
+    full_name: 'Nguyen Tuan Khai',
     date_of_birth: '2016-04-12',
     gender: 'male',
-    parent_name: 'Nguyễn Văn Hùng (Bố)',
+    parent_name: 'Nguyen Van Hung (Father)',
     parent_phone: '0909 123 456',
     parent_email: 'hung.nguyen@gmail.com',
     tuition_expiry_date: '2027-04-30',
     status: 'active',
     current_class_id: 'c0000000-0000-0000-0000-000000000005',
     assigned_hrt_id: 'u0000000-0000-0000-0000-000000000004',
-    notes: 'Học lực tốt, kỹ năng nói tự nhiên, chuẩn bị thi Cambridge Flyers.',
+    notes: 'Strong academic performance, natural speaking skills, preparing for Cambridge Flyers.',
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
 ];
@@ -609,41 +609,41 @@ const DEFAULT_CARE_TASKS: StudentTask[] = [
     id: '40000000-0000-0000-0000-000000000001',
     student_id: 'b0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Gọi điện báo cáo tiến độ tuần 4 & bài viết cho PH em Nguyễn Bình An',
+    title: 'Call parents of student Nguyen Binh An to report week 4 progress & writing sample',
     task_type: 'care_call',
     due_date: '2026-11-20',
     status: 'pending',
-    notes: 'Trao đổi kết quả bài kiểm tra mini-check viết câu và buổi học bổ trợ cùng Head Teacher Jamie.',
+    notes: 'Discuss mini-check sentence writing test results and supplementary tutoring session with Head Teacher Jamie.',
   },
   {
     id: '40000000-0000-0000-0000-000000000002',
     student_id: 'b0000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Nhắc tái tục học phí sắp hết hạn cho em Trần Thái Bình',
+    title: 'Remind parents of student Tran Thai Binh about upcoming tuition expiration',
     task_type: 'tuition_reminder',
     due_date: '2026-11-18',
     status: 'pending',
-    notes: 'Hạn học phí còn 7 ngày, gửi brochure lộ trình khóa Starters 2 chuẩn Oxford.',
+    notes: '7 days remaining on tuition; sent Oxford-standard Starters 2 course roadmap brochure.',
   },
   {
     id: '40000000-0000-0000-0000-000000000003',
     student_id: 'b0000000-0000-0000-0000-000000000004',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Xử lý học phí quá hạn em Đặng Bảo Nam',
+    title: 'Follow up on overdue tuition for student Dang Bao Nam',
     task_type: 'tuition_reminder',
     due_date: '2026-11-14',
     status: 'pending',
-    notes: 'Đã quá hạn 3 ngày, gọi điện xác nhận lại lịch chuyển khoản của mẹ bé.',
+    notes: 'Overdue by 3 days; called to confirm the bank transfer schedule with the student mother.',
   },
   {
     id: '40000000-0000-0000-0000-000000000004',
     student_id: 'b0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Gửi video clip thuyết trình trên lớp cho PH em Lê Quốc Cường',
+    title: 'Send in-class presentation video clip to parents of student Le Quoc Cuong',
     task_type: 'progress_report',
     due_date: '2026-11-19',
     status: 'pending',
-    notes: 'Clip bé thuyết trình mini chủ đề My Favorite Sport với Head Teacher Jamie.',
+    notes: 'Clip of the student giving a mini presentation on My Favorite Sport with Head Teacher Jamie.',
   },
 ];
 
@@ -653,7 +653,7 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     student_id: 'b0000000-0000-0000-0000-000000000001',
     class_id: 'c0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    period: 'Kỳ 1 - Giữa kỳ',
+    period: 'Semester 1 - Midterm',
     assessment_date: '2026-11-05',
     listening_score: 4.5,
     speaking_score: 4.0,
@@ -664,9 +664,9 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     reading_level: 'On Track',
     writing_level: 'Below Level',
     progress_status: 'Needs Attention',
-    strengths: 'Phát âm tự nhiên chuẩn Oxford, phản xạ nói nhanh, tương tác hào hứng với giáo viên bản ngữ.',
-    weaknesses: 'Ngữ pháp viết câu đơn còn nhầm thì hiện tại đơn và chia động từ ngôi thứ 3 số ít.',
-    progress_notes: 'Cần can thiệp bổ trợ kỹ năng Viết để củng cố trước kỳ thi Starters.',
+    strengths: 'Authentic Oxford pronunciation, quick verbal reflexes, enthusiastic interaction with native English teachers.',
+    weaknesses: 'Simple sentence grammar writing still confuses present simple and 3rd person singular verb conjugation.',
+    progress_notes: 'Needs supplementary writing intervention before upcoming Cambridge Starters exam.',
     has_academic_risk: true,
     assessed_by: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
@@ -676,7 +676,7 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     student_id: 'b0000000-0000-0000-0000-000000000002',
     class_id: 'c0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    period: 'Kỳ 1 - Giữa kỳ',
+    period: 'Semester 1 - Midterm',
     assessment_date: '2026-11-06',
     listening_score: 4.0,
     speaking_score: 4.5,
@@ -687,8 +687,8 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     reading_level: 'On Track',
     writing_level: 'On Track',
     progress_status: 'Improved',
-    strengths: 'Nắm từ vựng tốt, tích cực trong các hoạt động trò chơi ngôn ngữ.',
-    weaknesses: 'Thỉnh thoảng mất tập trung ở 15 phút cuối buổi học.',
+    strengths: 'Strong vocabulary acquisition, highly energetic in language game activities.',
+    weaknesses: 'Occasional loss of focus in the final 15 minutes of the session.',
     has_academic_risk: false,
     assessed_by: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
@@ -698,7 +698,7 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     student_id: 'b0000000-0000-0000-0000-000000000003',
     class_id: 'c0000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    period: 'Kỳ 1 - Giữa kỳ',
+    period: 'Semester 1 - Midterm',
     assessment_date: '2026-11-08',
     listening_score: 4.5,
     speaking_score: 5.0,
@@ -709,8 +709,8 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     reading_level: 'Above Level',
     writing_level: 'On Track',
     progress_status: 'Improved',
-    strengths: 'Khả năng nói lưu loát, dùng được các câu ghép cơ bản, ngữ điệu tự nhiên.',
-    weaknesses: 'Cần đọc thêm truyện tiếng Anh nhiều trang để tăng tốc độ đọc.',
+    strengths: 'Fluent speech delivery, uses basic compound sentences, natural intonation.',
+    weaknesses: 'Should read more multi-page English storybooks to improve reading speed.',
     has_academic_risk: false,
     assessed_by: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
@@ -720,7 +720,7 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     student_id: 'b0000000-0000-0000-0000-000000000005',
     class_id: 'c0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    period: 'Kỳ 1 - Giữa kỳ',
+    period: 'Semester 1 - Midterm',
     assessment_date: '2026-11-07',
     listening_score: 4.0,
     speaking_score: 4.0,
@@ -731,10 +731,10 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     reading_level: 'Below Level',
     writing_level: 'On Track',
     progress_status: 'Needs Attention',
-    strengths: 'Nghe tốt bài hội thoại dài, từ vựng phong phú.',
-    weaknesses: 'Kỹ năng Skimming và Scanning bài đọc dài còn hạn chế, hay bị bẫy từ đồng nghĩa.',
+    strengths: 'Excellent listening comprehension on lengthy dialogues, rich topical vocabulary.',
+    weaknesses: 'Skimming and scanning skills on long passages need refinement; easily distracted by synonym traps.',
     has_academic_risk: true,
-    assessed_by: 'u0000000-0000-0000-0000-000000000005', // HRT Trâm
+    assessed_by: 'u0000000-0000-0000-0000-000000000005', // HRT Tram
     created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
   },
   {
@@ -769,16 +769,16 @@ const DEFAULT_INTERVENTIONS: InterventionTicket[] = [
     assessment_id: 'd0000000-0000-0000-0000-000000000001',
     class_id: 'c0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    issue_description: 'Kỹ năng Viết đạt 2.5/5 khiên, gặp khó khăn chia động từ hiện tại đơn và trật tự từ.',
-    root_cause: 'Chưa nắm vững quy tắc thêm s/es và câu hỏi Do/Does trong câu nghi vấn.',
-    action_plan: 'Kèm bổ trợ ngữ pháp 1-1 30 phút mỗi thứ 4, giao 4 phiếu bài tập viết Oxford.',
+    issue_description: 'Writing competency scored 2.5/5 shields, encountering difficulty with simple present tense verb conjugation and word order.',
+    root_cause: 'Has not yet mastered s/es ending rules and Do/Does auxiliary verbs in interrogative sentences.',
+    action_plan: '1-on-1 grammar tutoring for 30 minutes every Wednesday, assigned 4 Oxford writing worksheets.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000006', // HRT Vy
     due_date: '2026-11-25',
-    reassessment_result: 'Học viên đã hoàn thành 4 phiếu bài tập, bài mini-test đạt 3.8/5 khiên.',
+    reassessment_result: 'Student completed 4 worksheets; mini-test score improved to 3.8/5 shields.',
     status: 'verified',
     verified_by: 'u0000000-0000-0000-0000-000000000003', // Head Teacher Jamie
     verified_at: new Date().toISOString(),
-    verification_notes: 'Head Teacher Jamie đã duyệt: Học viên An đạt tiến bộ rõ rệt, kết thúc can thiệp.',
+    verification_notes: 'Head Teacher Jamie approved: Student An demonstrated noticeable progress, intervention concluded successfully.',
     created_by: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
   },
@@ -787,9 +787,9 @@ const DEFAULT_INTERVENTIONS: InterventionTicket[] = [
     student_id: 'b0000000-0000-0000-0000-000000000004',
     class_id: 'c0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    issue_description: 'Nói ngập ngừng, ngại giao tiếp khi trả lời câu hỏi mở của giáo viên bản ngữ.',
-    root_cause: 'Vốn từ vựng chủ đề School & Hobbies còn hạn chế, sợ phát âm sai.',
-    action_plan: 'Luyện phát âm qua flashcard Oxford và ghép cặp thực hành hội thoại đầu giờ.',
+    issue_description: 'Hesitant speech, shy when answering open-ended questions from native teachers.',
+    root_cause: 'Limited vocabulary on School & Hobbies topics, fearful of mispronouncing.',
+    action_plan: 'Pronunciation drills with Oxford flashcards and paired conversation practice at session start.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     due_date: '2026-11-28',
     status: 'in_progress',
@@ -802,12 +802,12 @@ const DEFAULT_INTERVENTIONS: InterventionTicket[] = [
     assessment_id: 'd0000000-0000-0000-0000-000000000004',
     class_id: 'c0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    issue_description: 'Đọc hiểu đoạn văn dài Flyers còn chậm, dễ mất kiên nhẫn khi gặp từ mới.',
-    root_cause: 'Chưa có kỹ năng Skimming và Scanning bắt từ khóa chính trong bài thi Cambridge.',
-    action_plan: 'Hướng dẫn kỹ thuật gạch chân từ khóa và đọc lướt tìm ý chính.',
-    assigned_staff_id: 'u0000000-0000-0000-0000-000000000005', // HRT Trâm
+    issue_description: 'Slow reading comprehension on longer Flyers passages, tends to lose patience with unfamiliar words.',
+    root_cause: 'Lacks skimming and scanning skills to identify keywords in Cambridge exams.',
+    action_plan: 'Instructed in keyword underlining techniques and rapid skimming for main ideas.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000005', // HRT Tram
     due_date: '2026-11-22',
-    reassessment_result: 'Đã hoàn thành 5 bài đọc luyện Flyers, độ chính xác tăng từ 50% lên 75%.',
+    reassessment_result: 'Completed 5 Flyers reading practice drills; accuracy increased from 50% to 75%.',
     status: 'resolved',
     created_by: 'u0000000-0000-0000-0000-000000000005',
     created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
@@ -819,56 +819,56 @@ const DEFAULT_FEEDBACKS: ParentFeedback[] = [
     id: 'f0000000-0000-0000-0000-000000000001',
     student_id: 'b0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    parent_name: 'Nguyễn Văn Minh (Bố)',
+    parent_name: 'Nguyen Van Minh (Father)',
     parent_phone: '0901 112 223',
     feedback_type: 'academic_concern',
     channel: 'phone',
-    content: 'Phụ huynh hỏi về lộ trình ôn thi chứng chỉ Cambridge Starters và nhờ thầy cô kèm thêm phần Viết câu.',
+    content: 'Parents inquired about the Cambridge Starters preparation roadmap and requested supplementary tutoring for sentence writing.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000006', // HRT Vy
     due_date: '2026-11-20',
     status: 'resolved',
-    resolution_notes: 'HRT Vy đã gọi tư vấn chi tiết lộ trình và xếp lịch học bổ trợ ngữ pháp thứ Tư hàng tuần.',
+    resolution_notes: 'HRT Vy called to consult in detail on the academic roadmap and scheduled Wednesday grammar tutoring.',
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
   {
     id: 'f0000000-0000-0000-0000-000000000002',
     student_id: 'b0000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    parent_name: 'Trần Thị Hà (Mẹ)',
+    parent_name: 'Tran Thi Ha (Mother)',
     parent_phone: '0902 223 334',
     feedback_type: 'compliment',
     channel: 'zalo',
-    content: 'Phụ huynh khen bé dạo này về nhà tự giác nghe bài hát tiếng Anh và nói chuyện tự tin hơn hẳn.',
+    content: 'Mother shared positive feedback that the student proactively listens to English songs at home and speaks with greater confidence.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     due_date: '2026-11-18',
     status: 'resolved',
-    resolution_notes: 'Đã gửi lời cảm ơn mẹ và gửi kèm video clip bé thuyết trình mini trên lớp.',
+    resolution_notes: 'Sent appreciation message to mother along with the video clip of the student mini in-class presentation.',
     created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
   },
   {
     id: 'f0000000-0000-0000-0000-000000000003',
     student_id: 'b0000000-0000-0000-0000-000000000004',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    parent_name: 'Đặng Quốc Tuấn (Bố)',
+    parent_name: 'Dang Quoc Tuan (Father)',
     parent_phone: '0904 556 677',
     feedback_type: 'inquiry',
     channel: 'in_person',
-    content: 'Gia đình muốn tìm hiểu đăng ký câu lạc bộ Robotics sáng tạo và hoạt động ngoại khóa cuối tuần.',
-    assigned_staff_id: 'u0000000-0000-0000-0000-000000000002', // CM Phương Nhi
+    content: 'Family would like to explore enrolling in the Creative Robotics Club and weekend extracurricular activities.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000002', // CM Phuong Nhi
     due_date: '2026-11-21',
     status: 'in_progress',
-    resolution_notes: 'CM Phương Nhi đã tư vấn lịch trải nghiệm CLB Robotics thứ 7 tuần này.',
+    resolution_notes: 'CM Phuong Nhi consulted on Saturday Robotics Club trial schedule.',
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
     id: 'f0000000-0000-0000-0000-000000000003',
     student_id: 'b0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    parent_name: 'Lê Văn Sang (Bố)',
+    parent_name: 'Le Van Sang (Father)',
     parent_phone: '0903 334 445',
     feedback_type: 'inquiry',
     channel: 'app',
-    content: 'Phụ huynh cần bảng điểm tổng hợp giữa kỳ để đối chiếu tiến độ học tiếng Anh ở trường tiểu học.',
+    content: 'Parents requested midterm comprehensive report card to cross-reference academic progress at primary school.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     due_date: '2026-11-22',
     status: 'open',
@@ -881,14 +881,14 @@ const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
     id: '10000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     class_id: 'c0000000-0000-0000-0000-000000000001',
-    title: 'Bổ trợ kỹ năng Viết & Cấu trúc câu đơn (Starters)',
+    title: 'Supplementary Writing & Simple Sentence Structure (Starters)',
     session_date: '2026-11-20',
     start_time: '17:30',
     end_time: '18:30',
     teacher_id: 'u0000000-0000-0000-0000-000000000003', // Jamie Alexander
-    room: 'Phòng Oxford 201',
-    topic: 'Quy tắc chia động từ ngôi thứ 3 số ít và viết mô tả tranh theo chuẩn Cambridge',
-    target_objective: 'Học viên nhận diện đúng chủ ngữ và viết câu đúng ít nhất 80% phiếu bài tập',
+    room: 'Oxford Room 201',
+    topic: 'Third-person singular verb conjugation rules and Cambridge picture description writing',
+    target_objective: 'Students correctly identify subjects and write accurate sentences on at least 80% of worksheets',
     status: 'scheduled',
     attendees_count: 2,
     attendees: [
@@ -898,7 +898,7 @@ const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
         student_id: 'b0000000-0000-0000-0000-000000000001',
         attendance_status: 'present',
         assessment_score: 3.5,
-        teacher_feedback: 'Học sinh chú ý lắng nghe, làm đúng 4/5 câu viết mẫu.',
+        teacher_feedback: 'Student paid close attention, completed 4/5 sample writing sentences accurately.',
       },
       {
         id: '20000000-0000-0000-0000-000000000002',
@@ -906,7 +906,7 @@ const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
         student_id: 'b0000000-0000-0000-0000-000000000004',
         attendance_status: 'present',
         assessment_score: 3.0,
-        teacher_feedback: 'Đã nhớ cấu trúc câu cơ bản, cần rèn luyện thêm chính tả.',
+        teacher_feedback: 'Memorized basic sentence structures, needs further spelling practice.',
       },
     ],
     created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
@@ -915,17 +915,17 @@ const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
     id: '10000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     class_id: 'c0000000-0000-0000-0000-000000000002',
-    title: 'Luyện phản xạ Nói & Phát âm âm đuôi chuẩn Oxford (Movers)',
+    title: 'Speaking Reflexes & Oxford Standard Ending Sounds (Movers)',
     session_date: '2026-11-14',
     start_time: '18:00',
     end_time: '19:00',
     teacher_id: 'u0000000-0000-0000-0000-000000000003', // Jamie Alexander
-    room: 'Phòng Cambridge 302',
-    topic: 'Mô tả sự khác biệt giữa hai bức tranh và kể lại câu chuyện 4 tranh',
-    target_objective: 'Nói câu hoàn chỉnh có thì Quá khứ đơn, phát âm rõ âm đuôi /s/, /z/, /ed/',
+    room: 'Cambridge Room 302',
+    topic: 'Describing differences between two pictures and retelling a 4-picture story',
+    target_objective: 'Speak in complete sentences using past simple tense, articulate ending sounds /s/, /z/, /ed/',
     status: 'completed',
     attendees_count: 2,
-    notes: 'Buổi học diễn ra hào hứng, các bạn tương tác nhóm sôi nổi.',
+    notes: 'Enthusiastic session, lively group interaction.',
     attendees: [
       {
         id: '20000000-0000-0000-0000-000000000003',
@@ -933,7 +933,7 @@ const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
         student_id: 'b0000000-0000-0000-0000-000000000003',
         attendance_status: 'present',
         assessment_score: 4.5,
-        teacher_feedback: 'Phát âm chuẩn, kể chuyện mạch lạc và giàu cảm xúc.',
+        teacher_feedback: 'Standard pronunciation, coherent and expressive storytelling.',
       },
       {
         id: '20000000-0000-0000-0000-000000000004',
@@ -941,7 +941,7 @@ const DEFAULT_SUPPLEMENTARY_SESSIONS: SupplementarySession[] = [
         student_id: 'b0000000-0000-0000-0000-000000000006',
         attendance_status: 'present',
         assessment_score: 4.0,
-        teacher_feedback: 'Tự tin phát biểu, tương tác tốt cùng bạn ghép đôi.',
+        teacher_feedback: 'Confident speaker, interacted well with partner.',
       },
     ],
     created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
@@ -960,8 +960,8 @@ const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
     status: 'contacted',
     last_contact_date: '2026-11-12',
     contact_count: 2,
-    notes: 'Phụ huynh rất quan tâm khóa Starters nâng cao, hẹn thứ Bảy lên trung tâm chốt gói 6 tháng.',
-    tuition_package: 'Gói Starters Pro (6 tháng - 24 tuần)',
+    notes: 'Parents highly interested in advanced Starters course; appointment on Saturday at center to finalize 6-month package.',
+    tuition_package: 'Starters Pro Package (6 months - 24 weeks)',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
@@ -975,8 +975,8 @@ const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
     status: 'contacted',
     last_contact_date: '2026-11-11',
     contact_count: 3,
-    notes: 'Học phí quá hạn 3 ngày. Mẹ bé báo tuần này bận công tác, chuyển khoản gia hạn vào thứ Sáu.',
-    tuition_package: 'Gói Starters Foundation (1 năm)',
+    notes: 'Tuition overdue by 3 days. Mother reported busy on business trip this week, will transfer renewal fee on Friday.',
+    tuition_package: 'Starters Foundation Package (1 year)',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
@@ -986,12 +986,12 @@ const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
     current_expiry_date: '2026-11-25',
     days_remaining: 12,
     risk_level: 'medium',
-    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // HRT Trâm
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // HRT Tram
     status: 'monitoring',
     last_contact_date: '2026-11-05',
     contact_count: 1,
-    notes: 'Gia đình hài lòng tiến độ, chuẩn bị gửi thư ngỏ lộ trình Flyers Intensive.',
-    tuition_package: 'Gói Flyers Intensive (6 tháng)',
+    notes: 'Family pleased with progress, preparing invitation letter for Flyers Intensive roadmap.',
+    tuition_package: 'Flyers Intensive Package (6 months)',
     created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
   },
   {
@@ -1004,7 +1004,7 @@ const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
     assigned_hrt_id: 'u0000000-0000-0000-0000-000000000006', // HRT Vy
     status: 'monitoring',
     contact_count: 0,
-    notes: 'Học phí còn an toàn > 45 ngày.',
+    notes: 'Tuition safely remaining > 45 days.',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
@@ -1017,8 +1017,8 @@ const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
     assigned_hrt_id: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
     status: 'renewed',
     contact_count: 1,
-    notes: 'Gia đình đã tái tục gói 1 năm Movers Success.',
-    tuition_package: 'Gói Movers Success (1 năm)',
+    notes: 'Family renewed 1-year Movers Success package.',
+    tuition_package: 'Movers Success Package (1 year)',
     created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
   },
   {
@@ -1028,11 +1028,11 @@ const DEFAULT_RENEWAL_RECORDS: RenewalRecord[] = [
     current_expiry_date: '2026-11-18',
     days_remaining: 5,
     risk_level: 'high',
-    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // HRT Trâm
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // HRT Tram
     status: 'contacted',
     contact_count: 1,
-    notes: 'KAPLA Phạm Hùng: Sắp hết hạn 5 ngày, HRT Trâm đã gọi nhắc phụ huynh.',
-    tuition_package: 'Gói Flyers Standard (6 tháng)',
+    notes: 'KAPLA Pham Hung: Expiry in 5 days, HRT Tram called to remind parents.',
+    tuition_package: 'Flyers Standard Package (6 months)',
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
 ];
@@ -1046,7 +1046,7 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
 
 // Automatic LocalStorage Cache Invalidation for Clean Demo Testing
 const DATA_VERSION_KEY = 'kapla_demo_data_version';
-const CURRENT_DATA_VERSION = 'v2026_kapla_authentic_dataset_v3';
+const CURRENT_DATA_VERSION = 'v2026_kapla_authentic_dataset_v4_english';
 if (typeof window !== 'undefined') {
   const currentVer = localStorage.getItem(DATA_VERSION_KEY);
   if (currentVer !== CURRENT_DATA_VERSION) {
@@ -1059,7 +1059,7 @@ export class MockStorageService {
   private static ensureDevOnly(): void {
     if (typeof window !== 'undefined' && !isDev) {
       if (hasValidSupabaseConfig && env.VITE_ENABLE_DEV_MOCK === 'false') {
-        throw new Error('Chính sách bảo mật KAPLA: Chế độ Mock bị từ chối vì hệ thống đang kết nối Supabase Cloud chính thức.');
+        throw new Error('KAPLA Security Policy: Mock mode rejected because official Supabase Cloud is connected.');
       }
     }
   }
@@ -1075,7 +1075,7 @@ export class MockStorageService {
       profilesRaw.includes('cm.phamhung') ||
       profilesRaw.includes('hrt.mai') ||
       profilesRaw.includes('cskh.ph') ||
-      profilesRaw.includes('Lê Nguyễn') ||
+      profilesRaw.includes('Le Nguyen') ||
       profilesRaw.includes('Alexander') ||
       profilesRaw.includes('(CM)') ||
       profilesRaw.includes('(HRT)') ||
@@ -1083,7 +1083,7 @@ export class MockStorageService {
       studentsRaw.includes('17945') ||
       studentsRaw.includes('HV-LK') ||
       studentsRaw.includes('OLD-') ||
-      studentsRaw.includes('Thử Nghiệm')
+      studentsRaw.includes('Test Student')
     ) {
       Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
       localStorage.setItem('kapla_demo_data_version', currentVersion);
@@ -1123,26 +1123,26 @@ export class MockStorageService {
     const profiles = this.getProfiles();
     const caller = profiles.find((p) => p.id === callerId);
     const targetIdx = profiles.findIndex((p) => p.id === targetId);
-    if (targetIdx === -1) throw new Error('Không tìm thấy tài khoản.');
+    if (targetIdx === -1) throw new Error('Account not found.');
 
     const target = profiles[targetIdx];
     const isSysAdmin = caller?.system_role === 'system_admin' && caller?.status === 'active';
 
     if (!isSysAdmin) {
       if (updates.status !== undefined && updates.status !== target.status) {
-        throw new Error('Quyền bị từ chối: Nhân viên không thể tự thay đổi trạng thái tài khoản.');
+        throw new Error('Permission denied: Staff cannot modify own account status.');
       }
       if (updates.system_role !== undefined && updates.system_role !== target.system_role) {
-        throw new Error('Quyền bị từ chối: Nhân viên không thể tự thay đổi quyền hạn hệ thống.');
+        throw new Error('Permission denied: Staff cannot modify own system privileges.');
       }
       if (updates.rejection_reason !== undefined && updates.rejection_reason !== target.rejection_reason) {
-        throw new Error('Quyền bị từ chối: Nhân viên không thể sửa lý do phê duyệt.');
+        throw new Error('Permission denied: Staff cannot edit approval notes.');
       }
       if (updates.id !== undefined && updates.id !== target.id) {
-        throw new Error('Quyền bị từ chối: Không thể sửa định danh ID.');
+        throw new Error('Permission denied: Cannot edit identifier ID.');
       }
       if (updates.email !== undefined && updates.email !== target.email) {
-        throw new Error('Quyền bị từ chối: Không thể sửa email tài khoản.');
+        throw new Error('Permission denied: Cannot edit account email.');
       }
     }
 
@@ -1208,7 +1208,7 @@ export class MockStorageService {
     const profiles = this.getProfiles();
     const caller = profiles.find((p) => p.id === callerId);
     if (!caller || caller.status !== 'active') {
-      throw new Error('Người thực hiện không hợp lệ hoặc tài khoản chưa kích hoạt.');
+      throw new Error('Invalid actor or account not activated.');
     }
 
     const isSysAdmin = caller.system_role === 'system_admin';
@@ -1218,15 +1218,15 @@ export class MockStorageService {
     );
 
     if (!isSysAdmin && !isCMOfBranch) {
-      throw new Error('Quyền bị từ chối: Chỉ Quản trị hệ thống hoặc CM chi nhánh này mới có quyền cấp vai trò.');
+      throw new Error('Permission denied: Only System Admin or Center Manager can assign roles.');
     }
 
     if (callerId === targetUserId && !isSysAdmin) {
-      throw new Error('Quyền bị từ chối: Không thể tự cấp hoặc sửa đổi vai trò của chính mình.');
+      throw new Error('Permission denied: Cannot assign or modify your own role.');
     }
 
     if (role === 'CM' && !isSysAdmin) {
-      throw new Error('Quyền bị từ chối: Chỉ Quản trị hệ thống mới có quyền bổ nhiệm Giám đốc cơ sở (CM).');
+      throw new Error('Permission denied: Only System Admin can appoint Center Manager (CM).');
     }
 
     const existingIdx = memberships.findIndex((m) => m.user_id === targetUserId && m.branch_id === branchId);
@@ -1254,7 +1254,7 @@ export class MockStorageService {
 
     // Auto audit log
     const branches = this.getBranches();
-    const branchName = branches.find((b) => b.id === branchId)?.name || 'Chi nhánh';
+    const branchName = branches.find((b) => b.id === branchId)?.name || 'Campus';
     const targetEmail = profiles.find((p) => p.id === targetUserId)?.email;
 
     this.appendAuditLog({
@@ -1340,9 +1340,9 @@ export class MockStorageService {
     return {
       id: 'system',
       email: 'admin@kapla.edu.vn',
-      name: 'Quản trị viên Hệ thống',
+      name: 'System Administrator',
       branch_id: 'a0000000-0000-0000-0000-000000000001',
-      branch_name: 'KAPLA Phạm Hùng',
+      branch_name: 'KAPLA Pham Hung Campus',
     };
   }
 
@@ -1424,7 +1424,7 @@ export class MockStorageService {
           current_class: cls,
           current_class_name: cls?.name,
           assigned_hrt: hrt,
-          effective_hrt_name: hrt ? `${hrt.full_name} (HRT riêng)` : defHrt ? `${defHrt.full_name} (Theo lớp)` : 'Chưa phân công',
+          effective_hrt_name: hrt ? `${hrt.full_name} (Dedicated HRT)` : defHrt ? `${defHrt.full_name} (Class Default)` : 'Unassigned',
         };
       })
       .sort((a, b) => {
@@ -1511,7 +1511,7 @@ export class MockStorageService {
     const actor = this.getCurrentActor();
     const students = this.getStudents();
     const idx = students.findIndex((s) => s.id === studentId);
-    if (idx === -1) throw new Error('Không tìm thấy học viên.');
+    if (idx === -1) throw new Error('Student not found.');
     const updated: Student = {
       ...students[idx],
       ...updates,
@@ -1649,7 +1649,7 @@ export class MockStorageService {
     this.ensureDevOnly();
     const profiles = this.getProfiles();
     if (profiles.some((p) => p.email.toLowerCase() === payload.email.toLowerCase())) {
-      throw new Error('Email nhân sự này đã tồn tại trong hệ thống.');
+      throw new Error('This staff email already exists in the system.');
     }
     const newUid = 'u' + Math.random().toString(36).substring(2, 9);
     const newProfile: UserProfile = {
@@ -1702,7 +1702,7 @@ export class MockStorageService {
     this.ensureDevOnly();
     const profiles = this.getProfiles();
     const idx = profiles.findIndex((p) => p.id === userId);
-    if (idx === -1) throw new Error('Không tìm thấy tài khoản nhân sự.');
+    if (idx === -1) throw new Error('Staff account not found.');
 
     const target = profiles[idx];
     const updated: UserProfile = {
@@ -1751,7 +1751,7 @@ export class MockStorageService {
     this.ensureDevOnly();
     const profiles = this.getProfiles();
     const target = profiles.find((p) => p.id === userId);
-    if (!target) throw new Error('Không tìm thấy tài khoản nhân sự để xóa.');
+    if (!target) throw new Error('Staff account to delete not found.');
 
     const newProfiles = profiles.filter((p) => p.id !== userId);
     this.saveProfiles(newProfiles);
@@ -1793,11 +1793,11 @@ export class MockStorageService {
     const students = this.getStudents();
     const classes = this.getClasses();
     const studentIdx = students.findIndex((s) => s.id === studentId);
-    if (studentIdx === -1) throw new Error('Không tìm thấy học viên.');
+    if (studentIdx === -1) throw new Error('Student not found.');
 
     const student = students[studentIdx];
     const targetClass = classes.find((c) => c.id === toClassId);
-    if (!targetClass) throw new Error('Không tìm thấy lớp học đích.');
+    if (!targetClass) throw new Error('Target class not found.');
 
     const fromClassId = student.current_class_id || '';
     const fromBranchId = student.branch_id;
@@ -1817,7 +1817,7 @@ export class MockStorageService {
       reason,
       from_class_name: fromClass?.name,
       to_class_name: targetClass.name,
-      transferred_by_name: actor.name || 'Giám đốc cơ sở (CM)',
+      transferred_by_name: actor.name || 'Center Manager (CM)',
       created_at: new Date().toISOString(),
     });
     localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(transfers));
@@ -1874,7 +1874,7 @@ export class MockStorageService {
     const actor = this.getCurrentActor();
     const students = this.getStudents();
     const studentIdx = students.findIndex((s) => s.id === studentId);
-    if (studentIdx === -1) throw new Error('Không tìm thấy học viên.');
+    if (studentIdx === -1) throw new Error('Student not found.');
 
     const profiles = this.getProfiles();
     const newHrt = profiles.find((p) => p.id === hrtId);
@@ -1909,10 +1909,10 @@ export class MockStorageService {
         actor_name: actor.name,
         student_id: studentId,
         student_name: students[studentIdx].full_name,
-        new_hrt_name: newHrt?.full_name || 'Chưa phân công',
+        new_hrt_name: newHrt?.full_name || 'Unassigned',
         new_hrt_email: newHrt?.email,
-        previous_hrt_name: prevHrt?.full_name || 'Chưa phân công',
-        reason: reason || 'Phân công lại nhân sự phụ trách',
+        previous_hrt_name: prevHrt?.full_name || 'Unassigned',
+        reason: reason || 'Reassigning responsible staff member',
       },
     });
 
@@ -1997,7 +1997,7 @@ export class MockStorageService {
         ...a,
         student,
         class: cls,
-        assessed_by_name: assessor?.full_name || 'Giáo viên',
+        assessed_by_name: assessor?.full_name || 'Teacher',
       };
     });
   }
@@ -2057,7 +2057,7 @@ export class MockStorageService {
       ...newAssessment,
       student,
       class: cls,
-      assessed_by_name: assessor?.full_name || actor.name || 'Giáo viên',
+      assessed_by_name: assessor?.full_name || actor.name || 'Teacher',
     };
   }
 
@@ -2083,7 +2083,7 @@ export class MockStorageService {
         ...i,
         student,
         class: cls,
-        assigned_staff_name: staff?.full_name || 'Chưa gán',
+        assigned_staff_name: staff?.full_name || 'Unassigned',
         verified_by_name: verifier?.full_name,
       };
     });
@@ -2128,7 +2128,7 @@ export class MockStorageService {
       ...newIntervention,
       student,
       class: cls,
-      assigned_staff_name: staff?.full_name || 'Chưa gán',
+      assigned_staff_name: staff?.full_name || 'Unassigned',
     };
   }
 
@@ -2141,10 +2141,10 @@ export class MockStorageService {
     const actor = this.getCurrentActor();
     const interventions = this.getInterventions();
     const idx = interventions.findIndex((i) => i.id === id);
-    if (idx === -1) throw new Error('Không tìm thấy phiếu can thiệp.');
+    if (idx === -1) throw new Error('Intervention ticket not found.');
 
     if (status === 'verified') {
-      throw new Error('Chỉ Head Teacher hoặc CM mới có quyền xác minh phiếu can thiệp!');
+      throw new Error('Only Head Teacher or CM can verify intervention tickets.');
     }
 
     interventions[idx].status = status;
@@ -2179,13 +2179,13 @@ export class MockStorageService {
   ): void {
     this.ensureDevOnly();
     if (!isSysAdmin && !isHtOrCm) {
-      throw new Error('Quyền bị từ chối: Chỉ Head Teacher hoặc CM chi nhánh mới có quyền xác minh phiếu can thiệp.');
+      throw new Error('Permission denied: Only Head Teacher or Center Manager can verify intervention tickets.');
     }
 
     const actor = this.getCurrentActor();
     const interventions = this.getInterventions();
     const idx = interventions.findIndex((i) => i.id === id);
-    if (idx === -1) throw new Error('Không tìm thấy phiếu can thiệp.');
+    if (idx === -1) throw new Error('Intervention ticket not found.');
 
     interventions[idx].status = 'verified';
     interventions[idx].verified_by = callerId;
@@ -2227,7 +2227,7 @@ export class MockStorageService {
       ...f,
       student: students.find((s) => s.id === f.student_id),
       branch: branches.find((b) => b.id === f.branch_id),
-      assigned_staff_name: profiles.find((p) => p.id === f.assigned_staff_id)?.full_name || 'Chưa phân công',
+      assigned_staff_name: profiles.find((p) => p.id === f.assigned_staff_id)?.full_name || 'Unassigned',
     }));
   }
 
@@ -2269,7 +2269,7 @@ export class MockStorageService {
       ...newFeedback,
       student,
       branch,
-      assigned_staff_name: staff?.full_name || 'Chưa phân công',
+      assigned_staff_name: staff?.full_name || 'Unassigned',
     };
   }
 
@@ -2279,7 +2279,7 @@ export class MockStorageService {
     const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
     const feedbacks: ParentFeedback[] = raw ? JSON.parse(raw) : DEFAULT_FEEDBACKS;
     const idx = feedbacks.findIndex((f) => f.id === id);
-    if (idx === -1) throw new Error('Không tìm thấy phản hồi.');
+    if (idx === -1) throw new Error('Feedback not found.');
     feedbacks[idx] = { ...feedbacks[idx], ...updates, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedbacks));
 
@@ -2318,7 +2318,7 @@ export class MockStorageService {
       ...s,
       class: classes.find((c) => c.id === s.class_id),
       branch: branches.find((b) => b.id === s.branch_id),
-      teacher_name: profiles.find((p) => p.id === s.teacher_id)?.full_name || 'Chưa gán',
+      teacher_name: profiles.find((p) => p.id === s.teacher_id)?.full_name || 'Unassigned',
       attendees: (s.attendees || []).map((a) => ({
         ...a,
         student: students.find((st) => st.id === a.student_id),
@@ -2363,7 +2363,7 @@ export class MockStorageService {
       ...newSession,
       class: cls,
       branch,
-      teacher_name: teacher?.full_name || 'Chưa gán',
+      teacher_name: teacher?.full_name || 'Unassigned',
     };
   }
 
@@ -2373,7 +2373,7 @@ export class MockStorageService {
     const raw = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
     const sessions: SupplementarySession[] = raw ? JSON.parse(raw) : DEFAULT_SUPPLEMENTARY_SESSIONS;
     const idx = sessions.findIndex((s) => s.id === id);
-    if (idx === -1) throw new Error('Không tìm thấy buổi học.');
+    if (idx === -1) throw new Error('Supplementary session not found.');
     sessions[idx] = { ...sessions[idx], ...updates, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(sessions));
 
@@ -2413,7 +2413,7 @@ export class MockStorageService {
         ...r,
         student,
         branch: branches.find((b) => b.id === r.branch_id),
-        assigned_hrt_name: profiles.find((p) => p.id === r.assigned_hrt_id)?.full_name || 'Chưa gán',
+        assigned_hrt_name: profiles.find((p) => p.id === r.assigned_hrt_id)?.full_name || 'Unassigned',
       };
     });
   }
@@ -2424,7 +2424,7 @@ export class MockStorageService {
     const raw = localStorage.getItem(STORAGE_KEYS.RENEWAL);
     const records: RenewalRecord[] = raw ? JSON.parse(raw) : DEFAULT_RENEWAL_RECORDS;
     const idx = records.findIndex((r) => r.id === id);
-    if (idx === -1) throw new Error('Không tìm thấy bản ghi tái tục.');
+    if (idx === -1) throw new Error('Renewal record not found.');
     records[idx] = { ...records[idx], ...updates, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(records));
 
@@ -2476,7 +2476,7 @@ export class MockStorageService {
     const profiles = this.getProfiles();
     const caller = profiles.find((p) => p.id === callerId);
     if (caller?.system_role !== 'system_admin') {
-      throw new Error('Quyền bị từ chối: Chỉ Quản trị hệ thống (System Admin) mới có quyền chỉnh sửa cấu hình hệ thống.');
+      throw new Error('Permission denied: Only System Administrator can modify system configuration.');
     }
     const current = this.getSystemConfig();
     const updated = { ...current, ...updates };
@@ -2535,10 +2535,10 @@ export const StudentService = {
         return data.map((s: any) => ({
           ...s,
           effective_hrt_name: s.assigned_hrt
-            ? `${s.assigned_hrt.full_name} (HRT riêng)`
+            ? `${s.assigned_hrt.full_name} (Dedicated HRT)`
             : s.current_class?.default_hrt_name
-            ? `${s.current_class.default_hrt_name} (Theo lớp)`
-            : 'Chưa phân công',
+            ? `${s.current_class.default_hrt_name} (Class Default)`
+            : 'Unassigned',
         }));
       }
     }
@@ -2824,7 +2824,7 @@ export const AssessmentService = {
       if (!error && data) {
         return data.map((a: any) => ({
           ...a,
-          assessed_by_name: a.assessor?.full_name || 'Giáo viên',
+          assessed_by_name: a.assessor?.full_name || 'Teacher',
         }));
       }
     }
@@ -2906,7 +2906,7 @@ export const InterventionService = {
       if (!error && data) {
         return data.map((i: any) => ({
           ...i,
-          assigned_staff_name: i.assigned_staff?.full_name || 'Chưa gán',
+          assigned_staff_name: i.assigned_staff?.full_name || 'Unassigned',
           verified_by_name: i.verifier?.full_name,
         }));
       }
@@ -3008,7 +3008,7 @@ export const FeedbackService = {
       if (!error && data) {
         return data.map((f: any) => ({
           ...f,
-          assigned_staff_name: f.assigned_staff?.full_name || 'Chưa phân công',
+          assigned_staff_name: f.assigned_staff?.full_name || 'Unassigned',
         }));
       }
     }
@@ -3093,7 +3093,7 @@ export const SupplementaryService = {
       if (!error && data) {
         return data.map((s: any) => ({
           ...s,
-          teacher_name: s.teacher?.full_name || 'Chưa gán',
+          teacher_name: s.teacher?.full_name || 'Unassigned',
           attendees_count: s.attendees?.length || 0,
         }));
       }
@@ -3164,7 +3164,7 @@ export const RenewalService = {
           return {
             ...r,
             days_remaining: daysRemaining,
-            assigned_hrt_name: r.assigned_hrt?.full_name || 'Chưa gán',
+            assigned_hrt_name: r.assigned_hrt?.full_name || 'Unassigned',
           };
         });
       }

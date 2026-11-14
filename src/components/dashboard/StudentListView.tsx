@@ -103,7 +103,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const [academicStatusFilter, setAcademicStatusFilter] = useState<string>('all');
   const [renewalRiskFilter, setRenewalRiskFilter] = useState<string>('all');
 
-  // Month & Date Filtering (Customer Request: "lọc toàn bộ học sinh từng tháng để xem bé nào chưa được đánh giá")
+  // Month & Date Filtering (Customer Request: filter all students by month to view pending evaluations)
   const currentMonthKey = useMemo(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -242,7 +242,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         setHrtStaffs(hrts);
       }
     } catch (err: any) {
-      console.error('Lỗi tải dữ liệu học viên:', err);
+      console.error('Error loading student records:', err);
     } finally {
       setLoading(false);
     }
@@ -265,7 +265,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     if (diffDays < 0) {
       return {
         days: diffDays,
-        label: language === 'en' ? `Expired ${Math.abs(diffDays)}d ago` : `Đã hết hạn ${Math.abs(diffDays)} ngày`,
+        label: `Expired ${Math.abs(diffDays)}d ago`,
         status: 'expired' as const,
         color: 'bg-rose-50 text-rose-700 border-rose-200',
         badge: 'bg-rose-500',
@@ -274,7 +274,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     if (diffDays <= 14) {
       return {
         days: diffDays,
-        label: language === 'en' ? `Due in ${diffDays}d` : `Sắp hết hạn (${diffDays} ngày)`,
+        label: `Due in ${diffDays}d`,
         status: 'warning' as const,
         color: 'bg-amber-50 text-amber-700 border-amber-200',
         badge: 'bg-amber-500',
@@ -282,7 +282,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     }
     return {
       days: diffDays,
-      label: language === 'en' ? `${diffDays}d remaining` : `Còn ${diffDays} ngày`,
+      label: `${diffDays}d remaining`,
       status: 'active' as const,
       color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       badge: 'bg-emerald-500',
@@ -424,7 +424,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     return map;
   }, [feedbacks, interventions]);
 
-  // Monthly stats for the selected month (Image 2: "mục đích lọc là từng tháng để xem bé nào chưa được đánh giá")
+  // Monthly stats for the selected month (Customer Request: filter by month to view pending assessments)
   const monthlyStats = useMemo(() => {
     const total = students.length;
     let evaluatedCount = 0;
@@ -483,7 +483,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         matchRenewal = tuition.days < 0;
       }
 
-      // 7. Monthly Assessment Status Filter (Image 2: "xem bé nào chưa được đánh giá")
+      // 7. Monthly Assessment Status Filter (View students not assessed yet)
       const hasMonthlyAssessment = monthlyAssessmentsMap.has(s.id);
       if (assessmentStatusFilter === 'pending' && hasMonthlyAssessment) return false;
       if (assessmentStatusFilter === 'evaluated' && !hasMonthlyAssessment) return false;
@@ -520,7 +520,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
       return matchSearch && matchClass && matchLevel && matchTeacher && matchAcademic && matchRenewal;
     }).sort((a, b) => {
-      // Customer Requirement: "case nào mới update là sẽ cập nhật lên đầu tiên"
+      // Customer Requirement: Newly updated cases float to top
       const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
       const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
       return timeB - timeA;
@@ -593,7 +593,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         notes: newStudent.notes.trim() || undefined,
       });
 
-      setActionMessage({ type: 'success', text: 'Thêm học viên mới thành công!' });
+      setActionMessage({ type: 'success', text: 'New student added successfully!' });
       setShowAddModal(false);
       setNewStudent({
         student_code: '',
@@ -610,7 +610,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       });
       await loadData();
     } catch (err: any) {
-      setActionMessage({ type: 'error', text: err.message || 'Thêm học viên thất bại' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to add student' });
     } finally {
       setSubmitting(false);
     }
@@ -624,13 +624,13 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
     try {
       await StudentService.transferClass(selectedStudentForTransfer.id, transferClassId, transferReason);
-      setActionMessage({ type: 'success', text: `Chuyển lớp cho học viên ${selectedStudentForTransfer.full_name} thành công!` });
+      setActionMessage({ type: 'success', text: `Transferred class for student ${selectedStudentForTransfer.full_name} successfully!` });
       setSelectedStudentForTransfer(null);
       setTransferClassId('');
       setTransferReason('');
       await loadData();
     } catch (err: any) {
-      setActionMessage({ type: 'error', text: err.message || 'Chuyển lớp thất bại' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to transfer class' });
     } finally {
       setSubmitting(false);
     }
@@ -647,14 +647,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       await StudentService.assignHrt(selectedStudentForHrt.id, targetHrtId, hrtReason);
       setActionMessage({
         type: 'success',
-        text: targetHrtId ? 'Phân công HRT riêng thành công!' : 'Đã hủy HRT riêng, học viên quay về HRT mặc định của lớp.',
+        text: targetHrtId ? 'Designated HRT assigned successfully!' : 'Designated HRT cancelled, reverted to class default HRT.',
       });
       setSelectedStudentForHrt(null);
       setNewHrtId('');
       setHrtReason('');
       await loadData();
     } catch (err: any) {
-      setActionMessage({ type: 'error', text: err.message || 'Phân công HRT thất bại' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to assign HRT' });
     } finally {
       setSubmitting(false);
     }
@@ -706,14 +706,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       });
       setActionMessage({
         type: 'success',
-        text: language === 'en' ? 'Student profile updated successfully.' : 'Cập nhật thông tin học viên thành công.',
+        text: 'Student profile updated successfully.',
       });
       setEditingStudent(null);
       await loadData();
     } catch (err: any) {
       setActionMessage({
         type: 'error',
-        text: err?.message || 'Lỗi khi cập nhật học viên.',
+        text: err?.message || 'Error updating student record.',
       });
     } finally {
       setSubmitting(false);
@@ -735,7 +735,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       await StudentService.deleteStudent(deletingStudent.id);
       setActionMessage({
         type: 'success',
-        text: language === 'en' ? 'Student removed successfully.' : 'Đã xóa học viên thành công.',
+        text: 'Student removed successfully.',
       });
       setDeletingStudent(null);
       await loadData();
@@ -833,13 +833,11 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <GraduationCap className="w-5 h-5" />
             </span>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              {language === 'en' ? 'Student Records' : 'Hồ sơ học viên (Student Directory)'}
+              {'Student Records'}
             </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            {language === 'en'
-              ? `Manage student records, tuition expiry, class enrollment, and HRT assignments at ${currentBranch?.name || 'KAPLA'}`
-              : `Quản lý thông tin học viên, hạn học phí, lớp học và phân công HRT tại ${currentBranch?.name || 'KAPLA'}`}
+            {`Manage student records, tuition expiry, class enrollment, and HRT assignments at ${currentBranch?.name || 'KAPLA'}`}
           </p>
         </div>
 
@@ -850,7 +848,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            {language === 'en' ? 'Add New Student' : 'Thêm học viên mới'}
+            {'Add New Student'}
           </button>
         )}
       </div>
@@ -919,7 +917,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
       {/* =====================================================================
           CRM TIME & DATE FILTERING TOOLBAR (Matching Customer Image 1 & Image 2)
-          "cái lọc thời gian đâu anh", "lọc toàn bộ học sinh từng tháng để xem bé nào chưa được đánh giá"
+          CRM date dropdown & monthly assessment tracker
       ===================================================================== */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
         {/* Row 1: Search & Date Type Dropdown (Image 1) & Month Selector (Image 2) */}
@@ -995,7 +993,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
             )}
           </div>
 
-          {/* Month Selector (Từng tháng - Image 2) */}
+          {/* Month Selector (Monthly Filter) */}
           <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
             <Calendar className="w-4 h-4 text-slate-500 ml-1.5 shrink-0" />
             <span className="text-[11px] font-semibold text-slate-600 hidden sm:inline">Month:</span>
@@ -1096,7 +1094,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
           </select>
         </div>
 
-        {/* Row 3: Assessment Status Quick Filter Chips (Customer image 2: "xem bé nào chưa được đánh giá") */}
+        {/* Row 3: Assessment Status Quick Filter Chips */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
             Evaluation Status ({selectedMonth}):
@@ -1214,17 +1212,15 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       {/* Students Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500">{t('common.loading', 'Đang tải danh sách học viên...')}</div>
+          <div className="p-12 text-center text-xs text-slate-500">{t('common.loading', 'Loading student records...')}</div>
         ) : filteredStudents.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
               <GraduationCap className="w-6 h-6" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-800">{t('common.noData', 'Không có học viên nào phù hợp')}</h3>
+            <h3 className="text-sm font-semibold text-slate-800">{t('common.noData', 'No matching student records found')}</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              {language === 'en'
-                ? 'No students found within your authorized scope or current filters.'
-                : 'Không tìm thấy học viên trong phạm vi phân quyền hoặc theo bộ lọc hiện tại.'}
+              {'No students found within your authorized scope or current filters.'}
             </p>
           </div>
         ) : (
@@ -1330,7 +1326,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                         </div>
                       </td>
 
-                      {/* Monthly Assessment Status (Image 2 style: "xem bé nào chưa được đánh giá") */}
+                      {/* Monthly Assessment Status */}
                       <td className="py-3 px-3 bg-blue-50/20">
                         {isEvaluated ? (
                           <div className="space-y-1">
@@ -1411,7 +1407,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                             <>
                               <button
                                 type="button"
-                                title="Chuyển lớp cho học viên"
+                                title="Transfer student class"
                                 onClick={() => {
                                   setSelectedStudentForTransfer(student);
                                   setTransferClassId('');
@@ -1424,7 +1420,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                               <button
                                 type="button"
-                                title="Phân công hoặc đổi HRT riêng"
+                                title="Assign or change designated HRT"
                                 onClick={() => {
                                   setSelectedStudentForHrt(student);
                                   setNewHrtId(student.assigned_hrt_id || '');
@@ -1437,7 +1433,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                               <button
                                 type="button"
-                                title={language === 'en' ? 'Edit student' : 'Sửa thông tin học viên'}
+                                title={'Edit student'}
                                 onClick={() => handleOpenEditStudent(student)}
                                 className="p-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                               >
@@ -1449,7 +1445,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                           {canDeleteStudent && (
                             <button
                               type="button"
-                              title={language === 'en' ? 'Delete student (Admin Only)' : 'Xóa học viên (Chỉ Admin)'}
+                              title={'Delete student (Admin Only)'}
                               onClick={() => setDeletingStudent(student)}
                               className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                             >
@@ -1459,7 +1455,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                           <button
                             type="button"
-                            title={language === 'en' ? 'View Profile & Logcall' : 'Xem toàn bộ hồ sơ (Logcall)'}
+                            title={'View Profile & Logcall'}
                             onClick={() => setSelectedStudentForProfile(student)}
                             className="p-1.5 rounded-lg text-slate-600 hover:text-[#043264] hover:bg-blue-50 transition-colors"
                           >
@@ -1468,7 +1464,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                           <button
                             type="button"
-                            title="Xem lịch sử chuyển lớp"
+                            title="View transfer history"
                             onClick={() => openHistoryModal(student)}
                             className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                           >
@@ -1659,7 +1655,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       )}
 
       {/* =========================================================================
-          MODAL: THÊM HỌC VIÊN MỚI (NHẬP TAY)
+          MODAL: ADD NEW STUDENT
       ========================================================================= */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -1670,7 +1666,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   <GraduationCap className="w-5 h-5" />
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-                  {language === 'en' ? 'Add New Student Record' : 'Nhập tay hồ sơ học viên mới'}
+                  {'Add New Student Record'}
                 </h3>
               </div>
               <button
@@ -1686,7 +1682,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Student Code *' : 'Mã học viên *'}
+                    {'Student Code *'}
                   </label>
                   <input
                     type="text"
@@ -1699,14 +1695,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Full Name *' : 'Họ và tên học viên *'}
+                    {'Full Name *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={newStudent.full_name}
                     onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
-                    placeholder="VD: Nguyễn Văn Anh"
+                    placeholder="E.g., Alexander William"
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                   />
                 </div>
@@ -1715,7 +1711,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Date of Birth' : 'Ngày sinh'}
+                    {'Date of Birth'}
                   </label>
                   <input
                     type="date"
@@ -1726,15 +1722,15 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Gender' : 'Giới tính'}
+                    {'Gender'}
                   </label>
                   <select
                     value={newStudent.gender}
                     onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="male">{language === 'en' ? 'Male' : 'Nam'}</option>
-                    <option value="female">{language === 'en' ? 'Female' : 'Nữ'}</option>
+                    <option value="male">{'Male'}</option>
+                    <option value="female">{'Female'}</option>
                   </select>
                 </div>
               </div>
@@ -1742,20 +1738,20 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Parent Name *' : 'Họ tên phụ huynh *'}
+                    {'Parent Name *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={newStudent.parent_name}
                     onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
-                    placeholder={language === 'en' ? 'Parent Name' : 'VD: Nguyễn Thị Lan (Mẹ)'}
+                    placeholder={'Parent Name'}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                   />
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Parent Phone *' : 'Số điện thoại phụ huynh *'}
+                    {'Parent Phone *'}
                   </label>
                   <input
                     type="tel"
@@ -1770,7 +1766,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Tuition Expiry Date *' : 'Ngày hết hạn học phí *'}
+                  {'Tuition Expiry Date *'}
                 </label>
                 <input
                   type="date"
@@ -1780,21 +1776,21 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
                 <span className="text-[10px] text-slate-500">
-                  {language === 'en' ? 'Used for automatic retention alerts and tuition tracking.' : 'Dùng để tự động tính cảnh báo tái tục và hạn bảo lưu.'}
+                  {'Used for automatic retention alerts and tuition tracking.'}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Class Cohort' : 'Lớp học ghi danh'}
+                    {'Class Cohort'}
                   </label>
                   <select
                     value={newStudent.current_class_id}
                     onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">{language === 'en' ? '-- Unassigned --' : '-- Chưa xếp lớp --'}</option>
+                    <option value="">{'-- Unassigned --'}</option>
                     {classes.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.level})
@@ -1804,14 +1800,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 </div>
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Designated HRT' : 'Phân công HRT riêng'}
+                    {'Designated HRT'}
                   </label>
                   <select
                     value={newStudent.assigned_hrt_id}
                     onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">{language === 'en' ? 'Class Default' : 'Mặc định theo lớp'}</option>
+                    <option value="">{'Class Default'}</option>
                     {hrtStaffs.map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.full_name} (HRT)
@@ -1823,13 +1819,13 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Academic Notes' : 'Ghi chú học vụ'}
+                  {'Academic Notes'}
                 </label>
                 <textarea
                   rows={2}
                   value={newStudent.notes}
                   onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
-                  placeholder={language === 'en' ? 'Student characteristics, parent expectations...' : 'Đặc điểm học viên, kỳ vọng phụ huynh...'}
+                  placeholder={'Student characteristics, parent expectations...'}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -1840,7 +1836,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1848,8 +1844,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Save Student Record' : 'Lưu hồ sơ học viên')}
+                    ? ('Saving...')
+                    : ('Save Student Record')}
                 </button>
               </div>
             </form>
@@ -1858,7 +1854,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       )}
 
       {/* =========================================================================
-          MODAL: CHUYỂN LỚP HỌC VIÊN
+          MODAL: TRANSFER STUDENT CLASS
       ========================================================================= */}
       {selectedStudentForTransfer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -1869,7 +1865,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   <ArrowRightLeft className="w-5 h-5" />
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  {language === 'en' ? 'Transfer Student Class Cohort' : 'Chuyển lớp học viên'}
+                  {'Transfer Student Class Cohort'}
                 </h3>
               </div>
               <button
@@ -1885,16 +1881,16 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="font-semibold text-slate-900">{selectedStudentForTransfer.full_name}</div>
                 <div className="text-[11px] text-slate-500">
-                  {language === 'en' ? 'Current Class: ' : 'Lớp hiện tại: '}
+                  {'Current Class: '}
                   <span className="font-medium text-slate-800">
-                    {selectedStudentForTransfer.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')}
+                    {selectedStudentForTransfer.current_class?.name || ('Unassigned')}
                   </span>
                 </div>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Target Class Cohort *' : 'Chọn lớp học đích *'}
+                  {'Target Class Cohort *'}
                 </label>
                 <select
                   required
@@ -1902,12 +1898,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   onChange={(e) => setTransferClassId(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
-                  <option value="">{language === 'en' ? '-- Select Target Class --' : '-- Chọn lớp học --'}</option>
+                  <option value="">{'-- Select Target Class --'}</option>
                   {classes
                     .filter((c) => c.id !== selectedStudentForTransfer.current_class_id)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.level}) - HRT: {c.default_hrt_name || (language === 'en' ? 'Default' : 'Theo lớp')}
+                        {c.name} ({c.level}) - HRT: {c.default_hrt_name || ('Default')}
                       </option>
                     ))}
                 </select>
@@ -1915,14 +1911,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Reason for Transfer *' : 'Lý do chuyển lớp *'}
+                  {'Reason for Transfer *'}
                 </label>
                 <textarea
                   required
                   rows={3}
                   value={transferReason}
                   onChange={(e) => setTransferReason(e.target.value)}
-                  placeholder={language === 'en' ? 'e.g. Student promoted to Movers, schedule adjustment...' : 'VD: Học viên tiến bộ chuyển lên lớp Movers, đổi lịch học theo nguyện vọng phụ huynh...'}
+                  placeholder={'e.g. Student promoted to Movers, schedule adjustment...'}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -1933,7 +1929,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   onClick={() => setSelectedStudentForTransfer(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1941,8 +1937,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold disabled:opacity-50"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Transferring...' : 'Đang chuyển...')
-                    : (language === 'en' ? 'Confirm Transfer' : 'Xác nhận chuyển lớp')}
+                    ? ('Transferring...')
+                    : ('Confirm Transfer')}
                 </button>
               </div>
             </form>
@@ -1951,7 +1947,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       )}
 
       {/* =========================================================================
-          MODAL: PHÂN CÔNG HRT RIÊNG
+          MODAL: ASSIGN DESIGNATED HRT
       ========================================================================= */}
       {selectedStudentForHrt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -1962,7 +1958,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   <UserCheck className="w-5 h-5" />
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  {language === 'en' ? 'Assign Designated HRT' : 'Phân công Giáo viên chủ nhiệm (HRT)'}
+                  {'Assign Designated HRT'}
                 </h3>
               </div>
               <button
@@ -1978,16 +1974,16 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="font-semibold text-slate-900">{selectedStudentForHrt.full_name}</div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  {language === 'en' ? 'Class: ' : 'Lớp: '}
-                  {selectedStudentForHrt.current_class?.name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')} •{' '}
-                  {language === 'en' ? 'Current HRT: ' : 'Phụ trách hiện tại: '}
+                  {'Class: '}
+                  {selectedStudentForHrt.current_class?.name || ('Unassigned')} •{' '}
+                  {'Current HRT: '}
                   <span className="font-semibold text-slate-800">{selectedStudentForHrt.effective_hrt_name}</span>
                 </div>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Designated HRT *' : 'Chỉ định HRT *'}
+                  {'Designated HRT *'}
                 </label>
                 <select
                   value={newHrtId}
@@ -1995,7 +1991,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 >
                   <option value="">
-                    {language === 'en' ? '-- Class Default (Reset individual assignment) --' : '-- Mặc định theo lớp (Hủy phân công riêng) --'}
+                    {'-- Class Default (Reset individual assignment) --'}
                   </option>
                   {hrtStaffs.map((h) => (
                     <option key={h.id} value={h.id}>
@@ -2004,21 +2000,19 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   ))}
                 </select>
                 <p className="text-[10px] text-slate-500 mt-1">
-                  {language === 'en'
-                    ? '* Precedence rule: If designated HRT is set, this HRT has sole care responsibility and task routing.'
-                    : '* Theo quy tắc ưu tiên: Nếu chọn HRT riêng, chỉ HRT này mới có quyền xem học viên và nhận danh sách công việc liên quan.'}
+                  {'* Precedence rule: If designated HRT is set, this HRT has sole care responsibility and task routing.'}
                 </p>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Reason for Assignment' : 'Lý do phân công'}
+                  {'Reason for Assignment'}
                 </label>
                 <textarea
                   rows={2}
                   value={hrtReason}
                   onChange={(e) => setHrtReason(e.target.value)}
-                  placeholder={language === 'en' ? 'e.g. Special student needs dedicated experienced educator...' : 'VD: Cần giáo viên giàu kinh nghiệm đồng hành học viên đặc biệt...'}
+                  placeholder={'e.g. Special student needs dedicated experienced educator...'}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                 />
               </div>
@@ -2029,7 +2023,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   onClick={() => setSelectedStudentForHrt(null)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -2037,8 +2031,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   className="px-4 py-2 rounded-xl text-white bg-purple-700 hover:bg-purple-800 font-semibold disabled:opacity-50"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Confirm Assignment' : 'Xác nhận phân công')}
+                    ? ('Saving...')
+                    : ('Confirm Assignment')}
                 </button>
               </div>
             </form>
@@ -2047,7 +2041,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       )}
 
       {/* =========================================================================
-          MODAL: LỊCH SỬ CHUYỂN LỚP
+          MODAL: TRANSFER HISTORY
       ========================================================================= */}
       {selectedStudentForHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -2058,7 +2052,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   <History className="w-5 h-5" />
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm">
-                  {language === 'en' ? 'Class Transfer History' : 'Lịch sử chuyển lớp học viên'}
+                  {'Class Transfer History'}
                 </h3>
               </div>
               <button
@@ -2073,20 +2067,20 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
             <div className="pt-4 text-xs space-y-3 max-h-[60vh] overflow-y-auto">
               {transferHistory.length === 0 ? (
                 <div className="p-8 text-center text-slate-400">
-                  {language === 'en' ? 'No transfer records for this student.' : 'Chưa có lịch sử chuyển lớp nào cho học viên này.'}
+                  {'No transfer records for this student.'}
                 </div>
               ) : (
                 transferHistory.map((th) => (
                   <div key={th.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
                     <div className="flex items-center justify-between text-slate-500 text-[11px]">
                       <span>{th.transfer_date}</span>
-                      <span>{language === 'en' ? 'By: ' : 'Người thực hiện: '}{th.transferred_by_name || 'Admin'}</span>
+                      <span>{'By: '}{th.transferred_by_name || 'Admin'}</span>
                     </div>
                     <div className="font-semibold text-slate-800">
-                      {th.from_class_name || (language === 'en' ? 'Unassigned' : 'Chưa xếp lớp')} → {th.to_class_name}
+                      {th.from_class_name || ('Unassigned')} → {th.to_class_name}
                     </div>
                     <div className="text-slate-600 text-[11px]">
-                      {language === 'en' ? 'Reason: ' : 'Lý do: '}{th.reason}
+                      {'Reason: '}{th.reason}
                     </div>
                   </div>
                 ))
@@ -2097,7 +2091,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       )}
 
       {/* =========================================================================
-          MODAL: CHỈNH SỬA THÔNG TIN HỌC VIÊN (EDIT STUDENT)
+          MODAL: EDIT STUDENT PROFILE
       ========================================================================= */}
       {editingStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -2109,7 +2103,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-                    {language === 'en' ? 'Edit Student Profile' : 'Chỉnh sửa hồ sơ học viên'}
+                    {'Edit Student Profile'}
                   </h3>
                   <p className="text-[11px] font-mono text-slate-500">{editingStudent.student_code}</p>
                 </div>
@@ -2127,7 +2121,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Student Full Name *' : 'Họ và tên học viên *'}
+                    {'Student Full Name *'}
                   </label>
                   <input
                     type="text"
@@ -2140,7 +2134,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Student Code *' : 'Mã học viên *'}
+                    {'Student Code *'}
                   </label>
                   <input
                     type="text"
@@ -2155,7 +2149,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Date of Birth' : 'Ngày sinh'}
+                    {'Date of Birth'}
                   </label>
                   <input
                     type="date"
@@ -2167,15 +2161,15 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Gender' : 'Giới tính'}
+                    {'Gender'}
                   </label>
                   <select
                     value={editStudentForm.gender}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, gender: e.target.value as any })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
-                    <option value="male">{language === 'en' ? 'Male' : 'Nam'}</option>
-                    <option value="female">{language === 'en' ? 'Female' : 'Nữ'}</option>
+                    <option value="male">{'Male'}</option>
+                    <option value="female">{'Female'}</option>
                   </select>
                 </div>
               </div>
@@ -2183,7 +2177,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Parent Name *' : 'Họ tên phụ huynh *'}
+                    {'Parent Name *'}
                   </label>
                   <input
                     type="text"
@@ -2196,7 +2190,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Parent Phone *' : 'Số điện thoại phụ huynh *'}
+                    {'Parent Phone *'}
                   </label>
                   <input
                     type="tel"
@@ -2210,7 +2204,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Parent Email' : 'Email phụ huynh'}
+                  {'Parent Email'}
                 </label>
                 <input
                   type="email"
@@ -2223,14 +2217,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Class' : 'Lớp học'}
+                    {'Class'}
                   </label>
                   <select
                     value={editStudentForm.current_class_id}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, current_class_id: e.target.value })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
-                    <option value="">{language === 'en' ? '— No Class Assigned —' : '— Chưa xếp lớp —'}</option>
+                    <option value="">{'— No Class Assigned —'}</option>
                     {classes.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} ({c.level})
@@ -2241,14 +2235,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Assigned HRT' : 'HRT Phụ trách'}
+                    {'Assigned HRT'}
                   </label>
                   <select
                     value={editStudentForm.assigned_hrt_id}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, assigned_hrt_id: e.target.value })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
-                    <option value="">{language === 'en' ? '— Class Default HRT —' : '— Mặc định theo lớp —'}</option>
+                    <option value="">{'— Class Default HRT —'}</option>
                     {hrtStaffs.map((h) => (
                       <option key={h.id} value={h.id}>
                         {h.full_name} ({h.email})
@@ -2261,7 +2255,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Tuition Expiry Date *' : 'Hạn đóng học phí *'}
+                    {'Tuition Expiry Date *'}
                   </label>
                   <input
                     type="date"
@@ -2274,31 +2268,31 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Student Status' : 'Trạng thái học vụ'}
+                    {'Student Status'}
                   </label>
                   <select
                     value={editStudentForm.status}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, status: e.target.value as StudentStatus })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
-                    <option value="active">{language === 'en' ? 'Active' : 'Đang học'}</option>
-                    <option value="warning">{language === 'en' ? 'Tuition Due Soon' : 'Cần chú ý phí'}</option>
-                    <option value="expired">{language === 'en' ? 'Expired' : 'Đã hết hạn'}</option>
-                    <option value="reserved">{language === 'en' ? 'Reserved' : 'Bảo lưu'}</option>
-                    <option value="dropped">{language === 'en' ? 'Dropped' : 'Thôi học'}</option>
+                    <option value="active">{'Active'}</option>
+                    <option value="warning">{'Tuition Due Soon'}</option>
+                    <option value="expired">{'Expired'}</option>
+                    <option value="reserved">{'Reserved'}</option>
+                    <option value="dropped">{'Dropped'}</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Academic & Care Notes' : 'Ghi chú học vụ / Chăm sóc'}
+                  {'Academic & Care Notes'}
                 </label>
                 <textarea
                   rows={2}
                   value={editStudentForm.notes}
                   onChange={(e) => setEditStudentForm({ ...editStudentForm, notes: e.target.value })}
-                  placeholder={language === 'en' ? 'Learning strengths, weaknesses, special care instructions...' : 'Điểm mạnh, điểm yếu, lưu ý chăm sóc đặc biệt...'}
+                  placeholder={'Learning strengths, weaknesses, special care instructions...'}
                   className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
                 />
               </div>
@@ -2309,14 +2303,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   onClick={() => setEditingStudent(null)}
                   className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
                 >
-                  <span>{language === 'en' ? 'Save Changes' : 'Lưu thay đổi'}</span>
+                  <span>{'Save Changes'}</span>
                 </button>
               </div>
             </form>
@@ -2325,7 +2319,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       )}
 
       {/* =========================================================================
-          MODAL: XÁC NHẬN XÓA HỌC VIÊN (CONFIRM DELETE STUDENT)
+          MODAL: CONFIRM DELETE STUDENT
       ========================================================================= */}
       {deletingStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -2334,12 +2328,10 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <Trash2 className="w-5 h-5" />
             </div>
             <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-              {language === 'en' ? 'Delete Student Record?' : 'Xác nhận xóa học viên?'}
+              {'Delete Student Record?'}
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              {language === 'en'
-                ? `Are you sure you want to delete ${deletingStudent.full_name} (${deletingStudent.student_code})? All associated tasks, assessments, and attendance records will be permanently removed.`
-                : `Bạn có chắc chắn muốn xóa học viên ${deletingStudent.full_name} (${deletingStudent.student_code}) không? Toàn bộ nhật ký chăm sóc, đánh giá và phụ đạo liên quan sẽ bị xóa vĩnh viễn.`}
+              {`Are you sure you want to delete ${deletingStudent.full_name} (${deletingStudent.student_code})? All associated tasks, assessments, and attendance records will be permanently removed.`}
             </p>
 
             <div className="mt-5 flex items-center justify-end gap-2">
@@ -2348,7 +2340,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 onClick={() => setDeletingStudent(null)}
                 className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
               >
-                {language === 'en' ? 'Cancel' : 'Hủy'}
+                {'Cancel'}
               </button>
               <button
                 type="button"
@@ -2356,14 +2348,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 onClick={handleDeleteStudentSubmit}
                 className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
               >
-                <span>{language === 'en' ? 'Delete Permanently' : 'Xóa vĩnh viễn'}</span>
+                <span>{'Delete Permanently'}</span>
               </button>
             </div>
           </div>
         </div>
       )}
       {/* =========================================================================
-          MODAL: XEM HỒ SƠ TOÀN DIỆN & LOGCALL (STUDENT PROFILE MODAL)
+          MODAL: VIEW COMPREHENSIVE STUDENT PROFILE
       ========================================================================= */}
       <StudentProfileModal
         student={selectedStudentForProfile}

@@ -50,63 +50,63 @@ export const TopBar: React.FC<TopBarProps> = ({
     switch (activeSection) {
       case 'overview':
         return {
-          title: t('topbar.overviewTitle', 'Tổng quan học vụ & Tiến độ'),
-          subtitle: t('topbar.overviewSub', 'Theo dõi tổng thể học viên, mức độ rủi ro và các mốc can thiệp.'),
+          title: t('topbar.overviewTitle', 'Academic Overview & Progress'),
+          subtitle: t('topbar.overviewSub', 'Track students, risk levels, and intervention milestones.'),
         };
       case 'students':
         return {
-          title: t('topbar.studentsTitle', 'Hồ sơ học viên (Student Records)'),
-          subtitle: t('topbar.studentsSub', 'Quản lý thông tin học tập, phân công HRT và hạn phí học viên.'),
+          title: t('topbar.studentsTitle', 'Student Records Directory'),
+          subtitle: t('topbar.studentsSub', 'Manage student records, HRT assignments, and tuition expiry.'),
         };
       case 'care_tasks':
         return {
-          title: t('topbar.careTasksTitle', 'Công việc HRT (Care Worklist)'),
-          subtitle: t('topbar.careTasksSub', 'Nhiệm vụ chăm sóc học viên theo quy tắc ưu tiên HRT riêng.'),
+          title: t('topbar.careTasksTitle', 'HRT Care Tasks & Worklist'),
+          subtitle: t('topbar.careTasksSub', 'Student care follow-up enforcing designated HRT priority.'),
         };
       case 'assessments':
         return {
-          title: t('topbar.assessmentsTitle', 'Đánh giá năng lực 4 kỹ năng'),
-          subtitle: t('topbar.assessmentsSub', 'Ghi nhận Nghe - Nói - Đọc - Viết theo chuẩn Cambridge & Oxford Quality.'),
+          title: t('topbar.assessmentsTitle', '4-Skill Competency Assessments'),
+          subtitle: t('topbar.assessmentsSub', 'Evaluate Listening, Speaking, Reading, Writing on Cambridge & Oxford scales.'),
         };
       case 'interventions':
         return {
-          title: t('topbar.interventionsTitle', 'Phiếu can thiệp học thuật (Academic Interventions)'),
-          subtitle: t('topbar.interventionsSub', 'Theo dõi kế hoạch khắc phục, hạn xử lý và xác minh kết quả.'),
+          title: t('topbar.interventionsTitle', 'Academic Interventions & Care Plans'),
+          subtitle: t('topbar.interventionsSub', 'Track remediation plans, deadlines, and Head Teacher verification sign-offs.'),
         };
       case 'feedback':
         return {
-          title: t('topbar.feedbackTitle', 'Phản hồi & Kỳ vọng phụ huynh (Parent Feedback)'),
-          subtitle: t('topbar.feedbackSub', 'Ghi nhận và điều phối giải quyết khiếu nại, góp ý từ phụ huynh.'),
+          title: t('topbar.feedbackTitle', 'Parent Inquiries & Feedback'),
+          subtitle: t('topbar.feedbackSub', 'Receive, categorize, and resolve parent inquiries under 48h SLA.'),
         };
       case 'supplementary':
         return {
-          title: t('topbar.supplementaryTitle', 'Lớp học bổ trợ (Supplementary Tutoring)'),
-          subtitle: t('topbar.supplementarySub', 'Theo dõi điểm danh, nội dung bổ trợ và nhận xét sự tiến bộ.'),
+          title: t('topbar.supplementaryTitle', 'Supplementary Tutoring Sessions'),
+          subtitle: t('topbar.supplementarySub', 'Track tutoring attendance, session topics, and progress evaluations.'),
         };
       case 'renewal':
         return {
-          title: t('topbar.renewalTitle', 'Quản lý tái tục & Rủi ro học phí'),
-          subtitle: t('topbar.renewalSub', 'Cảnh báo hạn tái tục, hỗ trợ chăm sóc phụ huynh trước hạn.'),
+          title: t('topbar.renewalTitle', 'Tuition Renewals & Risk Management'),
+          subtitle: t('topbar.renewalSub', 'Forecast upcoming expirations and manage proactive parent outreach.'),
         };
       case 'staff_roles':
         return {
-          title: t('topbar.staffRolesTitle', 'Quản trị nhân sự & Phân quyền'),
-          subtitle: t('topbar.staffRolesSub', 'Phê duyệt tài khoản mới, phân bổ vai trò và chi nhánh công tác.'),
+          title: t('topbar.staffRolesTitle', 'Staff Roles & Permission Approvals'),
+          subtitle: t('topbar.staffRolesSub', 'Review staff registrations, assign roles, and configure campus access.'),
         };
       case 'branches_classes':
         return {
-          title: t('topbar.branchesClassesTitle', 'Chi nhánh & Danh sách lớp học'),
-          subtitle: t('topbar.branchesClassesSub', 'Cấu hình chi nhánh hoạt động và thiết lập phân công lớp.'),
+          title: t('topbar.branchesClassesTitle', 'Campuses & Classrooms'),
+          subtitle: t('topbar.branchesClassesSub', 'Manage campus locations, classrooms, and schedules.'),
         };
       case 'logs':
         return {
-          title: t('topbar.logsTitle', 'Nhật ký tác nghiệp (Activity Logs)'),
-          subtitle: t('topbar.logsSub', 'Lịch sử tương tác giữa các bộ phận chuyên môn và học viên.'),
+          title: t('topbar.logsTitle', 'Activity & Audit Trail'),
+          subtitle: t('topbar.logsSub', 'Historical trace of operational actions and student interactions.'),
         };
       default:
         return {
           title: 'KAPLA Staff Dashboard',
-          subtitle: t('brand.portalSubtitle', 'Hệ thống quản lý đào tạo & chăm sóc học viên'),
+          subtitle: t('brand.portalSubtitle', 'Academic Administration & Staff Operations Portal'),
         };
     }
   }, [activeSection, t]);
@@ -123,7 +123,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           type="button"
           onClick={onOpenMobileMenu}
           className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl"
-          aria-label="Mở menu"
+          aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -153,7 +153,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             >
               <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
               <span className="max-w-[130px] sm:max-w-[180px] truncate">
-                {currentBranch ? tDb(currentBranch.name) : t('topbar.selectBranch', 'Chọn chi nhánh')}
+                {currentBranch ? tDb(currentBranch.name) : t('topbar.selectBranch', 'Select Campus')}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
@@ -166,7 +166,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 />
                 <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 animate-in fade-in zoom-in-95 duration-100">
                   <div className="px-3 py-1.5 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                    {isSystemAdmin ? t('topbar.systemBranches', 'Chi nhánh toàn hệ thống') : t('topbar.assignedBranches', 'Chi nhánh phân bổ')}
+                    {isSystemAdmin ? t('topbar.systemBranches', 'All System Campuses') : t('topbar.assignedBranches', 'Assigned Campus')}
                   </div>
                   {availableBranches.map((branch) => {
                     const isSelected = currentBranch?.id === branch.id;
@@ -185,7 +185,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         <div className="truncate">
                           <span className="block font-medium">{tDb(branch.name)}</span>
                           <span className="text-[10px] text-slate-400 font-mono">
-                            {language === 'en' ? `Code: ${branch.code}` : `Mã: ${branch.code}`}
+                            {`Code: ${branch.code}`}
                           </span>
                         </div>
                         {isSelected && <CheckCircle2 className="w-4 h-4 text-[#026fd7] shrink-0" />}
@@ -200,11 +200,11 @@ export const TopBar: React.FC<TopBarProps> = ({
           <div
             id="branch-fixed-badge"
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-[#043264] bg-blue-50/80 border border-blue-200/80 rounded-xl"
-            title={language === 'en' ? 'Assigned Operating Campus' : 'Cơ sở công tác được phân bổ'}
+            title={'Assigned Operating Campus'}
           >
             <Building2 className="w-3.5 h-3.5 text-[#026fd7]" />
             <span className="max-w-[130px] sm:max-w-[180px] truncate">
-              {currentBranch ? tDb(currentBranch.name) : (language === 'en' ? 'Campus' : 'Chi nhánh')}
+              {currentBranch ? tDb(currentBranch.name) : ('Campus')}
             </span>
           </div>
         )}
@@ -214,8 +214,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           <RoleBadgeIcon role={profile?.system_role || 'customer_service'} size="sm" />
           <span>
             {profile?.system_role === 'system_admin'
-              ? (language === 'en' ? 'System Admin' : 'Quản trị hệ thống')
-              : activeRole || (language === 'en' ? 'Staff' : 'Nhân viên')}
+              ? ('System Admin')
+              : activeRole || ('Staff')}
           </span>
         </div>
 
@@ -225,7 +225,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             onClick={onRefreshData}
             disabled={refreshing}
-            title={t('topbar.refreshData', 'Làm mới dữ liệu')}
+            title={t('topbar.refreshData', 'Refresh Data')}
             className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -260,7 +260,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     {profile?.email}
                   </p>
                   <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {t('topbar.emailVerified', '● Email đã xác thực')}
+                    {t('topbar.emailVerified', '● Email Verified')}
                   </span>
                 </div>
 
@@ -274,7 +274,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{t('topbar.refreshData', 'Làm mới phiên làm việc')}</span>
+                    <span>{t('topbar.refreshData', 'Refresh Session')}</span>
                   </button>
 
                   <button
@@ -286,7 +286,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     className="w-full text-left px-4 py-2 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2"
                   >
                     <LogOut className="w-3.5 h-3.5" />
-                    <span>{t('auth.logout', 'Đăng xuất')}</span>
+                    <span>{t('auth.logout', 'Sign Out')}</span>
                   </button>
                 </div>
               </div>

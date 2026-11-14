@@ -169,7 +169,7 @@ export const StaffApprovalView: React.FC = () => {
           p_system_role: selectedSystemRole,
         });
         if (error) throw error;
-        setActionNotice({ type: 'success', text: `Đã phê duyệt tài khoản ${approvingUser.full_name} với vai trò ${selectedRole}.` });
+        setActionNotice({ type: 'success', text: `Approved account ${approvingUser.full_name} with role ${selectedRole}.` });
       } else {
         // Mock Implementation
         const currentProfiles = MockStorageService.getProfiles();
@@ -199,7 +199,7 @@ export const StaffApprovalView: React.FC = () => {
         }
         MockStorageService.saveMemberships(currentMemberships);
 
-        const branchName = availableBranches.find((b) => b.id === selectedBranchId)?.name || 'Chi nhánh';
+        const branchName = availableBranches.find((b) => b.id === selectedBranchId)?.name || 'Campus';
         MockStorageService.appendAuditLog({
           actor_email: profile?.email || 'admin@kapla.edu.vn',
           action: 'APPROVE_USER_ROLE',
@@ -209,13 +209,13 @@ export const StaffApprovalView: React.FC = () => {
           details: { role: selectedRole, system_role: selectedSystemRole },
         });
 
-        setActionNotice({ type: 'success', text: `Đã duyệt thành công tài khoản ${approvingUser.full_name} làm ${selectedRole} tại ${branchName}.` });
+        setActionNotice({ type: 'success', text: `Successfully approved account ${approvingUser.full_name} as ${selectedRole} at ${branchName}.` });
       }
 
       setApprovingUser(null);
       await loadData();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi phê duyệt tài khoản.';
+      const msg = err instanceof Error ? err.message : 'Error approving staff account.';
       setActionNotice({ type: 'error', text: msg });
     } finally {
       setSubmittingAction(false);
@@ -224,7 +224,7 @@ export const StaffApprovalView: React.FC = () => {
 
   // Deactivate User
   const handleDeactivate = async (target: UserProfile) => {
-    if (!confirm(`Bạn có chắc chắn muốn vô hiệu hóa tài khoản của "${target.full_name}"?`)) return;
+    if (!confirm(`Are you sure you want to disable the account of "${target.full_name}"?`)) return;
 
     setLoading(true);
     setActionNotice(null);
@@ -232,7 +232,7 @@ export const StaffApprovalView: React.FC = () => {
       if (realSupabase) {
         const { error } = await realSupabase.rpc('deactivate_user', {
           p_target_user_id: target.id,
-          p_reason: 'Tạm ngưng quyền truy cập từ trang quản trị nhân sự.',
+          p_reason: 'Access suspended from staff administration panel.',
         });
         if (error) throw error;
       } else {
@@ -240,7 +240,7 @@ export const StaffApprovalView: React.FC = () => {
         const idx = currentProfiles.findIndex((p) => p.id === target.id);
         if (idx !== -1) {
           currentProfiles[idx].status = 'inactive';
-          currentProfiles[idx].rejection_reason = 'Tạm ngưng quyền truy cập từ trang quản trị nhân sự.';
+          currentProfiles[idx].rejection_reason = 'Access suspended from staff administration panel.';
           MockStorageService.saveProfiles(currentProfiles);
         }
 
@@ -248,14 +248,14 @@ export const StaffApprovalView: React.FC = () => {
           actor_email: profile?.email || 'admin@kapla.edu.vn',
           action: 'DEACTIVATE_USER',
           target_user_email: target.email,
-          details: { reason: 'Vô hiệu hóa tài khoản' },
+          details: { reason: 'Account disabled' },
         });
       }
 
-      setActionNotice({ type: 'success', text: `Đã vô hiệu hóa tài khoản ${target.full_name}.` });
+      setActionNotice({ type: 'success', text: `Disabled account ${target.full_name}.` });
       await loadData();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi khi vô hiệu hóa tài khoản.';
+      const msg = err instanceof Error ? err.message : 'Error disabling staff account.';
       setActionNotice({ type: 'error', text: msg });
     } finally {
       setLoading(false);
@@ -285,14 +285,14 @@ export const StaffApprovalView: React.FC = () => {
       await StaffService.createStaff(addForm);
       setActionNotice({
         type: 'success',
-        text: language === 'en' ? 'Staff account created successfully.' : 'Đã tạo tài khoản nhân sự thành công.',
+        text: 'Staff account created successfully.',
       });
       setShowAddModal(false);
       await loadData();
     } catch (err: any) {
       setActionNotice({
         type: 'error',
-        text: err?.message || 'Lỗi khi tạo nhân sự mới.',
+        text: err?.message || 'Error creating new staff member.',
       });
     } finally {
       setSubmittingAction(false);
@@ -321,14 +321,14 @@ export const StaffApprovalView: React.FC = () => {
       await StaffService.updateStaff(editingStaff.id, editForm);
       setActionNotice({
         type: 'success',
-        text: language === 'en' ? 'Staff profile updated successfully.' : 'Đã cập nhật thông tin nhân sự thành công.',
+        text: 'Staff profile updated successfully.',
       });
       setEditingStaff(null);
       await loadData();
     } catch (err: any) {
       setActionNotice({
         type: 'error',
-        text: err?.message || 'Lỗi khi cập nhật nhân sự.',
+        text: err?.message || 'Error updating staff member.',
       });
     } finally {
       setSubmittingAction(false);
@@ -340,7 +340,7 @@ export const StaffApprovalView: React.FC = () => {
     if (deletingStaff.id === profile?.id) {
       setActionNotice({
         type: 'error',
-        text: language === 'en' ? 'Cannot delete your own active account.' : 'Không thể xóa tài khoản của chính bạn.',
+        text: 'Cannot delete your own active account.',
       });
       setDeletingStaff(null);
       return;
@@ -351,14 +351,14 @@ export const StaffApprovalView: React.FC = () => {
       await StaffService.deleteStaff(deletingStaff.id);
       setActionNotice({
         type: 'success',
-        text: language === 'en' ? 'Staff account deleted permanently.' : 'Đã xóa tài khoản nhân sự thành công.',
+        text: 'Staff account deleted permanently.',
       });
       setDeletingStaff(null);
       await loadData();
     } catch (err: any) {
       setActionNotice({
         type: 'error',
-        text: err?.message || 'Lỗi khi xóa nhân sự.',
+        text: err?.message || 'Error deleting staff member.',
       });
     } finally {
       setSubmittingAction(false);
@@ -452,7 +452,7 @@ export const StaffApprovalView: React.FC = () => {
               }`}
             >
               <Clock className="w-4 h-4" />
-              <span>{language === 'en' ? 'Pending Approvals' : 'Tài khoản chờ duyệt'}</span>
+              <span>{'Pending Approvals'}</span>
               {pendingUsers.length > 0 && (
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
@@ -478,9 +478,7 @@ export const StaffApprovalView: React.FC = () => {
           >
             <ShieldCheck className="w-4 h-4" />
             <span>
-              {language === 'en'
-                ? `Staff Directory (${activeStaffList.length})`
-                : `Danh sách nhân sự (${activeStaffList.length})`}
+              {`Staff Directory (${activeStaffList.length})`}
             </span>
           </button>
 
@@ -495,7 +493,7 @@ export const StaffApprovalView: React.FC = () => {
               }`}
             >
               <History className="w-4 h-4" />
-              <span>{language === 'en' ? 'Permission Audit Trail' : 'Nhật ký phân quyền'}</span>
+              <span>{'Permission Audit Trail'}</span>
             </button>
           )}
         </div>
@@ -503,9 +501,7 @@ export const StaffApprovalView: React.FC = () => {
         <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
           <Lock className="w-3.5 h-3.5 text-blue-600" />
           <span>
-            {language === 'en'
-              ? 'Enforced with PostgreSQL RLS & UUID RBAC at database level'
-              : 'RLS & UUID RBAC bảo vệ trực tiếp ở tầng dữ liệu'}
+            {'Enforced with PostgreSQL RLS & UUID RBAC at database level'}
           </span>
         </div>
       </div>
@@ -518,19 +514,15 @@ export const StaffApprovalView: React.FC = () => {
           <div className="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/60">
             <div>
               <h3 className="font-display text-sm font-bold text-slate-900">
-                {language === 'en'
-                  ? 'Pending Staff Account Approvals'
-                  : 'Danh sách tài khoản nhân viên đang chờ phê duyệt'}
+                {'Pending Staff Account Approvals'}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {language === 'en'
-                  ? 'Staff members who verified email and require Center Manager (CM) or System Admin approval before accessing systems.'
-                  : 'Nhân viên đã xác thực email và cần Giám đốc cơ sở (CM) hoặc Quản trị hệ thống cấp vai trò trước khi được truy cập.'}
+                {'Staff members who verified email and require Center Manager (CM) or System Admin approval before accessing systems.'}
               </p>
             </div>
             {!canApprove && (
               <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-lg font-medium self-start">
-                {language === 'en' ? 'Approval restricted to CM / Admin' : 'Chỉ CM hoặc Admin mới có quyền duyệt'}
+                {'Approval restricted to CM / Admin'}
               </span>
             )}
           </div>
@@ -538,7 +530,7 @@ export const StaffApprovalView: React.FC = () => {
           {loading ? (
             <div className="p-8 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-[#026fd7]" />
-              {language === 'en' ? 'Loading pending staff...' : 'Đang tải danh sách chờ duyệt...'}
+              {'Loading pending staff...'}
             </div>
           ) : pendingUsers.length === 0 ? (
             <div className="p-12 text-center space-y-3">
@@ -546,12 +538,10 @@ export const StaffApprovalView: React.FC = () => {
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <h4 className="font-display text-sm font-bold text-slate-800">
-                {language === 'en' ? 'No Pending Approval Requests' : 'Không có tài khoản nào chờ duyệt'}
+                {'No Pending Approval Requests'}
               </h4>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                {language === 'en'
-                  ? 'All newly registered staff members have been assigned to their respective branches.'
-                  : 'Tất cả nhân sự đăng ký mới đã được phân bổ quyền vào các chi nhánh tương ứng.'}
+                {'All newly registered staff members have been assigned to their respective branches.'}
               </p>
             </div>
           ) : (
@@ -559,12 +549,12 @@ export const StaffApprovalView: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200">
-                    <th className="py-3 px-5">{language === 'en' ? 'Full Name' : 'Họ và tên'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Work Email' : 'Email công việc'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Phone Number' : 'Số điện thoại'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Target Campus' : 'Cơ sở đăng ký'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Registered Date' : 'Thời gian đăng ký'}</th>
-                    <th className="py-3 px-5 text-right">{language === 'en' ? 'Actions' : 'Thao tác'}</th>
+                    <th className="py-3 px-5">{'Full Name'}</th>
+                    <th className="py-3 px-4">{'Work Email'}</th>
+                    <th className="py-3 px-4">{'Phone Number'}</th>
+                    <th className="py-3 px-4">{'Target Campus'}</th>
+                    <th className="py-3 px-4">{'Registered Date'}</th>
+                    <th className="py-3 px-5 text-right">{'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -588,14 +578,14 @@ export const StaffApprovalView: React.FC = () => {
                             </span>
                           ) : (
                             <span className="text-slate-400 italic">
-                              {language === 'en' ? 'No Campus Selected' : 'Chưa chọn cơ sở'}
+                              {'No Campus Selected'}
                             </span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-slate-500">
                           {u.created_at
-                            ? new Date(u.created_at).toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN')
-                            : (language === 'en' ? 'New' : 'Mới đăng ký')}
+                            ? new Date(u.created_at).toLocaleDateString('en-US')
+                            : ('New')}
                         </td>
                         <td className="py-3.5 px-5 text-right">
                           {canApprove ? (
@@ -606,7 +596,7 @@ export const StaffApprovalView: React.FC = () => {
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-2xs"
                               >
                                 <UserCheck className="w-3.5 h-3.5" />
-                                {language === 'en' ? 'Approve & Assign Role' : 'Phê duyệt & Cấp vai trò'}
+                                {'Approve & Assign Role'}
                               </button>
                               <button
                                 type="button"
@@ -614,12 +604,12 @@ export const StaffApprovalView: React.FC = () => {
                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
                               >
                                 <UserX className="w-3.5 h-3.5" />
-                                {language === 'en' ? 'Deactivate' : 'Khóa'}
+                                {'Deactivate'}
                               </button>
                             </div>
                           ) : (
                             <span className="text-slate-400 italic text-[11px]">
-                              {language === 'en' ? 'CM/Admin only' : 'Chỉ CM/Admin duyệt'}
+                              {'CM/Admin only'}
                             </span>
                           )}
                         </td>
@@ -646,7 +636,7 @@ export const StaffApprovalView: React.FC = () => {
               </div>
               <input
                 type="text"
-                placeholder={language === 'en' ? 'Search staff by name or email...' : 'Tìm nhân sự theo tên hoặc email...'}
+                placeholder={'Search staff by name or email...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7]"
@@ -659,7 +649,7 @@ export const StaffApprovalView: React.FC = () => {
                 onChange={(e) => setFilterBranch(e.target.value)}
                 className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-slate-700"
               >
-                <option value="all">{language === 'en' ? 'All Campuses' : 'Tất cả chi nhánh'}</option>
+                <option value="all">{'All Campuses'}</option>
                 {availableBranches.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -672,9 +662,9 @@ export const StaffApprovalView: React.FC = () => {
                 onChange={(e) => setFilterRole(e.target.value)}
                 className="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-slate-700"
               >
-                <option value="all">{language === 'en' ? 'All Roles' : 'Tất cả vai trò'}</option>
+                <option value="all">{'All Roles'}</option>
                 <option value="system_admin">
-                  {language === 'en' ? 'System Administrator' : 'Quản trị hệ thống (System Admin)'}
+                  {'System Administrator'}
                 </option>
                 {ALL_STAFF_ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -690,7 +680,7 @@ export const StaffApprovalView: React.FC = () => {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-2xs shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>{language === 'en' ? 'Add Staff' : 'Thêm nhân sự'}</span>
+                  <span>{'Add Staff'}</span>
                 </button>
               )}
             </div>
@@ -702,13 +692,13 @@ export const StaffApprovalView: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200">
-                    <th className="py-3 px-5">{language === 'en' ? 'Staff Member' : 'Nhân viên'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Email & Contact' : 'Email & Liên hệ'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Campus & Role' : 'Chi nhánh & Vai trò'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'System Access' : 'Quyền hệ thống'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Status' : 'Trạng thái'}</th>
+                    <th className="py-3 px-5">{'Staff Member'}</th>
+                    <th className="py-3 px-4">{'Email & Contact'}</th>
+                    <th className="py-3 px-4">{'Campus & Role'}</th>
+                    <th className="py-3 px-4">{'System Access'}</th>
+                    <th className="py-3 px-4">{'Status'}</th>
                     {canApprove && (
-                      <th className="py-3 px-5 text-right">{language === 'en' ? 'Actions' : 'Điều chỉnh'}</th>
+                      <th className="py-3 px-5 text-right">{'Actions'}</th>
                     )}
                   </tr>
                 </thead>
@@ -721,7 +711,7 @@ export const StaffApprovalView: React.FC = () => {
                       <td className="py-3.5 px-4">
                         <div className="font-mono text-slate-800">{staff.email}</div>
                         <div className="text-[11px] text-slate-500">
-                          {staff.phone || (language === 'en' ? 'No phone updated' : 'Chưa cập nhật SĐT')}
+                          {staff.phone || ('No phone updated')}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
@@ -732,7 +722,7 @@ export const StaffApprovalView: React.FC = () => {
                               return (
                                 <div key={m.id} className="flex items-center gap-1.5">
                                   <span className="font-medium text-[#043264]">
-                                    {br ? br.name : (language === 'en' ? 'Campus' : 'Chi nhánh')}
+                                    {br ? br.name : ('Campus')}
                                   </span>
                                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800">
                                     {m.role}
@@ -743,7 +733,7 @@ export const StaffApprovalView: React.FC = () => {
                           </div>
                         ) : (
                           <span className="text-slate-400 italic">
-                            {language === 'en' ? 'No Campus Assigned' : 'Chưa phân bổ chi nhánh'}
+                            {'No Campus Assigned'}
                           </span>
                         )}
                       </td>
@@ -751,11 +741,11 @@ export const StaffApprovalView: React.FC = () => {
                         {staff.system_role === 'system_admin' ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                             <ShieldCheck className="w-3 h-3 text-indigo-600" />
-                            {language === 'en' ? 'System Administrator' : 'Quản trị hệ thống'}
+                            {'System Administrator'}
                           </span>
                         ) : (
                           <span className="text-slate-500">
-                            {language === 'en' ? 'Branch Staff' : 'Nhân viên'}
+                            {'Branch Staff'}
                           </span>
                         )}
                       </td>
@@ -775,9 +765,9 @@ export const StaffApprovalView: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenApproveModal(staff)}
                               className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors"
-                              title={language === 'en' ? 'Update Role' : 'Cấp/Đổi quyền'}
+                              title={'Update Role'}
                             >
-                              {language === 'en' ? 'Role' : 'Đổi quyền'}
+                              {'Role'}
                             </button>
                             {isSystemAdmin && (
                               <>
@@ -785,7 +775,7 @@ export const StaffApprovalView: React.FC = () => {
                                   type="button"
                                   onClick={() => handleOpenEditModal(staff)}
                                   className="p-1 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                  title={language === 'en' ? 'Edit Profile' : 'Sửa thông tin'}
+                                  title={'Edit Profile'}
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
@@ -796,12 +786,8 @@ export const StaffApprovalView: React.FC = () => {
                                   className="p-1 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
                                   title={
                                     staff.id === profile?.id
-                                      ? language === 'en'
-                                        ? 'Cannot delete yourself'
-                                        : 'Không thể tự xóa tài khoản'
-                                      : language === 'en'
-                                      ? 'Delete Account'
-                                      : 'Xóa tài khoản'
+                                      ? 'Cannot delete yourself'
+                                      : 'Delete Account'
                                   }
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -828,18 +814,14 @@ export const StaffApprovalView: React.FC = () => {
           <div className="px-5 py-4 border-b border-slate-200 bg-slate-50/60 flex items-center justify-between">
             <div>
               <h3 className="font-display text-sm font-bold text-slate-900">
-                {language === 'en'
-                  ? 'Role Grants, Updates & Revocations (Audit Log)'
-                  : 'Nhật ký cấp, đổi và thu hồi quyền (Audit Log)'}
+                {'Role Grants, Updates & Revocations (Audit Log)'}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {language === 'en'
-                  ? 'Transparent security audit trail enforced by database Row-Level Security policies.'
-                  : 'Ghi nhận lịch sử kiểm toán bảo mật minh bạch theo tiêu chuẩn phân quyền RLS.'}
+                {'Transparent security audit trail enforced by database Row-Level Security policies.'}
               </p>
             </div>
             <span className="text-[11px] font-mono text-slate-400">
-              {language === 'en' ? 'Real-time automatic capture' : 'Tự động ghi nhận theo thời gian thực'}
+              {'Real-time automatic capture'}
             </span>
           </div>
 
@@ -847,22 +829,22 @@ export const StaffApprovalView: React.FC = () => {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-200">
-                  <th className="py-3 px-5">{language === 'en' ? 'Timestamp' : 'Thời gian'}</th>
-                  <th className="py-3 px-4">{language === 'en' ? 'Actor' : 'Người thực hiện'}</th>
-                  <th className="py-3 px-4">{language === 'en' ? 'Action' : 'Hành động'}</th>
-                  <th className="py-3 px-4">{language === 'en' ? 'Target Account' : 'Tài khoản đối tượng'}</th>
-                  <th className="py-3 px-4">{language === 'en' ? 'Campus / Branch' : 'Chi nhánh'}</th>
-                  <th className="py-3 px-5">{language === 'en' ? 'Recorded Details' : 'Chi tiết ghi nhận'}</th>
+                  <th className="py-3 px-5">{'Timestamp'}</th>
+                  <th className="py-3 px-4">{'Actor'}</th>
+                  <th className="py-3 px-4">{'Action'}</th>
+                  <th className="py-3 px-4">{'Target Account'}</th>
+                  <th className="py-3 px-4">{'Campus / Branch'}</th>
+                  <th className="py-3 px-5">{'Recorded Details'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {auditLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-5 font-mono text-slate-500 whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString(language === 'en' ? 'en-US' : 'vi-VN')}
+                      {new Date(log.created_at).toLocaleString('en-US')}
                     </td>
                     <td className="py-3 px-4 font-semibold text-slate-800">
-                      {log.actor_email || (language === 'en' ? 'System' : 'Hệ thống')}
+                      {log.actor_email || ('System')}
                     </td>
                     <td className="py-3 px-4">
                       <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
@@ -873,7 +855,7 @@ export const StaffApprovalView: React.FC = () => {
                       {log.target_user_email || '—'}
                     </td>
                     <td className="py-3 px-4 text-[#043264] font-medium">
-                      {log.branch_name || (language === 'en' ? 'System' : 'Hệ thống')}
+                      {log.branch_name || ('System')}
                     </td>
                     <td className="py-3 px-5 text-slate-600 font-mono text-[11px]">
                       {JSON.stringify(log.details)}
@@ -899,7 +881,7 @@ export const StaffApprovalView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-display text-base font-bold text-slate-900">
-                    {language === 'en' ? 'Approve & Assign Staff Role' : 'Phê duyệt vai trò nhân sự'}
+                    {'Approve & Assign Staff Role'}
                   </h3>
                   <p className="text-xs text-slate-500">{approvingUser.full_name} ({approvingUser.email})</p>
                 </div>
@@ -917,7 +899,7 @@ export const StaffApprovalView: React.FC = () => {
               {/* Branch Selection */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Assigned Campus *' : 'Chi nhánh phân bổ công tác *'}
+                  {'Assigned Campus *'}
                 </label>
                 <select
                   required
@@ -936,7 +918,7 @@ export const StaffApprovalView: React.FC = () => {
               {/* Staff Role Selection */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Branch Operational Role *' : 'Vai trò nghiệp vụ tại chi nhánh *'}
+                  {'Branch Operational Role *'}
                 </label>
                 <select
                   required
@@ -952,7 +934,7 @@ export const StaffApprovalView: React.FC = () => {
                 </select>
                 <p className="text-[11px] text-slate-500 mt-1.5 bg-slate-50 p-2 rounded-lg border border-slate-200">
                   <span className="font-semibold text-slate-700">
-                    {language === 'en' ? 'Role Scope:' : 'Mô tả quyền:'}
+                    {'Role Scope:'}
                   </span>{' '}
                   {ROLE_DESCRIPTIONS[selectedRole]}
                 </p>
@@ -962,7 +944,7 @@ export const StaffApprovalView: React.FC = () => {
               {isSystemAdmin && (
                 <div className="pt-2 border-t border-slate-200">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Elevated System Privileges' : 'Quyền hạn hệ thống cấp cao'}
+                    {'Elevated System Privileges'}
                   </label>
                   <select
                     value={selectedSystemRole}
@@ -970,14 +952,10 @@ export const StaffApprovalView: React.FC = () => {
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
                     <option value="staff">
-                      {language === 'en'
-                        ? 'Standard Staff (Branch-scoped)'
-                        : 'Nhân viên thông thường (Theo vai trò chi nhánh)'}
+                      {'Standard Staff (Branch-scoped)'}
                     </option>
                     <option value="system_admin">
-                      {language === 'en'
-                        ? 'System Administrator (Full multi-branch access)'
-                        : 'Quản trị viên hệ thống (Toàn quyền đa chi nhánh)'}
+                      {'System Administrator (Full multi-branch access)'}
                     </option>
                   </select>
                 </div>
@@ -990,7 +968,7 @@ export const StaffApprovalView: React.FC = () => {
                   onClick={() => setApprovingUser(null)}
                   className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy bỏ'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -998,7 +976,7 @@ export const StaffApprovalView: React.FC = () => {
                   className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-2 shadow-sm disabled:opacity-70"
                 >
                   {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {language === 'en' ? 'Confirm Permissions' : 'Xác nhận phân quyền'}
+                  {'Confirm Permissions'}
                 </button>
               </div>
             </form>
@@ -1007,7 +985,7 @@ export const StaffApprovalView: React.FC = () => {
       )}
 
       {/* =========================================================================
-          MODAL: THÊM NHÂN SỰ MỚI (ADD STAFF MEMBER)
+          MODAL: ADD NEW STAFF MEMBER
       ========================================================================= */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -1019,10 +997,10 @@ export const StaffApprovalView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-                    {language === 'en' ? 'Add Staff Account' : 'Thêm tài khoản nhân sự'}
+                    {'Add Staff Account'}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    {language === 'en' ? 'Create new employee with designated role' : 'Cấp tài khoản mới và phân quyền làm việc'}
+                    {'Create new employee with designated role'}
                   </p>
                 </div>
               </div>
@@ -1038,12 +1016,12 @@ export const StaffApprovalView: React.FC = () => {
             <form onSubmit={handleCreateStaff} className="mt-4 space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Full Name *' : 'Họ và tên *'}
+                  {'Full Name *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'en' ? 'e.g. Nguyen Van An' : 'VD: Nguyễn Văn An'}
+                  placeholder={'e.g. Nguyen Van An'}
                   value={addForm.full_name}
                   onChange={(e) => setAddForm({ ...addForm, full_name: e.target.value })}
                   className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
@@ -1052,7 +1030,7 @@ export const StaffApprovalView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Work Email *' : 'Email công việc *'}
+                  {'Work Email *'}
                 </label>
                 <input
                   type="email"
@@ -1067,7 +1045,7 @@ export const StaffApprovalView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Phone Number' : 'Số điện thoại'}
+                    {'Phone Number'}
                   </label>
                   <input
                     type="tel"
@@ -1080,7 +1058,7 @@ export const StaffApprovalView: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Initial Password' : 'Mật khẩu ban đầu'}
+                    {'Initial Password'}
                   </label>
                   <input
                     type="text"
@@ -1094,7 +1072,7 @@ export const StaffApprovalView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Branch / Campus *' : 'Chi nhánh trực thuộc *'}
+                    {'Branch / Campus *'}
                   </label>
                   <select
                     required
@@ -1112,7 +1090,7 @@ export const StaffApprovalView: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Operational Role *' : 'Vai trò nghiệp vụ *'}
+                    {'Operational Role *'}
                   </label>
                   <select
                     required
@@ -1132,15 +1110,15 @@ export const StaffApprovalView: React.FC = () => {
               {isSystemAdmin && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'System Access' : 'Phân quyền hệ thống'}
+                    {'System Access'}
                   </label>
                   <select
                     value={addForm.system_role}
                     onChange={(e) => setAddForm({ ...addForm, system_role: e.target.value as SystemRole })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
-                    <option value="staff">{language === 'en' ? 'Branch Staff' : 'Nhân viên cơ sở'}</option>
-                    <option value="system_admin">{language === 'en' ? 'System Administrator' : 'Quản trị hệ thống'}</option>
+                    <option value="staff">{'Branch Staff'}</option>
+                    <option value="system_admin">{'System Administrator'}</option>
                   </select>
                 </div>
               )}
@@ -1151,7 +1129,7 @@ export const StaffApprovalView: React.FC = () => {
                   onClick={() => setShowAddModal(false)}
                   className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1159,7 +1137,7 @@ export const StaffApprovalView: React.FC = () => {
                   className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
                 >
                   {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{language === 'en' ? 'Create Account' : 'Tạo tài khoản'}</span>
+                  <span>{'Create Account'}</span>
                 </button>
               </div>
             </form>
@@ -1168,7 +1146,7 @@ export const StaffApprovalView: React.FC = () => {
       )}
 
       {/* =========================================================================
-          MODAL: CHỈNH SỬA THÔNG TIN NHÂN SỰ (EDIT STAFF MEMBER)
+          MODAL: EDIT STAFF MEMBER
       ========================================================================= */}
       {editingStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -1180,7 +1158,7 @@ export const StaffApprovalView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-                    {language === 'en' ? 'Edit Staff Profile' : 'Chỉnh sửa nhân sự'}
+                    {'Edit Staff Profile'}
                   </h3>
                   <p className="text-[11px] font-mono text-slate-500">{editingStaff.email}</p>
                 </div>
@@ -1197,7 +1175,7 @@ export const StaffApprovalView: React.FC = () => {
             <form onSubmit={handleUpdateStaff} className="mt-4 space-y-3.5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Full Name *' : 'Họ và tên *'}
+                  {'Full Name *'}
                 </label>
                 <input
                   type="text"
@@ -1210,7 +1188,7 @@ export const StaffApprovalView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {language === 'en' ? 'Phone Number' : 'Số điện thoại'}
+                  {'Phone Number'}
                 </label>
                 <input
                   type="tel"
@@ -1223,7 +1201,7 @@ export const StaffApprovalView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Campus' : 'Chi nhánh'}
+                    {'Campus'}
                   </label>
                   <select
                     value={editForm.branch_id}
@@ -1240,7 +1218,7 @@ export const StaffApprovalView: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Role' : 'Vai trò'}
+                    {'Role'}
                   </label>
                   <select
                     value={editForm.role}
@@ -1260,30 +1238,30 @@ export const StaffApprovalView: React.FC = () => {
                 {isSystemAdmin && (
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      {language === 'en' ? 'System Role' : 'Quyền hệ thống'}
+                      {'System Role'}
                     </label>
                     <select
                       value={editForm.system_role}
                       onChange={(e) => setEditForm({ ...editForm, system_role: e.target.value as SystemRole })}
                       className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                     >
-                      <option value="staff">{language === 'en' ? 'Staff' : 'Nhân viên'}</option>
-                      <option value="system_admin">{language === 'en' ? 'System Admin' : 'Quản trị hệ thống'}</option>
+                      <option value="staff">{'Staff'}</option>
+                      <option value="system_admin">{'System Admin'}</option>
                     </select>
                   </div>
                 )}
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {language === 'en' ? 'Status' : 'Trạng thái'}
+                    {'Status'}
                   </label>
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   >
-                    <option value="active">{language === 'en' ? 'Active' : 'Hoạt động'}</option>
-                    <option value="inactive">{language === 'en' ? 'Inactive' : 'Tạm khóa'}</option>
+                    <option value="active">{'Active'}</option>
+                    <option value="inactive">{'Inactive'}</option>
                   </select>
                 </div>
               </div>
@@ -1294,7 +1272,7 @@ export const StaffApprovalView: React.FC = () => {
                   onClick={() => setEditingStaff(null)}
                   className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1302,7 +1280,7 @@ export const StaffApprovalView: React.FC = () => {
                   className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
                 >
                   {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{language === 'en' ? 'Save Changes' : 'Lưu thay đổi'}</span>
+                  <span>{'Save Changes'}</span>
                 </button>
               </div>
             </form>
@@ -1311,7 +1289,7 @@ export const StaffApprovalView: React.FC = () => {
       )}
 
       {/* =========================================================================
-          MODAL: XÁC NHẬN XÓA TÀI KHOẢN (CONFIRM DELETE STAFF)
+          MODAL: CONFIRM DELETE STAFF
       ========================================================================= */}
       {deletingStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -1320,12 +1298,10 @@ export const StaffApprovalView: React.FC = () => {
               <Trash2 className="w-5 h-5" />
             </div>
             <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-              {language === 'en' ? 'Delete Staff Account?' : 'Xóa tài khoản nhân sự?'}
+              {'Delete Staff Account?'}
             </h3>
             <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-              {language === 'en'
-                ? `Are you sure you want to delete ${deletingStaff.full_name} (${deletingStaff.email})? All branch assignments will be removed.`
-                : `Bạn có chắc chắn muốn xóa nhân sự ${deletingStaff.full_name} (${deletingStaff.email}) không? Toàn bộ phân quyền chi nhánh sẽ bị gỡ bỏ.`}
+              {`Are you sure you want to delete ${deletingStaff.full_name} (${deletingStaff.email})? All branch assignments will be removed.`}
             </p>
 
             <div className="mt-5 flex items-center justify-end gap-2">
@@ -1334,7 +1310,7 @@ export const StaffApprovalView: React.FC = () => {
                 onClick={() => setDeletingStaff(null)}
                 className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
               >
-                {language === 'en' ? 'Cancel' : 'Hủy'}
+                {'Cancel'}
               </button>
               <button
                 type="button"
@@ -1343,7 +1319,7 @@ export const StaffApprovalView: React.FC = () => {
                 className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
               >
                 {submittingAction && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>{language === 'en' ? 'Delete' : 'Xóa vĩnh viễn'}</span>
+                <span>{'Delete'}</span>
               </button>
             </div>
           </div>

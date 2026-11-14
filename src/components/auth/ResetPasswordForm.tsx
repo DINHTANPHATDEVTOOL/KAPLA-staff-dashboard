@@ -20,11 +20,11 @@ export const ResetPasswordForm: React.FC = () => {
     setErrorMsg(null);
 
     if (newPassword.length < 6) {
-      setErrorMsg('Mật khẩu mới phải có tối thiểu 6 ký tự.');
+      setErrorMsg('New password must be at least 6 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setErrorMsg('Mật khẩu xác nhận không khớp.');
+      setErrorMsg('Passwords do not match.');
       return;
     }
 
@@ -34,7 +34,7 @@ export const ResetPasswordForm: React.FC = () => {
       if (res.success) {
         setIsSuccess(true);
       } else {
-        setErrorMsg(res.error || 'Cập nhật mật khẩu thất bại.');
+        setErrorMsg(res.error || 'Password update failed.');
       }
     } finally {
       setSubmitting(false);
@@ -43,8 +43,8 @@ export const ResetPasswordForm: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Đặt lại mật khẩu mới"
-      subtitle="Thiết lập mật khẩu an toàn mới cho tài khoản nhân sự KAPLA."
+      title="Set New Password"
+      subtitle="Set a new secure password for your KAPLA staff account."
     >
       {isSuccess ? (
         <div className="text-center space-y-4 py-3">
@@ -52,17 +52,17 @@ export const ResetPasswordForm: React.FC = () => {
             <CheckCircle2 className="w-7 h-7" />
           </div>
           <h3 className="font-display text-base font-bold text-slate-900">
-            Cập nhật mật khẩu thành công!
+            Password Updated Successfully!
           </h3>
           <p className="text-xs text-slate-600">
-            Bây giờ bạn có thể đăng nhập bằng mật khẩu mới vừa tạo.
+            You can now sign in using your new credentials.
           </p>
           <button
             type="button"
             onClick={() => setAuthScreen('login')}
             className="w-full mt-4 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-all"
           >
-            Đăng nhập ngay
+            Sign In Now
           </button>
         </div>
       ) : (
@@ -76,7 +76,7 @@ export const ResetPasswordForm: React.FC = () => {
 
           <div>
             <label htmlFor="reset-pass" className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Mật khẩu mới <span className="text-red-500">*</span>
+              New Password <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -88,7 +88,7 @@ export const ResetPasswordForm: React.FC = () => {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder="Minimum 6 characters"
                 className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all placeholder:text-slate-400"
               />
             </div>
@@ -96,7 +96,7 @@ export const ResetPasswordForm: React.FC = () => {
 
           <div>
             <label htmlFor="reset-confirm" className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+              Confirm New Password <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -108,7 +108,7 @@ export const ResetPasswordForm: React.FC = () => {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder="Re-enter new password"
                 className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#026fd7] focus:border-transparent transition-all placeholder:text-slate-400"
               />
             </div>
@@ -122,10 +122,10 @@ export const ResetPasswordForm: React.FC = () => {
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Đang lưu...
+                Saving...
               </>
             ) : (
-              'Cập nhật mật khẩu'
+              'Update Password'
             )}
           </button>
         </form>

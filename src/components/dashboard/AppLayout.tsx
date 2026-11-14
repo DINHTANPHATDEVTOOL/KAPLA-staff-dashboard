@@ -82,7 +82,7 @@ export const AppLayout: React.FC = () => {
       </div>
       <div className="space-y-1.5">
         <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
-          Kế hoạch triển khai: {phase}
+          Implementation Roadmap: {phase}
         </span>
         <h3 className="font-display text-lg font-bold text-slate-900 pt-2">
           {title}
@@ -98,7 +98,7 @@ export const AppLayout: React.FC = () => {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          Khám phá phân hệ Quản trị nhân sự & Phân quyền (T02)
+          Explore Staff Roles & Permissions Module (T02)
         </button>
       </div>
     </div>

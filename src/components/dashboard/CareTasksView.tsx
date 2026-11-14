@@ -1,5 +1,5 @@
 // ==============================================================================
-// KAPLA Staff Dashboard — T03: HRT Care Tasks (Áp dụng quy tắc ưu tiên HRT riêng)
+// KAPLA Staff Dashboard — T03: HRT Care Tasks (Enforcing Designated HRT Priority)
 // ==============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -31,11 +31,11 @@ export const CareTasksView: React.FC = () => {
     CareTaskType,
     { label: string; color: string; icon: React.ComponentType<{ className?: string }> }
   > = useMemo(() => ({
-    care_call: { label: language === 'en' ? 'Care Call' : 'Cuộc gọi chăm sóc', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: PhoneCall },
-    progress_report: { label: language === 'en' ? 'Progress Report' : 'Báo cáo tiến độ', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: ClipboardList },
-    tuition_reminder: { label: language === 'en' ? 'Tuition Reminder' : 'Nhắc tái tục học phí', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: AlertCircle },
-    attendance_check: { label: language === 'en' ? 'Attendance Check' : 'Kiểm tra điểm danh', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
-    academic_support: { label: language === 'en' ? 'Academic Support' : 'Hỗ trợ học vụ', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Calendar },
+    care_call: { label: 'Care Call', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: PhoneCall },
+    progress_report: { label: 'Progress Report', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: ClipboardList },
+    tuition_reminder: { label: 'Tuition Reminder', color: 'bg-amber-50 text-amber-700 border-amber-200', icon: AlertCircle },
+    attendance_check: { label: 'Attendance Check', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
+    academic_support: { label: 'Academic Support', color: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: Calendar },
   }), [language]);
 
   const [tasks, setTasks] = useState<StudentTask[]>([]);
@@ -50,7 +50,7 @@ export const CareTasksView: React.FC = () => {
       const data = await StudentService.getCareTasks(branchId, profile?.id, isSysAdmin, isCM);
       setTasks(data);
     } catch (err) {
-      console.error('Lỗi tải danh sách công việc:', err);
+      console.error('Error loading care tasks:', err);
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export const CareTasksView: React.FC = () => {
         prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t))
       );
     } catch (err: any) {
-      console.error('Lỗi cập nhật trạng thái task:', err);
+      console.error('Error updating task status:', err);
     }
   };
 
@@ -111,19 +111,17 @@ export const CareTasksView: React.FC = () => {
               <ClipboardList className="w-5 h-5" />
             </span>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              {language === 'en' ? 'Designated HRT Care Worklist' : 'Danh sách công việc HRT phụ trách'}
+              {'Designated HRT Care Worklist'}
             </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            {language === 'en'
-              ? `Student care and progress tracking tasks within authorized scope (${currentBranch?.name ? tDb(currentBranch.name) : 'KAPLA'})`
-              : `Nhiệm vụ chăm sóc và theo dõi tiến độ của các học viên thuộc phạm vi trách nhiệm (${currentBranch?.name ? tDb(currentBranch.name) : 'KAPLA'})`}
+            {`Student care and progress tracking tasks within authorized scope (${currentBranch?.name ? tDb(currentBranch.name) : 'KAPLA'})`}
           </p>
         </div>
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-xs text-purple-800">
           <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
-          <span>{language === 'en' ? 'Designated Individual HRT Priority' : 'Áp dụng quy tắc ưu tiên HRT riêng'}</span>
+          <span>{'Designated Individual HRT Priority'}</span>
         </div>
       </div>
 
@@ -131,19 +129,19 @@ export const CareTasksView: React.FC = () => {
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-            {language === 'en' ? 'Total Tasks' : 'Tổng công việc'}
+            {'Total Tasks'}
           </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/40">
           <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
-            {language === 'en' ? 'Action Needed' : 'Cần xử lý'}
+            {'Action Needed'}
           </span>
           <div className="text-2xl font-bold text-amber-800 mt-1">{stats.pending}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
           <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
-            {language === 'en' ? 'Completed' : 'Đã hoàn thành'}
+            {'Completed'}
           </span>
           <div className="text-2xl font-bold text-emerald-800 mt-1">{stats.completed}</div>
         </div>
@@ -157,7 +155,7 @@ export const CareTasksView: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={language === 'en' ? 'Search by task title or student name...' : 'Tìm theo tiêu đề công việc hoặc tên học sinh...'}
+            placeholder={'Search by task title or student name...'}
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           />
         </div>
@@ -168,9 +166,9 @@ export const CareTasksView: React.FC = () => {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">{language === 'en' ? 'All Statuses' : 'Tất cả trạng thái'}</option>
-            <option value="pending">{language === 'en' ? 'Pending' : 'Chưa hoàn thành'}</option>
-            <option value="completed">{language === 'en' ? 'Completed' : 'Đã hoàn thành'}</option>
+            <option value="all">{'All Statuses'}</option>
+            <option value="pending">{'Pending'}</option>
+            <option value="completed">{'Completed'}</option>
           </select>
         </div>
       </div>
@@ -178,19 +176,17 @@ export const CareTasksView: React.FC = () => {
       {/* Task List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
         {loading ? (
-          <div className="p-12 text-center text-xs text-slate-500">{t('common.loading', 'Đang tải danh sách công việc...')}</div>
+          <div className="p-12 text-center text-xs text-slate-500">{t('common.loading', 'Loading care tasks...')}</div>
         ) : filteredTasks.length === 0 ? (
           <div className="p-12 text-center">
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h3 className="text-sm font-semibold text-slate-800">
-              {language === 'en' ? 'No Care Tasks Found' : 'Không có công việc nào'}
+              {'No Care Tasks Found'}
             </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              {language === 'en'
-                ? 'All student care duties within your responsibility have been completed or none pending.'
-                : 'Tất cả các nhiệm vụ chăm sóc thuộc trách nhiệm của bạn đã hoàn tất hoặc không có phát sinh.'}
+              {'All student care duties within your responsibility have been completed or none pending.'}
             </p>
           </div>
         ) : (
@@ -230,9 +226,9 @@ export const CareTasksView: React.FC = () => {
                         </span>
 
                         <span className="text-[11px] text-slate-500 font-medium">
-                          {language === 'en' ? 'Student: ' : 'Học viên: '}
+                          {'Student: '}
                           <span className="text-slate-900 font-semibold">
-                            {task.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
+                            {task.student?.full_name || ('Student')}
                           </span>
                           {task.student?.current_class && ` (${task.student.current_class.name})`}
                         </span>
@@ -259,7 +255,7 @@ export const CareTasksView: React.FC = () => {
                   <div className="text-right shrink-0">
                     <div className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-600">
                       <Clock className="w-3 h-3 text-slate-400" />
-                      {language === 'en' ? 'Due: ' : 'Hạn: '}{task.due_date}
+                      {'Due: '}{task.due_date}
                     </div>
                   </div>
                 </div>

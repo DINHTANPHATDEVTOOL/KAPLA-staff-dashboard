@@ -133,7 +133,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
         setClasses(branchId ? cls.filter((c) => c.branch_id === branchId) : cls);
       }
     } catch (err) {
-      console.error('Lỗi tải đánh giá năng lực:', err);
+      console.error('Error loading assessments:', err);
     } finally {
       setLoading(false);
     }
@@ -261,8 +261,8 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
       setIsChangingStudent(false);
       await loadData();
     } catch (err: any) {
-      console.error('Lỗi tạo bài đánh giá:', err);
-      alert(err.message || 'Lỗi khi lưu bài đánh giá');
+      console.error('Error creating assessment:', err);
+      alert(err.message || 'Error saving assessment');
     } finally {
       setSubmitting(false);
     }
@@ -313,7 +313,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
     });
   }, [assessments, searchTerm, classFilter, riskFilter, progressFilter, dateFrom, dateTo, monthFilter]);
 
-  // Pending students for targetMonth (Customer Request: "lọc toàn bộ học sinh từng tháng để xem bé nào chưa được đánh giá cập nhật")
+  // Pending students for targetMonth (Customer Request: filter all students by month to view pending evaluations)
   const pendingStudents = useMemo(() => {
     return students.filter((s) => {
       const hasAssessment = assessments.some((a) => {
@@ -356,9 +356,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
             </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            {language === 'en'
-              ? `Track Listening, Speaking, Reading, Writing via Cambridge & Oxford standards at ${currentBranch?.name || 'KAPLA'}`
-              : `Ghi nhận Nghe - Nói - Đọc - Viết theo thang chuẩn Cambridge & Oxford Quality tại ${currentBranch?.name || 'KAPLA'}`}
+            {`Track Listening, Speaking, Reading, Writing via Cambridge & Oxford standards at ${currentBranch?.name || 'KAPLA'}`}
           </p>
         </div>
 
@@ -417,41 +415,41 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-            {language === 'en' ? 'Total Assessments' : 'Tổng lượt đánh giá'}
+            {'Total Assessments'}
           </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</div>
           <span className="text-[10px] text-slate-400">
-            {language === 'en' ? 'Evaluated cohort records' : 'Hồ sơ đánh giá lưu hệ thống'}
+            {'Evaluated cohort records'}
           </span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
           <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
-            {language === 'en' ? 'On Track & Above' : 'Tiến độ tốt (Đạt chuẩn)'}
+            {'On Track & Above'}
           </span>
           <div className="text-2xl font-bold text-emerald-800 mt-1">{stats.safeCount}</div>
           <span className="text-[10px] text-emerald-600">
-            {language === 'en' ? 'Competency standards met' : 'Đạt yêu cầu Oxford Quality'}
+            {'Competency standards met'}
           </span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/40">
           <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
-            {language === 'en' ? 'Academic Risk (< Level)' : 'Phát hiện nguy cơ học thuật'}
+            {'Academic Risk (< Level)'}
           </span>
           <div className="text-2xl font-bold text-rose-800 mt-1">{stats.riskCount}</div>
           <span className="text-[10px] text-rose-600 font-medium">
-            {language === 'en' ? 'Requires Intervention' : 'Cần tạo phiếu can thiệp'}
+            {'Requires Intervention'}
           </span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-blue-200 bg-blue-50/40">
           <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider">
-            {language === 'en' ? 'Progress Rate' : 'Tỷ lệ cải thiện'}
+            {'Progress Rate'}
           </span>
           <div className="text-2xl font-bold text-blue-800 mt-1">{stats.improvedRate}%</div>
           <span className="text-[10px] text-blue-600">
-            {language === 'en' ? 'Marked as Improved' : 'Có tiến bộ so với kỳ trước'}
+            {'Marked as Improved'}
           </span>
         </div>
       </div>
@@ -517,9 +515,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={
-                language === 'en'
-                  ? 'Search by student name, code, period, assessor...'
-                  : 'Tìm theo tên học sinh, mã HS, kỳ đánh giá, giáo viên...'
+                'Search by student name, code, period, assessor...'
               }
               className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
             />
@@ -547,9 +543,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               onChange={(e) => setRiskFilter(e.target.value)}
               className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-medium"
             >
-              <option value="all">{language === 'en' ? 'All Risk Levels' : 'Tất cả mức độ'}</option>
-              <option value="risk">{language === 'en' ? 'Academic Risk (Below Level)' : 'Có nguy cơ học tập (Below Level)'}</option>
-              <option value="safe">{language === 'en' ? 'On Track & Above' : 'Đạt chuẩn trở lên'}</option>
+              <option value="all">{'All Risk Levels'}</option>
+              <option value="risk">{'Academic Risk (Below Level)'}</option>
+              <option value="safe">{'On Track & Above'}</option>
             </select>
 
             {/* Progress vs Previous filter (Image 9) */}
@@ -558,11 +554,11 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               onChange={(e) => setProgressFilter(e.target.value)}
               className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-medium"
             >
-              <option value="all">{language === 'en' ? 'All Progress' : 'Tất cả tiến độ'}</option>
-              <option value="Improved">{language === 'en' ? 'Improved' : 'Tiến bộ (Improved)'}</option>
-              <option value="Maintained">{language === 'en' ? 'Maintained' : 'Duy trì (Maintained)'}</option>
-              <option value="Needs Attention">{language === 'en' ? 'Needs Attention' : 'Cần chú ý (Needs Attention)'}</option>
-              <option value="First Assessment">{language === 'en' ? 'First Assessment' : 'Đánh giá đầu tiên'}</option>
+              <option value="all">{'All Progress'}</option>
+              <option value="Improved">{'Improved'}</option>
+              <option value="Maintained">{'Maintained'}</option>
+              <option value="Needs Attention">{'Needs Attention'}</option>
+              <option value="First Assessment">{'First Assessment'}</option>
             </select>
 
             {/* Month shortcut filter (Image 8) */}
@@ -571,9 +567,9 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               onChange={(e) => setMonthFilter(e.target.value)}
               className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
             >
-              <option value="all">{language === 'en' ? 'All Months' : 'Tất cả tháng'}</option>
-              <option value="this_month">{language === 'en' ? 'This Month' : 'Tháng này'}</option>
-              <option value="last_month">{language === 'en' ? 'Last Month' : 'Tháng trước'}</option>
+              <option value="all">{'All Months'}</option>
+              <option value="this_month">{'This Month'}</option>
+              <option value="last_month">{'Last Month'}</option>
             </select>
           </div>
         </div>
@@ -582,7 +578,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 text-xs text-slate-600">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-medium text-slate-500">{language === 'en' ? 'Date (From):' : 'Từ ngày:'}</span>
+            <span className="font-medium text-slate-500">{'Date (From):'}</span>
             <input
               type="date"
               value={dateFrom}
@@ -592,7 +588,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="font-medium text-slate-500">{language === 'en' ? 'Date (To):' : 'Đến ngày:'}</span>
+            <span className="font-medium text-slate-500">{'Date (To):'}</span>
             <input
               type="date"
               value={dateTo}
@@ -615,7 +611,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               }}
               className="text-[#026fd7] hover:underline font-medium text-xs ml-auto"
             >
-              {language === 'en' ? 'Reset All Filters' : 'Đặt lại bộ lọc'}
+              {'Reset All Filters'}
             </button>
           )}
         </div>
@@ -742,18 +738,16 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
           {loading ? (
             <div className="p-12 text-center text-xs text-slate-500">
-              {language === 'en' ? 'Loading assessment records...' : 'Đang tải danh sách đánh giá...'}
+              {'Loading assessment records...'}
             </div>
           ) : filteredAssessments.length === 0 ? (
             <div className="p-12 text-center">
               <ClipboardCheck className="w-10 h-10 text-slate-400 mx-auto mb-2" />
               <h4 className="text-sm font-semibold text-slate-800">
-                {language === 'en' ? 'No Assessments Found' : 'Không có bài đánh giá nào'}
+                {'No Assessments Found'}
               </h4>
               <p className="text-xs text-slate-500 mt-1">
-                {language === 'en'
-                  ? 'Adjust your filter criteria or record a new 4-skill assessment.'
-                  : 'Thử thay đổi bộ lọc hoặc thêm bài đánh giá mới.'}
+                {'Adjust your filter criteria or record a new 4-skill assessment.'}
               </p>
             </div>
           ) : (
@@ -761,15 +755,15 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
                   <tr>
-                    <th className="py-3 px-4">{language === 'en' ? 'Date' : 'Ngày'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Student' : 'Học viên'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Class & Level' : 'Lớp học'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Term' : 'Kỳ'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? '4-Skill Competencies' : 'Năng lực 4 kỹ năng'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Progress' : 'Tiến độ'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Risk Status' : 'Tình trạng'}</th>
-                    <th className="py-3 px-4">{language === 'en' ? 'Assessed By' : 'Giáo viên'}</th>
-                    <th className="py-3 px-4 text-right">{language === 'en' ? 'Actions' : 'Thao tác'}</th>
+                    <th className="py-3 px-4">{'Date'}</th>
+                    <th className="py-3 px-4">{'Student'}</th>
+                    <th className="py-3 px-4">{'Class & Level'}</th>
+                    <th className="py-3 px-4">{'Term'}</th>
+                    <th className="py-3 px-4">{'4-Skill Competencies'}</th>
+                    <th className="py-3 px-4">{'Progress'}</th>
+                    <th className="py-3 px-4">{'Risk Status'}</th>
+                    <th className="py-3 px-4">{'Assessed By'}</th>
+                    <th className="py-3 px-4 text-right">{'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -800,7 +794,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                                 onClick={() => studentObj && setSelectedStudentForProfile(studentObj)}
                                 className="font-semibold text-slate-900 hover:text-[#026fd7] hover:underline text-left block"
                               >
-                                {a.student?.full_name || 'Học viên'}
+                                {a.student?.full_name || 'Student'}
                               </button>
                               <span className="text-[11px] font-mono text-slate-500 font-semibold">
                                 {a.student?.student_code || '---'}
@@ -852,12 +846,12 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                           {a.has_academic_risk ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                               <AlertTriangle className="w-3 h-3 text-rose-600" />
-                              {language === 'en' ? 'Risk' : 'Nguy cơ'}
+                              {'Risk'}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              {language === 'en' ? 'On Track' : 'Đạt chuẩn'}
+                              {'On Track'}
                             </span>
                           )}
                         </td>
@@ -873,7 +867,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                             {studentObj && (
                               <button
                                 type="button"
-                                title={language === 'en' ? 'Open Student Profile & Logcall' : 'Xem toàn bộ hồ sơ & logcall'}
+                                title={'Open Student Profile & Logcall'}
                                 onClick={() => setSelectedStudentForProfile(studentObj)}
                                 className="p-1.5 rounded-lg text-slate-600 hover:text-[#043264] hover:bg-blue-50 transition-colors"
                               >
@@ -884,14 +878,12 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                             {a.has_academic_risk && onNavigateToIntervention && (
                               <button
                                 type="button"
-                                title={language === 'en' ? 'Create Intervention Ticket' : 'Lập phiếu can thiệp'}
+                                title={'Create Intervention Ticket'}
                                 onClick={() =>
                                   onNavigateToIntervention(
                                     a.student_id,
                                     a.id,
-                                    language === 'en'
-                                      ? `Weak skills: ${a.weaknesses || 'Academic intervention required'}`
-                                      : `Kỹ năng yếu: ${a.weaknesses || 'Cần can thiệp bổ trợ học vụ'}`
+                                    `Weak skills: ${a.weaknesses || 'Academic intervention required'}`
                                   )
                                 }
                                 className="p-1.5 rounded-lg text-rose-700 hover:bg-rose-50 border border-rose-200 transition-colors"
@@ -916,18 +908,16 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {loading ? (
             <div className="col-span-2 p-12 text-center text-xs text-slate-500">
-              {language === 'en' ? 'Loading assessments...' : 'Đang tải danh sách đánh giá...'}
+              {'Loading assessments...'}
             </div>
           ) : filteredAssessments.length === 0 ? (
             <div className="col-span-2 p-12 text-center bg-white rounded-xl border border-slate-200">
               <ClipboardCheck className="w-10 h-10 text-slate-400 mx-auto mb-2" />
               <h4 className="text-sm font-semibold text-slate-800">
-                {language === 'en' ? 'No Assessments Found' : 'Chưa có bài đánh giá nào'}
+                {'No Assessments Found'}
               </h4>
               <p className="text-xs text-slate-500 mt-1">
-                {language === 'en'
-                  ? 'Add the first 4-skill assessment for this class cohort.'
-                  : 'Hãy thêm bài đánh giá 4 kỹ năng đầu tiên cho lớp học.'}
+                {'Add the first 4-skill assessment for this class cohort.'}
               </p>
             </div>
           ) : (
@@ -952,14 +942,14 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                             onClick={() => studentObj && setSelectedStudentForProfile(studentObj)}
                             className="font-bold text-slate-900 text-sm hover:text-[#026fd7] hover:underline text-left cursor-pointer"
                           >
-                            {a.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
+                            {a.student?.full_name || ('Student')}
                           </button>
                           <span className="text-[11px] text-slate-500 font-mono">
-                            ({a.class?.name || (language === 'en' ? 'Class' : 'Lớp')})
+                            ({a.class?.name || ('Class')})
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-400 mt-0.5">
-                          {tDb(a.period)} • {language === 'en' ? 'Date: ' : 'Ngày: '}
+                          {tDb(a.period)} • {'Date: '}
                           {a.assessment_date}
                           {a.progress_status && ` • ${a.progress_status}`}
                         </div>
@@ -968,11 +958,11 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                       {a.has_academic_risk ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                           <AlertTriangle className="w-3 h-3 text-rose-600" />
-                          {language === 'en' ? 'Academic Risk' : 'Nguy cơ học thuật'}
+                          {'Academic Risk'}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
-                          {language === 'en' ? 'Standard Progress' : 'Tiến độ đạt chuẩn'}
+                          {'Standard Progress'}
                         </span>
                       )}
                     </div>
@@ -981,25 +971,25 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-4">
                       <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
                         <span className="text-[10px] font-semibold text-slate-500 block mb-1">
-                          {language === 'en' ? 'Listening' : 'Nghe'}
+                          {'Listening'}
                         </span>
                         {renderSkillBadge('', a.listening_level, a.listening_score)}
                       </div>
                       <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
                         <span className="text-[10px] font-semibold text-slate-500 block mb-1">
-                          {language === 'en' ? 'Speaking' : 'Nói'}
+                          {'Speaking'}
                         </span>
                         {renderSkillBadge('', a.speaking_level, a.speaking_score)}
                       </div>
                       <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
                         <span className="text-[10px] font-semibold text-slate-500 block mb-1">
-                          {language === 'en' ? 'Reading' : 'Đọc'}
+                          {'Reading'}
                         </span>
                         {renderSkillBadge('', a.reading_level, a.reading_score)}
                       </div>
                       <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60 text-center">
                         <span className="text-[10px] font-semibold text-slate-500 block mb-1">
-                          {language === 'en' ? 'Writing' : 'Viết'}
+                          {'Writing'}
                         </span>
                         {renderSkillBadge('', a.writing_level, a.writing_score)}
                       </div>
@@ -1010,7 +1000,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                       {a.strengths && (
                         <p>
                           <strong className="text-emerald-700">
-                            {language === 'en' ? 'Strengths: ' : 'Điểm mạnh: '}
+                            {'Strengths: '}
                           </strong>
                           {tDb(a.strengths)}
                         </p>
@@ -1018,7 +1008,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                       {a.weaknesses && (
                         <p>
                           <strong className="text-rose-700">
-                            {language === 'en' ? 'Areas for Growth: ' : 'Cần cải thiện: '}
+                            {'Areas for Growth: '}
                           </strong>
                           {tDb(a.weaknesses)}
                         </p>
@@ -1031,7 +1021,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
 
                   <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px]">
                     <span className="text-slate-400">
-                      {language === 'en' ? 'Assessed by: ' : 'Đánh giá bởi: '}
+                      {'Assessed by: '}
                       {a.assessed_by_name}
                     </span>
 
@@ -1043,7 +1033,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          {language === 'en' ? 'Profile' : 'Hồ sơ'}
+                          {'Profile'}
                         </button>
                       )}
 
@@ -1054,15 +1044,13 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                             onNavigateToIntervention(
                               a.student_id,
                               a.id,
-                              language === 'en'
-                                ? `Weak skills: ${a.weaknesses || 'Academic intervention required'}`
-                                : `Kỹ năng yếu: ${a.weaknesses || 'Cần can thiệp bổ trợ học vụ'}`
+                              `Weak skills: ${a.weaknesses || 'Academic intervention required'}`
                             )
                           }
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          {language === 'en' ? 'Open Ticket' : 'Lập phiếu can thiệp'}
+                          {'Open Ticket'}
                         </button>
                       )}
                     </div>
@@ -1148,14 +1136,14 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   <div className="space-y-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <div>
                       <span className="text-[11px] text-slate-500 block mb-1">
-                        {language === 'en' ? 'Step 1: Filter by Class Cohort' : 'Bước 1: Lọc theo lớp học'}
+                        {'Step 1: Filter by Class Cohort'}
                       </span>
                       <select
                         value={filterClassForSelect}
                         onChange={(e) => setFilterClassForSelect(e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                       >
-                        <option value="">{language === 'en' ? '-- All Classes --' : '-- Tất cả lớp --'}</option>
+                        <option value="">{'-- All Classes --'}</option>
                         {classes.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name} ({c.level})
@@ -1166,7 +1154,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
 
                     <div>
                       <span className="text-[11px] text-slate-500 block mb-1">
-                        {language === 'en' ? 'Step 2: Select Student *' : 'Bước 2: Chọn học viên *'}
+                        {'Step 2: Select Student *'}
                       </span>
                       <select
                         required
@@ -1175,7 +1163,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white font-medium"
                       >
                         <option value="">
-                          {language === 'en' ? '-- Choose student --' : '-- Chọn học viên trong lớp --'}
+                          {'-- Choose student --'}
                         </option>
                         {modalFilteredStudents.map((s) => (
                           <option key={s.id} value={s.id}>
@@ -1202,10 +1190,10 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                     <option value="Mid-Term">Mid-Term</option>
                     <option value="Final-Term">Final-Term</option>
                     <option value="Monthly Assessment">Monthly Assessment</option>
-                    <option value="Kỳ 1 - Giữa kỳ">Kỳ 1 - Giữa kỳ</option>
-                    <option value="Kỳ 1 - Cuối kỳ">Kỳ 1 - Cuối kỳ</option>
-                    <option value="Kỳ 2 - Giữa kỳ">Kỳ 2 - Giữa kỳ</option>
-                    <option value="Kỳ 2 - Cuối kỳ">Kỳ 2 - Cuối kỳ</option>
+                    <option value="Semester 1 - Midterm">Semester 1 - Midterm</option>
+                    <option value="Semester 1 - Final">Semester 1 - Final</option>
+                    <option value="Semester 2 - Midterm">Semester 2 - Midterm</option>
+                    <option value="Semester 2 - Final">Semester 2 - Final</option>
                   </select>
                 </div>
 
@@ -1351,9 +1339,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   value={form.strengths}
                   onChange={(e) => setForm({ ...form, strengths: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Confident natural pronunciation, active group engagement...'
-                      : 'VD: Phát âm tự nhiên chuẩn Oxford, tự tin nói chuyện với GVBN...'
+                    'e.g. Confident natural pronunciation, active group engagement...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 />
@@ -1368,9 +1354,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   value={form.weaknesses}
                   onChange={(e) => setForm({ ...form, weaknesses: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'e.g. Needs grammar support for simple present tense third person -s...'
-                      : 'VD: Cần củng cố ngữ pháp viết câu đơn và chia động từ ngôi thứ 3 số ít...'
+                    'e.g. Needs grammar support for simple present tense third person -s...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 />
@@ -1385,9 +1369,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   value={form.progress_notes}
                   onChange={(e) => setForm({ ...form, progress_notes: e.target.value })}
                   placeholder={
-                    language === 'en'
-                      ? 'Teacher guidance, tutor recommendations, or parent notes...'
-                      : 'Đề xuất kèm bổ trợ 1-1 trước kỳ thi hoặc dặn dò phụ huynh...'
+                    'Teacher guidance, tutor recommendations, or parent notes...'
                   }
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                 />
@@ -1400,7 +1382,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium"
                 >
-                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1408,8 +1390,8 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                   className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 shadow-xs"
                 >
                   {submitting
-                    ? (language === 'en' ? 'Saving...' : 'Đang lưu...')
-                    : (language === 'en' ? 'Save Assessment' : 'Lưu đánh giá')}
+                    ? ('Saving...')
+                    : ('Save Assessment')}
                 </button>
               </div>
             </form>

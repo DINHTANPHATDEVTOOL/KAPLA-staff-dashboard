@@ -68,10 +68,10 @@ export const PendingApprovalScreen: React.FC = () => {
 
   return (
     <AuthLayout
-      title={t('auth.pendingTitle', 'Tài khoản đang chờ duyệt quyền')}
+      title={t('auth.pendingTitle', 'Account Pending Role Approval')}
       subtitle={t(
         'auth.pendingSubtitle',
-        'Email đã xác thực thành công. Vui lòng chờ Giám đốc cơ sở (CM) cấp quyền để truy cập dữ liệu.'
+        'Email verified successfully. Please wait for the Center Manager (CM) to grant roles to access data.'
       )}
     >
       <div className="space-y-6">
@@ -82,12 +82,12 @@ export const PendingApprovalScreen: React.FC = () => {
           </div>
           <div>
             <h4 className="font-semibold text-xs text-amber-900 uppercase tracking-wide">
-              {t('auth.pendingStatusLabel', 'Trạng thái: Đang chờ phân bổ vai trò')}
+              {t('auth.pendingStatusLabel', 'Status: Awaiting Role Assignment')}
             </h4>
             <p className="text-xs text-amber-800/90 mt-1 leading-relaxed">
               {t(
                 'auth.pendingSecurityNotice',
-                'Nhằm đảm bảo an toàn thông tin học viên và bảo mật học phí, hệ thống chỉ mở quyền sau khi CM chi nhánh hoặc Quản trị hệ thống phê duyệt phân công cụ thể.'
+                'To safeguard student privacy and tuition records, system access is granted after the Center Manager or System Admin approves role assignments.'
               )}
             </p>
           </div>
@@ -97,18 +97,18 @@ export const PendingApprovalScreen: React.FC = () => {
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-xs">
           <div className="flex items-center justify-between pb-2 border-b border-slate-200">
             <span className="font-semibold text-slate-700">
-              {t('auth.accountSummaryTitle', 'Thông tin tài khoản đăng ký:')}
+              {t('auth.accountSummaryTitle', 'Registered Account Summary:')}
             </span>
             <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 font-medium text-[10px]">
-              {t('auth.pendingBadge', 'Chờ phê duyệt')}
+              {t('auth.pendingBadge', 'Pending Approval')}
             </span>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-slate-700">
               <User className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-slate-500 w-24">{t('auth.fullNameLabel', 'Họ và tên')}:</span>
-              <span className="font-medium text-slate-900">{profile?.full_name || 'Nhân viên mới'}</span>
+              <span className="text-slate-500 w-24">{t('auth.fullNameLabel', 'Full Name')}:</span>
+              <span className="font-medium text-slate-900">{profile?.full_name || 'New Staff'}</span>
             </div>
 
             <div className="flex items-center gap-2 text-slate-700">
@@ -119,9 +119,9 @@ export const PendingApprovalScreen: React.FC = () => {
 
             <div className="flex items-center gap-2 text-slate-700">
               <Building className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-slate-500 w-24">{t('auth.registeredBranch', 'Cơ sở đăng ký')}:</span>
+              <span className="text-slate-500 w-24">{t('auth.registeredBranch', 'Registered Campus')}:</span>
               <span className="font-medium text-[#043264]">
-                {preferredBranch ? `${preferredBranch.name} (${preferredBranch.code})` : t('common.none', 'Chưa chọn')}
+                {preferredBranch ? `${preferredBranch.name} (${preferredBranch.code})` : t('common.none', 'None')}
               </span>
             </div>
           </div>
@@ -136,7 +136,7 @@ export const PendingApprovalScreen: React.FC = () => {
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-all shadow-sm disabled:opacity-70"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? t('auth.checking', 'Đang kiểm tra...') : t('auth.checkStatusBtn', 'Kiểm tra lại trạng thái duyệt')}
+            {refreshing ? t('auth.checking', 'Checking...') : t('auth.checkStatusBtn', 'Check Approval Status')}
           </button>
 
           {/* Dev helper to fast approve */}
@@ -148,7 +148,7 @@ export const PendingApprovalScreen: React.FC = () => {
               className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              {fastApproving ? 'Đang kích hoạt...' : '⚡ Phê duyệt nhanh tài khoản này làm HRT [Thử nghiệm]'}
+              {fastApproving ? 'Activating...' : '⚡ Quick Approve this account as HRT [Demo Mode]'}
             </button>
           )}
         </div>
@@ -157,7 +157,7 @@ export const PendingApprovalScreen: React.FC = () => {
         <div className="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <span className="inline-flex items-center gap-1.5 text-emerald-700 font-medium">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            {t('topbar.emailVerified', 'Email đã xác thực')}
+            {t('topbar.emailVerified', 'Email Verified')}
           </span>
 
           <button
@@ -166,7 +166,7 @@ export const PendingApprovalScreen: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-red-600 hover:text-red-700 font-medium"
           >
             <LogOut className="w-3.5 h-3.5" />
-            {t('auth.logout', 'Đăng xuất')}
+            {t('auth.logout', 'Sign Out')}
           </button>
         </div>
       </div>
