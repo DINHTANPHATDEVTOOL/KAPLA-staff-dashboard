@@ -102,7 +102,21 @@ export type DashboardNavSection =
   | 'renewal'
   | 'logs'
   | 'staff_roles'
-  | 'branches_classes';
+  | 'branches_classes'
+  | 'automated_emails';
+
+export interface EmailDispatchLogEntry {
+  id: string;
+  sender: string;
+  recipients: string[];
+  title: string;
+  action_type: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test';
+  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test';
+  content?: string;
+  turnaround?: string;
+  status: 'delivered' | 'pending' | 'failed';
+  dispatched_at: string;
+}
 
 // -----------------------------------------------------------------------------
 // Phase T03: Student Profiles, Tuition, Enrollments & Care Tasks
@@ -359,6 +373,8 @@ export interface SystemConfig {
   cambridge_scale_max: number; // 5.0 shields
   academic_risk_threshold: number; // < 3.0 shields
   sender_email?: string; // Automated notification dispatch email (kapladashboard@gmail.com)
+  gmail_app_password?: string;
+  smtp_status?: 'ready' | 'connected' | 'unverified';
 }
 
 // -----------------------------------------------------------------------------

@@ -15,6 +15,7 @@ import {
   History,
   ShieldCheck,
   Building2,
+  Mail,
   X,
   LogOut,
   ChevronRight,
@@ -66,6 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       { id: 'feedback', label: t('nav.feedback', 'Parent Feedback'), icon: MessageSquareHeart },
       { id: 'supplementary', label: t('nav.supplementary', 'Supplementary Sessions'), icon: BookOpenCheck },
       { id: 'renewal', label: t('nav.renewal', 'Renewals & Tuition'), icon: CalendarClock },
+      { id: 'automated_emails', label: t('nav.automated_emails', 'Automated Emails'), icon: Mail },
       { id: 'logs', label: t('nav.logs', 'Activity Logs'), icon: History },
       {
         id: 'staff_roles',

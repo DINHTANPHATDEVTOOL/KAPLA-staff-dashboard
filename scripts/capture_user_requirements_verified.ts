@@ -238,6 +238,21 @@ async function main() {
   await cdp.captureScreenshot(screenRenewal);
   console.log('Saved screenshot 6 (Renewal monthly filter with kapladashboard@gmail.com):', screenRenewal);
 
+  // 5. Navigate to Automated Emails Dispatch Center
+  console.log('Navigating to Automated Email Dispatch Center...');
+  await cdp.eval(`
+    (() => {
+      const btns = Array.from(document.querySelectorAll('button, a'));
+      const mailBtn = btns.find(b => b.innerText && (b.innerText.includes('Automated Emails') || b.innerText.includes('kapladashboard@gmail.com')));
+      if (mailBtn) mailBtn.click();
+    })()
+  `);
+  await sleep(2500);
+
+  const screenAutomatedEmails = path.join(artifactDir, 'customer_automated_emails_view.png');
+  await cdp.captureScreenshot(screenAutomatedEmails);
+  console.log('Saved screenshot 7 (Automated Email Dispatch Center with outbox & live sender):', screenAutomatedEmails);
+
   cdp.close();
   chromeProc.kill();
   console.log('🎉 All visual verification screenshots captured successfully!');

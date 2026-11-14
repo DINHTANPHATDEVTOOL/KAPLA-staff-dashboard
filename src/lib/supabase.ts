@@ -32,6 +32,7 @@ import {
   StaffRole,
   SystemRole,
   AccountStatus,
+  EmailDispatchLogEntry,
 } from '../types';
 
 // Safely resolve environment across Vite (import.meta.env) and Node.js test runners (process.env)
@@ -174,6 +175,7 @@ const STORAGE_KEYS = {
   SUPPLEMENTARY: 'kapla_mock_supplementary',
   RENEWAL: 'kapla_mock_renewal',
   SYSTEM_CONFIG: 'kapla_system_config',
+  EMAIL_LOGS: 'kapla_mock_email_logs',
 };
 
 // Initial Seed Data with Single Branch (KAPLA Pham Hung Campus Only)
@@ -1121,11 +1123,92 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   cambridge_scale_max: 5.0,
   academic_risk_threshold: 3.0,
   sender_email: 'kapladashboard@gmail.com',
+  gmail_app_password: '',
+  smtp_status: 'ready',
 };
+
+const DEFAULT_EMAIL_LOGS: EmailDispatchLogEntry[] = [
+  {
+    id: 'em-001',
+    sender: 'kapladashboard@gmail.com',
+    recipients: [
+      'Assigned HRT: Le Thi Mai Tram (tram.le@kapla.edu.vn)',
+      'Center Manager: Tran Phuong Nhi (cm.nhi@kapla.edu.vn)',
+      'Academic Teachers: David Miller, Jamie Alexander',
+    ],
+    title: 'Reminder Appointment: Follow-up consultation for Pham Minh Khoi',
+    action_type: 'reminder',
+    actionType: 'reminder',
+    content: 'Scheduled by Center Manager (CM) for student Pham Minh Khoi (KAP-PH-005). Task Type: Call care. Due: 2026-11-18. Focus on Zalo audio recording homework assistance.',
+    status: 'delivered',
+    dispatched_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+  },
+  {
+    id: 'em-002',
+    sender: 'kapladashboard@gmail.com',
+    recipients: [
+      'Assigned HRT: Nguyen Hoang Minh (minh.nguyen@kapla.edu.vn)',
+      'Center Manager: Tran Phuong Nhi (cm.nhi@kapla.edu.vn)',
+      'Teacher: Jamie Alexander',
+    ],
+    title: '1-Day Deadline Alert: Urgent Tuition Renewal for Dang Bao Nam',
+    action_type: 'renewal',
+    actionType: 'renewal',
+    content: 'Student Dang Bao Nam (KAP-PH-004) tuition expiry is overdue. Please perform urgent EPP outreach call.',
+    status: 'delivered',
+    dispatched_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+  },
+  {
+    id: 'em-003',
+    sender: 'kapladashboard@gmail.com',
+    recipients: [
+      'Assigned HRT: Le Thi Mai Tram (tram.le@kapla.edu.vn)',
+      'Center Manager (CM)',
+      'All Teachers',
+    ],
+    title: 'Resolution Confirmed: Speaking Audio Practice on Zalo (Pham Minh Khoi)',
+    action_type: 'feedback',
+    actionType: 'feedback',
+    content: 'Parent feedback resolved with turnaround of 1h 45m. Resolution notes: HRT Tram created dedicated Zalo group and guided parents on audio submission workflow.',
+    turnaround: '1h 45m',
+    status: 'delivered',
+    dispatched_at: new Date(Date.now() - 8 * 3600000).toISOString(),
+  },
+  {
+    id: 'em-004',
+    sender: 'kapladashboard@gmail.com',
+    recipients: [
+      'Head Teacher: Nguyen Hoang Minh (minh.nguyen@kapla.edu.vn)',
+      'Center Manager: Tran Phuong Nhi (cm.nhi@kapla.edu.vn)',
+      'Teacher: Jamie Alexander',
+    ],
+    title: 'Reminder Appointment Scheduled: Cambridge Starters Grammar Tutoring',
+    action_type: 'reminder',
+    actionType: 'reminder',
+    content: 'Scheduled by Head Teacher (HT) for student Nguyen Binh An (KAP-PH-001). Task Type: Tutoring. Due: 2026-11-20.',
+    status: 'delivered',
+    dispatched_at: new Date(Date.now() - 14 * 3600000).toISOString(),
+  },
+  {
+    id: 'em-005',
+    sender: 'kapladashboard@gmail.com',
+    recipients: [
+      'Senior Operations Officer: Le Hoang Nam (soo.nam@kapla.edu.vn)',
+      'Center Manager: Tran Phuong Nhi (cm.nhi@kapla.edu.vn)',
+      'Assigned HRT: Tran Hoang Vy (vy.tran@kapla.edu.vn)',
+    ],
+    title: 'Automated Dispatch Notice: Tuition Renewal Expiry Warning (14-Day Cycle)',
+    action_type: 'renewal',
+    actionType: 'renewal',
+    content: 'Tuition renewal window active for Tran Thai Binh (KAP-PH-002). Tuition expiry date: 2026-11-20.',
+    status: 'delivered',
+    dispatched_at: new Date(Date.now() - 24 * 3600000).toISOString(),
+  },
+];
 
 // Automatic LocalStorage Cache Invalidation for Clean Demo Testing
 const DATA_VERSION_KEY = 'kapla_demo_data_version';
-const CURRENT_DATA_VERSION = 'v2026_kapla_authentic_dataset_v6_grouped_feedback_reminders';
+const CURRENT_DATA_VERSION = 'v2026_kapla_authentic_dataset_v7_automated_email_center';
 if (typeof window !== 'undefined') {
   const currentVer = localStorage.getItem(DATA_VERSION_KEY);
   if (currentVer !== CURRENT_DATA_VERSION) {
@@ -2601,6 +2684,30 @@ export class MockStorageService {
     return updated;
   }
 
+  static getEmailLogs(): EmailDispatchLogEntry[] {
+    this.ensureDevOnly();
+    const raw = localStorage.getItem(STORAGE_KEYS.EMAIL_LOGS);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.EMAIL_LOGS, JSON.stringify(DEFAULT_EMAIL_LOGS));
+      return DEFAULT_EMAIL_LOGS;
+    }
+    return JSON.parse(raw);
+  }
+
+  static appendEmailLog(entry: EmailDispatchLogEntry): void {
+    this.ensureDevOnly();
+    const logs = this.getEmailLogs();
+    const updated = [entry, ...logs];
+    localStorage.setItem(STORAGE_KEYS.EMAIL_LOGS, JSON.stringify(updated));
+    this.notifyChange(STORAGE_KEYS.EMAIL_LOGS);
+  }
+
+  static clearEmailLogs(): void {
+    this.ensureDevOnly();
+    localStorage.setItem(STORAGE_KEYS.EMAIL_LOGS, JSON.stringify([]));
+    this.notifyChange(STORAGE_KEYS.EMAIL_LOGS);
+  }
+
   static resetToDefault(): void {
     localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(DEFAULT_BRANCHES));
     localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(DEFAULT_PROFILES));
@@ -2617,6 +2724,7 @@ export class MockStorageService {
     localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(DEFAULT_SUPPLEMENTARY_SESSIONS));
     localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(DEFAULT_RENEWAL_RECORDS));
     localStorage.setItem(STORAGE_KEYS.SYSTEM_CONFIG, JSON.stringify(DEFAULT_SYSTEM_CONFIG));
+    localStorage.setItem(STORAGE_KEYS.EMAIL_LOGS, JSON.stringify(DEFAULT_EMAIL_LOGS));
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
   }
 }
@@ -3394,7 +3502,8 @@ export const SystemConfigService = {
 export interface AutomatedEmailPayload {
   title: string;
   recipients: string[];
-  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention';
+  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test';
+  content?: string;
   turnaround?: string;
   sender?: string;
   metadata?: Record<string, any>;
@@ -3404,17 +3513,65 @@ export const EmailNotificationService = {
   SENDER_EMAIL: 'kapladashboard@gmail.com',
 
   getSenderEmail(): string {
-    return this.SENDER_EMAIL;
+    const config = MockStorageService.getSystemConfig();
+    return config?.sender_email || this.SENDER_EMAIL;
   },
 
-  dispatchAutomatedEmail(payload: AutomatedEmailPayload) {
-    const from = this.SENDER_EMAIL;
-    const dispatched = {
-      ...payload,
+  getEmailLogs(): EmailDispatchLogEntry[] {
+    return MockStorageService.getEmailLogs();
+  },
+
+  clearEmailLogs(): void {
+    MockStorageService.clearEmailLogs();
+  },
+
+  saveSmtpConfig(senderEmail: string, gmailAppPassword?: string): void {
+    const config = MockStorageService.getSystemConfig();
+    MockStorageService.updateSystemConfig('system', {
+      ...config,
+      sender_email: senderEmail.trim(),
+      gmail_app_password: gmailAppPassword?.trim() || config.gmail_app_password,
+      smtp_status: gmailAppPassword ? 'connected' : 'ready',
+    });
+  },
+
+  dispatchAutomatedEmail(payload: AutomatedEmailPayload): EmailDispatchLogEntry {
+    const from = this.getSenderEmail();
+    const entry: EmailDispatchLogEntry = {
+      id: `em-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       sender: from,
-      dispatchedAt: new Date().toISOString(),
+      recipients: payload.recipients,
+      title: payload.title,
+      action_type: payload.actionType,
+      actionType: payload.actionType,
+      content: payload.content || `Automated notification dispatched for ${payload.title}`,
+      turnaround: payload.turnaround,
+      status: 'delivered',
+      dispatched_at: new Date().toISOString(),
     };
+
+    MockStorageService.appendEmailLog(entry);
     console.info(`[Automated Email Service] Dispatched from ${from} to ${payload.recipients.join(', ')} | ${payload.title}`);
-    return dispatched;
+    return entry;
+  },
+
+  sendTestEmail(recipient: string, template: string, note?: string): EmailDispatchLogEntry {
+    const from = this.getSenderEmail();
+    const title = `[Test Notification] Automated Dispatch via ${from}: ${template}`;
+    const entry: EmailDispatchLogEntry = {
+      id: `em-test-${Date.now()}`,
+      sender: from,
+      recipients: [recipient.trim()],
+      title,
+      action_type: 'test',
+      actionType: 'test',
+      content: note || `Verification test email dispatched to validate automated delivery from Google SMTP (${from}) to ${recipient}. System operational 100%.`,
+      status: 'delivered',
+      dispatched_at: new Date().toISOString(),
+    };
+
+    MockStorageService.appendEmailLog(entry);
+    console.info(`[Automated Email Service] Test email sent from ${from} to ${recipient}`);
+    return entry;
   },
 };

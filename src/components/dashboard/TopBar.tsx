@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Bell,
   Sparkles,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, LanguageToggle } from '../../context/LanguageContext';
@@ -24,6 +25,7 @@ interface TopBarProps {
   onOpenMobileMenu: () => void;
   onRefreshData?: () => void;
   refreshing?: boolean;
+  onNavigate?: (section: DashboardNavSection) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -31,6 +33,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenMobileMenu,
   onRefreshData,
   refreshing = false,
+  onNavigate,
 }) => {
   const {
     profile,
@@ -97,6 +100,11 @@ export const TopBar: React.FC<TopBarProps> = ({
         return {
           title: t('topbar.branchesClassesTitle', 'Campuses & Classrooms'),
           subtitle: t('topbar.branchesClassesSub', 'Manage campus locations, classrooms, and schedules.'),
+        };
+      case 'automated_emails':
+        return {
+          title: 'Automated Email Dispatch Center',
+          subtitle: 'Automated notification dispatches from kapladashboard@gmail.com to HRT, Management & Teachers.',
         };
       case 'logs':
         return {
@@ -218,6 +226,20 @@ export const TopBar: React.FC<TopBarProps> = ({
               : activeRole || ('Staff')}
           </span>
         </div>
+
+        {/* Automated Dispatch Email Quick Pill */}
+        {onNavigate && (
+          <button
+            type="button"
+            onClick={() => onNavigate('automated_emails')}
+            title="Automated Notification Dispatcher: kapladashboard@gmail.com"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all shadow-2xs cursor-pointer"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <Mail className="w-3.5 h-3.5 text-emerald-700" />
+            <span className="font-mono text-[11px]">kapladashboard@gmail.com</span>
+          </button>
+        )}
 
         {/* Refresh Action */}
         {onRefreshData && (

@@ -16,6 +16,7 @@ import { FeedbackView } from './FeedbackView';
 import { SupplementaryView } from './SupplementaryView';
 import { RenewalView } from './RenewalView';
 import { ActivityLogsView } from './ActivityLogsView';
+import { AutomatedEmailsView } from './AutomatedEmailsView';
 import { DashboardNavSection, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
@@ -122,6 +123,7 @@ export const AppLayout: React.FC = () => {
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onRefreshData={handleRefresh}
           refreshing={refreshing}
+          onNavigate={setActiveSection}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
@@ -163,6 +165,10 @@ export const AppLayout: React.FC = () => {
 
           {activeSection === 'renewal' && (
             <RenewalView />
+          )}
+
+          {activeSection === 'automated_emails' && (
+            <AutomatedEmailsView onNavigate={setActiveSection} />
           )}
 
           {activeSection === 'logs' && (
