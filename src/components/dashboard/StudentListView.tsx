@@ -24,13 +24,40 @@ import {
   Sparkles,
   Edit,
   Trash2,
+  User,
+  Eye,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Student, StudentStatus, ClassRoom, UserProfile, ClassTransfer } from '../../types';
-import { StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
+import {
+  Student,
+  StudentStatus,
+  ClassRoom,
+  UserProfile,
+  ClassTransfer,
+  StudentAssessment,
+  InterventionTicket,
+  ParentFeedback,
+  RenewalRecord,
+  DashboardNavSection,
+} from '../../types';
+import {
+  StudentService,
+  AssessmentService,
+  InterventionService,
+  FeedbackService,
+  RenewalService,
+  realSupabase,
+  MockStorageService,
+  subscribeToTableChanges,
+} from '../../lib/supabase';
+import { StudentProfileModal } from './StudentProfileModal';
 
-export const StudentListView: React.FC = () => {
+interface StudentListViewProps {
+  onNavigate?: (section: DashboardNavSection) => void;
+}
+
+export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) => {
   const { profile, activeRole, currentBranch } = useAuth();
   const { language, t, tDb } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
@@ -40,13 +67,23 @@ export const StudentListView: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [hrtStaffs, setHrtStaffs] = useState<UserProfile[]>([]);
+  const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
+  const [interventions, setInterventions] = useState<InterventionTicket[]>([]);
+  const [feedbacks, setFeedbacks] = useState<ParentFeedback[]>([]);
+  const [renewals, setRenewals] = useState<RenewalRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Filters matching customer specification
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [classFilter, setClassFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [teacherFilter, setTeacherFilter] = useState<string>('all');
+  const [academicStatusFilter, setAcademicStatusFilter] = useState<string>('all');
+  const [renewalRiskFilter, setRenewalRiskFilter] = useState<string>('all');
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<Student | null>(null);
   const [selectedStudentForTransfer, setSelectedStudentForTransfer] = useState<Student | null>(null);
   const [selectedStudentForHrt, setSelectedStudentForHrt] = useState<Student | null>(null);
   const [selectedStudentForHistory, setSelectedStudentForHistory] = useState<Student | null>(null);
@@ -97,8 +134,19 @@ export const StudentListView: React.FC = () => {
     setLoading(true);
     try {
       const branchId = currentBranch?.id;
-      const data = await StudentService.getStudents(branchId, profile?.id, isSysAdmin, isCM);
-      setStudents(data);
+      const [stuData, assessData, intervData, feedData, renewData] = await Promise.all([
+        StudentService.getStudents(branchId, profile?.id, isSysAdmin, isCM),
+        AssessmentService.getAssessments(branchId),
+        InterventionService.getInterventions(branchId),
+        FeedbackService.getFeedbacks(branchId),
+        RenewalService.getRecords(branchId),
+      ]);
+
+      setStudents(stuData);
+      setAssessments(assessData);
+      setInterventions(intervData);
+      setFeedbacks(feedData);
+      setRenewals(renewData);
 
       // Load classes for branch
       if (realSupabase) {
@@ -139,6 +187,7 @@ export const StudentListView: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    return subscribeToTableChanges('students', loadData);
   }, [currentBranch?.id, profile?.id, isSysAdmin, isCM]);
 
   // Calculate tuition days remaining and badge
@@ -152,6 +201,7 @@ export const StudentListView: React.FC = () => {
 
     if (diffDays < 0) {
       return {
+        days: diffDays,
         label: language === 'en' ? `Expired ${Math.abs(diffDays)}d ago` : `Đã hết hạn ${Math.abs(diffDays)} ngày`,
         status: 'expired' as const,
         color: 'bg-rose-50 text-rose-700 border-rose-200',
@@ -160,6 +210,7 @@ export const StudentListView: React.FC = () => {
     }
     if (diffDays <= 14) {
       return {
+        days: diffDays,
         label: language === 'en' ? `Due in ${diffDays}d` : `Sắp hết hạn (${diffDays} ngày)`,
         status: 'warning' as const,
         color: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -167,6 +218,7 @@ export const StudentListView: React.FC = () => {
       };
     }
     return {
+      days: diffDays,
       label: language === 'en' ? `${diffDays}d remaining` : `Còn ${diffDays} ngày`,
       status: 'active' as const,
       color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -174,37 +226,166 @@ export const StudentListView: React.FC = () => {
     };
   };
 
-  // Filtered students
+  // Derive unique levels and teachers for filters
+  const availableLevels = useMemo(() => {
+    const set = new Set<string>();
+    classes.forEach((c) => {
+      if (c.level) set.add(c.level);
+    });
+    students.forEach((s) => {
+      if (s.current_class?.level) set.add(s.current_class.level);
+    });
+    return Array.from(set).sort();
+  }, [classes, students]);
+
+  const availableTeachers = useMemo(() => {
+    const map = new Map<string, string>();
+    classes.forEach((c) => {
+      if (c.default_hrt_name) map.set(c.default_hrt_name, `${c.default_hrt_name} (HRT)`);
+      if (c.main_teacher_name) map.set(c.main_teacher_name, `${c.main_teacher_name} (Teacher)`);
+    });
+    hrtStaffs.forEach((h) => {
+      map.set(h.full_name, `${h.full_name} (HRT)`);
+    });
+    students.forEach((s) => {
+      if (s.effective_hrt_name) map.set(s.effective_hrt_name, `${s.effective_hrt_name} (HRT)`);
+    });
+    return Array.from(map.entries()).map(([name, label]) => ({ name, label }));
+  }, [classes, hrtStaffs, students]);
+
+  // Sets of student IDs with specific conditions
+  const academicRiskStudentIds = useMemo(() => {
+    const ids = new Set<string>();
+    // Check latest assessment per student to accurately reflect current academic status
+    const latestAssessMap = new Map<string, StudentAssessment>();
+    assessments.forEach((a) => {
+      const existing = latestAssessMap.get(a.student_id);
+      if (!existing || new Date(a.assessment_date).getTime() > new Date(existing.assessment_date).getTime()) {
+        latestAssessMap.set(a.student_id, a);
+      }
+    });
+
+    latestAssessMap.forEach((a, stuId) => {
+      if (a.has_academic_risk) ids.add(stuId);
+    });
+
+    // Include students with active interventions underway
+    interventions.forEach((i) => {
+      if (i.status === 'open' || i.status === 'in_progress') ids.add(i.student_id);
+    });
+    return ids;
+  }, [assessments, interventions]);
+
+  const parentPerceptionRiskStudentIds = useMemo(() => {
+    const ids = new Set<string>();
+    feedbacks.forEach((f) => {
+      if (f.status === 'open' || f.status === 'in_progress') {
+        ids.add(f.student_id);
+      }
+    });
+    return ids;
+  }, [feedbacks]);
+
+  const renewalRiskStudentIds = useMemo(() => {
+    const ids = new Set<string>();
+    students.forEach((s) => {
+      const tuition = getTuitionStatus(s.tuition_expiry_date);
+      if (tuition.days <= 30) {
+        ids.add(s.id);
+      }
+    });
+    renewals.forEach((r) => {
+      if (r.risk_level === 'high' || r.days_remaining <= 30) {
+        ids.add(r.student_id);
+      }
+    });
+    return ids;
+  }, [students, renewals]);
+
+  // Filtered students with all 6 controls from Image 3/4
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
+      // 1. Search name, student code, parent name, phone
+      const query = searchTerm.toLowerCase().trim();
       const matchSearch =
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.student_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.parent_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.parent_phone.includes(searchTerm);
+        !query ||
+        s.full_name.toLowerCase().includes(query) ||
+        s.student_code.toLowerCase().includes(query) ||
+        s.parent_name.toLowerCase().includes(query) ||
+        s.parent_phone.includes(query);
 
+      // 2. Class filter
       const matchClass = classFilter === 'all' || s.current_class_id === classFilter;
 
-      const tStatus = getTuitionStatus(s.tuition_expiry_date).status;
-      const matchStatus = statusFilter === 'all' || tStatus === statusFilter;
+      // 3. Level filter
+      const studentLevel = s.current_class?.level || '';
+      const matchLevel = levelFilter === 'all' || studentLevel === levelFilter;
 
-      return matchSearch && matchClass && matchStatus;
+      // 4. Teacher filter
+      const hrtName = s.assigned_hrt?.full_name || s.effective_hrt_name || s.current_class?.default_hrt_name || '';
+      const teacherName = s.current_class?.main_teacher_name || '';
+      const matchTeacher =
+        teacherFilter === 'all' ||
+        hrtName.toLowerCase().includes(teacherFilter.toLowerCase()) ||
+        teacherName.toLowerCase().includes(teacherFilter.toLowerCase());
+
+      // 5. Academic status filter
+      const isAcademicRisk = academicRiskStudentIds.has(s.id);
+      const matchAcademic =
+        academicStatusFilter === 'all' ||
+        (academicStatusFilter === 'risk' && isAcademicRisk) ||
+        (academicStatusFilter === 'on_track' && !isAcademicRisk);
+
+      // 6. Renewal risk filter
+      const tuition = getTuitionStatus(s.tuition_expiry_date);
+      let matchRenewal = true;
+      if (renewalRiskFilter === 'safe') {
+        matchRenewal = tuition.days > 30;
+      } else if (renewalRiskFilter === 'expiring') {
+        matchRenewal = tuition.days <= 30 && tuition.days > 0;
+      } else if (renewalRiskFilter === 'due_soon') {
+        matchRenewal = tuition.days <= 14 && tuition.days >= 0;
+      } else if (renewalRiskFilter === 'overdue') {
+        matchRenewal = tuition.days < 0;
+      }
+
+      return matchSearch && matchClass && matchLevel && matchTeacher && matchAcademic && matchRenewal;
     });
-  }, [students, searchTerm, classFilter, statusFilter]);
+  }, [
+    students,
+    searchTerm,
+    classFilter,
+    levelFilter,
+    teacherFilter,
+    academicStatusFilter,
+    renewalRiskFilter,
+    academicRiskStudentIds,
+  ]);
 
-  // Stats
+  // Stats calculation matching customer screenshot (Image 3 & 4)
   const stats = useMemo(() => {
-    let warning = 0;
-    let expired = 0;
-    let active = 0;
-    students.forEach((s) => {
-      const st = getTuitionStatus(s.tuition_expiry_date).status;
-      if (st === 'expired') expired++;
-      else if (st === 'warning') warning++;
-      else active++;
-    });
-    return { total: students.length, active, warning, expired };
-  }, [students]);
+    const totalTracked = students.length;
+    const highAcademicRiskCount = academicRiskStudentIds.size;
+    const openInterventionsCount = interventions.filter(
+      (i) => i.status === 'open' || i.status === 'in_progress'
+    ).length;
+
+    const highParentPerceptionRiskCount = parentPerceptionRiskStudentIds.size;
+    const pendingFeedbackCount = feedbacks.filter((f) => f.status === 'open').length;
+
+    const expiringFeesCount = renewalRiskStudentIds.size;
+    const onTrackCount = Math.max(0, totalTracked - highAcademicRiskCount);
+
+    return {
+      totalTracked,
+      onTrackCount,
+      highAcademicRiskCount,
+      openInterventionsCount,
+      highParentPerceptionRiskCount,
+      pendingFeedbackCount,
+      expiringFeesCount,
+    };
+  }, [students, academicRiskStudentIds, interventions, parentPerceptionRiskStudentIds, feedbacks, renewalRiskStudentIds]);
 
   // Handlers
   const handleCreateStudent = async (e: React.FormEvent) => {
@@ -426,66 +607,80 @@ export const StudentListView: React.FC = () => {
         </div>
       )}
 
-      {/* Stats Cards */}
+      {/* Stats Cards — Exactly matching Customer Specification (Image 3 & 4) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Card 1: Total Tracked Students */}
         <div className="bg-white p-4 rounded-xl border border-slate-200">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-            {language === 'en' ? 'Total Managed Students' : 'Tổng học viên phụ trách'}
+            {t('students.kpiTotalTracked', 'Total Tracked Students')}
           </span>
-          <div className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</div>
-          <span className="text-[10px] text-slate-400">
-            {language === 'en' ? 'Within authorized scope' : 'Thuộc phạm vi phân quyền'}
-          </span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">
-            {language === 'en' ? 'Safe Tuition' : 'Học phí an toàn'}
-          </span>
-          <div className="text-2xl font-bold text-emerald-700 mt-1">{stats.active}</div>
-          <span className="text-[10px] text-emerald-600">
-            {language === 'en' ? 'Expiry > 14 days' : 'Hạn > 14 ngày'}
+          <div className="text-2xl font-bold text-slate-900 mt-1">{stats.totalTracked}</div>
+          <span className="text-[10px] text-slate-500 font-medium">
+            {t('students.kpiTotalTrackedSub', 'On Track')}: {stats.onTrackCount}
           </span>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/40">
-          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
-            {language === 'en' ? 'Due Soon (≤ 14 days)' : 'Sắp hết hạn (≤ 14 ngày)'}
-          </span>
-          <div className="text-2xl font-bold text-amber-800 mt-1">{stats.warning}</div>
-          <span className="text-[10px] text-amber-700">
-            {language === 'en' ? 'Retention outreach needed' : 'Cần liên hệ nhắc tái tục'}
-          </span>
-        </div>
+
+        {/* Card 2: High Academic Risk */}
         <div className="bg-white p-4 rounded-xl border border-rose-200 bg-rose-50/40">
           <span className="text-[11px] font-semibold text-rose-700 uppercase tracking-wider">
-            {language === 'en' ? 'Overdue Tuition' : 'Đã quá hạn học phí'}
+            {t('students.kpiAcademicRisk', 'High Academic Risk')}
           </span>
-          <div className="text-2xl font-bold text-rose-800 mt-1">{stats.expired}</div>
-          <span className="text-[10px] text-rose-700">
-            {language === 'en' ? 'Urgent action required' : 'Cần xử lý khẩn cấp'}
+          <div className="text-2xl font-bold text-rose-800 mt-1">{stats.highAcademicRiskCount}</div>
+          <span className="text-[10px] text-rose-600 font-medium">
+            {t('students.kpiAcademicRiskSub', 'Open Interventions')}: {stats.openInterventionsCount}
+          </span>
+        </div>
+
+        {/* Card 3: High Parent Perception Risk */}
+        <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/40">
+          <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider">
+            {t('students.kpiParentPerception', 'High Parent Perception Risk')}
+          </span>
+          <div className="text-2xl font-bold text-amber-800 mt-1">{stats.highParentPerceptionRiskCount}</div>
+          <span className="text-[10px] text-amber-700 font-medium">
+            {t('students.kpiParentPerceptionSub', 'Pending Feedback')}: {stats.pendingFeedbackCount}
+          </span>
+        </div>
+
+        {/* Card 4: Expiring Fees / Renewal Risk */}
+        <div className="bg-white p-4 rounded-xl border border-slate-200">
+          <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+            {t('students.kpiRenewalRisk', 'Expiring Fees / Renewal Risk')}
+          </span>
+          <div className="text-2xl font-bold text-slate-900 mt-1">{stats.expiringFeesCount}</div>
+          <span className="text-[10px] text-slate-500 font-medium">
+            {t('students.kpiRenewalRiskSub', 'Fee expiry ≤ 30 days or High/Critical risk')}
           </span>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-        <div className="relative flex-1">
+      {/* Filters Bar — Exactly matching 6 filters from Customer Specification (Image 3 & 4) */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={language === 'en' ? 'Search by student name, code, parent, phone...' : 'Tìm theo tên học viên, mã học sinh, tên phụ huynh, SĐT...'}
+            placeholder={
+              language === 'en'
+                ? 'Search by student name, Student ID, parent...'
+                : 'Tìm theo tên học sinh, mã HS, phụ huynh...'
+            }
             className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        {/* 5 Dropdown Filters */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap items-center gap-2">
+          {/* 1. All Classes */}
           <select
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+            className="px-2.5 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">{language === 'en' ? 'All Classes' : 'Tất cả lớp học'}</option>
+            <option value="all">{t('students.allClasses', 'All Classes')}</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.level})
@@ -493,15 +688,56 @@ export const StudentListView: React.FC = () => {
             ))}
           </select>
 
+          {/* 2. All Levels */}
           <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            className="px-2.5 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
           >
-            <option value="all">{t('students.allStatuses', 'Tất cả trạng thái')}</option>
-            <option value="active">{t('renewal.statusSafe', 'Còn hạn an toàn')}</option>
-            <option value="warning">{t('renewal.statusDueSoon', 'Sắp hết hạn (≤ 14 ngày)')}</option>
-            <option value="expired">{t('renewal.statusOverdue', 'Đã hết hạn')}</option>
+            <option value="all">{t('students.filterAllLevels', 'All Levels')}</option>
+            {availableLevels.map((lvl) => (
+              <option key={lvl} value={lvl}>
+                {lvl}
+              </option>
+            ))}
+          </select>
+
+          {/* 3. All Teachers */}
+          <select
+            value={teacherFilter}
+            onChange={(e) => setTeacherFilter(e.target.value)}
+            className="px-2.5 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+          >
+            <option value="all">{t('students.filterAllTeachers', 'All Teachers')}</option>
+            {availableTeachers.map((tch) => (
+              <option key={tch.name} value={tch.name}>
+                {tch.label}
+              </option>
+            ))}
+          </select>
+
+          {/* 4. Academic Status */}
+          <select
+            value={academicStatusFilter}
+            onChange={(e) => setAcademicStatusFilter(e.target.value)}
+            className="px-2.5 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-medium"
+          >
+            <option value="all">{t('students.filterAcademicStatus', 'Academic Status')}</option>
+            <option value="on_track">{t('students.filterAcademicOnTrack', 'On Track')}</option>
+            <option value="risk">{t('students.filterAcademicRisk', 'High Academic Risk')}</option>
+          </select>
+
+          {/* 5. Renewal Risk */}
+          <select
+            value={renewalRiskFilter}
+            onChange={(e) => setRenewalRiskFilter(e.target.value)}
+            className="px-2.5 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-medium col-span-2 sm:col-span-1"
+          >
+            <option value="all">{t('students.filterRenewalRisk', 'Renewal Risk')}</option>
+            <option value="safe">{t('students.filterRenewalSafe', 'Safe (> 30 days)')}</option>
+            <option value="expiring">{t('students.filterRenewalExpiring', 'Expiring (≤ 30 days)')}</option>
+            <option value="due_soon">{t('students.filterRenewalDueSoon', 'Due Soon (≤ 14 days)')}</option>
+            <option value="overdue">{t('students.filterRenewalOverdue', 'Overdue')}</option>
           </select>
         </div>
       </div>
@@ -542,17 +778,28 @@ export const StudentListView: React.FC = () => {
 
                   return (
                     <tr key={student.id} className="hover:bg-slate-50/70 transition-colors">
-                      {/* Student Info */}
+                      {/* Student Info — Clickable to open Student Profile & Logcall */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 text-[#043264] font-bold text-xs flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStudentForProfile(student)}
+                            title={language === 'en' ? 'Open student profile & logcall' : 'Xem toàn bộ hồ sơ & logcall'}
+                            className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-[#043264] font-bold text-xs flex items-center justify-center transition-transform hover:scale-105 cursor-pointer shadow-2xs"
+                          >
                             {student.full_name.charAt(0)}
-                          </div>
+                          </button>
                           <div>
-                            <div className="font-semibold text-slate-900">{student.full_name}</div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedStudentForProfile(student)}
+                              className="font-semibold text-slate-900 hover:text-[#026fd7] hover:underline text-left transition-colors cursor-pointer block"
+                            >
+                              {student.full_name}
+                            </button>
                             <div className="text-[11px] text-slate-500">
                               {language === 'en' ? 'ID: ' : 'Mã: '}
-                              <span className="font-mono text-slate-700">{student.student_code}</span>
+                              <span className="font-mono text-slate-700 font-semibold">{student.student_code}</span>
                               {student.date_of_birth && ` • ${student.date_of_birth}`}
                             </div>
                           </div>
@@ -670,6 +917,15 @@ export const StudentListView: React.FC = () => {
                               </button>
                             </>
                           )}
+
+                          <button
+                            type="button"
+                            title={language === 'en' ? 'View Profile & Logcall' : 'Xem toàn bộ hồ sơ (Logcall)'}
+                            onClick={() => setSelectedStudentForProfile(student)}
+                            className="p-1.5 rounded-lg text-slate-600 hover:text-[#043264] hover:bg-blue-50 transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
 
                           <button
                             type="button"
@@ -1394,6 +1650,17 @@ export const StudentListView: React.FC = () => {
           </div>
         </div>
       )}
+      {/* =========================================================================
+          MODAL: XEM HỒ SƠ TOÀN DIỆN & LOGCALL (STUDENT PROFILE MODAL)
+      ========================================================================= */}
+      <StudentProfileModal
+        student={selectedStudentForProfile}
+        isOpen={Boolean(selectedStudentForProfile)}
+        onClose={() => setSelectedStudentForProfile(null)}
+        onOpenAddAssessment={() => onNavigate?.('assessments')}
+        onOpenAddFeedback={() => onNavigate?.('feedback')}
+        onOpenIntervention={() => onNavigate?.('interventions')}
+      />
     </div>
   );
 };

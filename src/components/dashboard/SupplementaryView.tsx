@@ -102,6 +102,16 @@ export const SupplementaryView: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('kapla-storage-change', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('kapla-storage-change', handleSync);
+    };
   }, [currentBranch?.id]);
 
   const handleCreateSession = async (e: React.FormEvent) => {

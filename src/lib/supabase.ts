@@ -34,9 +34,32 @@ import {
   AccountStatus,
 } from '../types';
 
-const isDev = Boolean(import.meta.env.DEV);
-const rawSupabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-const rawSupabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+// Safely resolve environment across Vite (import.meta.env) and Node.js test runners (process.env)
+const env: Record<string, string | boolean | undefined> =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env) ||
+  (typeof process !== 'undefined' && process.env) ||
+  {};
+
+if (typeof globalThis.localStorage === 'undefined') {
+  const memStore = new Map<string, string>();
+  (globalThis as any).localStorage = {
+    getItem: (key: string) => memStore.get(key) ?? null,
+    setItem: (key: string, value: string) => memStore.set(key, String(value)),
+    removeItem: (key: string) => memStore.delete(key),
+    clear: () => memStore.clear(),
+    key: (index: number) => Array.from(memStore.keys())[index] ?? null,
+    get length() {
+      return memStore.size;
+    },
+  };
+}
+
+const isDev = Boolean(env.DEV || env.NODE_ENV !== 'production');
+const rawSupabaseUrl = String(env.VITE_SUPABASE_URL || '')
+  .trim()
+  .replace(/\/rest\/v1\/?$/, '')
+  .replace(/\/+$/, '');
+const rawSupabaseAnonKey = String(env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 // Check if credentials are placeholders or dummy values
 export const isPlaceholderUrl =
@@ -72,8 +95,53 @@ export const realSupabase: SupabaseClient | null = hasValidSupabaseConfig
 
 // Mock mode is enabled if explicitly requested via VITE_ENABLE_DEV_MOCK=true
 // OR automatically when real Supabase is not configured (e.g. Netlify preview without cloud backend)
-const forceDevMock = import.meta.env.VITE_ENABLE_DEV_MOCK === 'true';
+const forceDevMock = env.VITE_ENABLE_DEV_MOCK === 'true';
 export const isDevMockMode = Boolean(forceDevMock || realSupabase === null);
+
+// Unified Realtime Subscription Helper (Supports Cross-tab LocalStorage and Multi-device Supabase WebSockets)
+export function subscribeToTableChanges(
+  table: string,
+  onChange: () => void
+): () => void {
+  const handleStorage = () => onChange();
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('kapla-storage-change', handleStorage);
+  }
+
+  let supaChannel: any = null;
+  if (realSupabase) {
+    try {
+      supaChannel = realSupabase
+        .channel(`rt:${table}-${Math.random().toString(36).substring(2, 7)}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table },
+          () => {
+            onChange();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn(`[Realtime] Subscription error for ${table}:`, e);
+    }
+  }
+
+  return () => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('kapla-storage-change', handleStorage);
+    }
+    if (supaChannel && realSupabase) {
+      try {
+        realSupabase.removeChannel(supaChannel);
+      } catch {
+        // ignore
+      }
+    }
+  };
+}
 
 if (!isDev) {
   if (hasValidSupabaseConfig) {
@@ -279,6 +347,17 @@ const DEFAULT_CLASSES: ClassRoom[] = [
     schedule: 'Thứ 7 & CN (14:30 - 16:00)',
     status: 'active',
   },
+  {
+    id: 'c0000000-0000-0000-0000-000000000005',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L6-0030',
+    level: 'Level 6',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Minh',
+    main_teacher_name: 'Jamie William',
+    schedule: 'Thứ 3 & 6 (18:00 - 19:30)',
+    status: 'active',
+  },
 ];
 
 const DEFAULT_AUDIT_LOGS: AuditLog[] = [
@@ -437,6 +516,23 @@ const DEFAULT_STUDENTS: Student[] = [
     notes: 'Kỹ năng Đọc cần cải thiện, HRT Trâm đang theo dõi sát sao.',
     created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
   },
+  {
+    id: 'b0000000-0000-0000-0000-000000000009',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    student_code: '0003',
+    full_name: 'Nguyễn Tuấn Khải',
+    date_of_birth: '2016-04-12',
+    gender: 'male',
+    parent_name: 'Nguyễn Văn Hùng (Bố)',
+    parent_phone: '0909 123 456',
+    parent_email: 'hung.nguyen@gmail.com',
+    tuition_expiry_date: '2027-04-30',
+    status: 'active',
+    current_class_id: 'c0000000-0000-0000-0000-000000000005',
+    assigned_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    notes: 'Học lực tốt, kỹ năng nói tự nhiên, chuẩn bị thi Cambridge Flyers.',
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
 ];
 
 const DEFAULT_ENROLLMENTS: Enrollment[] = [
@@ -563,6 +659,11 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     speaking_score: 4.0,
     reading_score: 3.5,
     writing_score: 2.5,
+    listening_level: 'Above Level',
+    speaking_level: 'On Track',
+    reading_level: 'On Track',
+    writing_level: 'Below Level',
+    progress_status: 'Needs Attention',
     strengths: 'Phát âm tự nhiên chuẩn Oxford, phản xạ nói nhanh, tương tác hào hứng với giáo viên bản ngữ.',
     weaknesses: 'Ngữ pháp viết câu đơn còn nhầm thì hiện tại đơn và chia động từ ngôi thứ 3 số ít.',
     progress_notes: 'Cần can thiệp bổ trợ kỹ năng Viết để củng cố trước kỳ thi Starters.',
@@ -581,6 +682,11 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     speaking_score: 4.5,
     reading_score: 4.0,
     writing_score: 4.0,
+    listening_level: 'On Track',
+    speaking_level: 'Above Level',
+    reading_level: 'On Track',
+    writing_level: 'On Track',
+    progress_status: 'Improved',
     strengths: 'Nắm từ vựng tốt, tích cực trong các hoạt động trò chơi ngôn ngữ.',
     weaknesses: 'Thỉnh thoảng mất tập trung ở 15 phút cuối buổi học.',
     has_academic_risk: false,
@@ -598,6 +704,11 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     speaking_score: 5.0,
     reading_score: 4.5,
     writing_score: 4.0,
+    listening_level: 'Above Level',
+    speaking_level: 'Above Level',
+    reading_level: 'Above Level',
+    writing_level: 'On Track',
+    progress_status: 'Improved',
     strengths: 'Khả năng nói lưu loát, dùng được các câu ghép cơ bản, ngữ điệu tự nhiên.',
     weaknesses: 'Cần đọc thêm truyện tiếng Anh nhiều trang để tăng tốc độ đọc.',
     has_academic_risk: false,
@@ -615,11 +726,39 @@ const DEFAULT_ASSESSMENTS: StudentAssessment[] = [
     speaking_score: 4.0,
     reading_score: 2.5,
     writing_score: 3.5,
+    listening_level: 'On Track',
+    speaking_level: 'On Track',
+    reading_level: 'Below Level',
+    writing_level: 'On Track',
+    progress_status: 'Needs Attention',
     strengths: 'Nghe tốt bài hội thoại dài, từ vựng phong phú.',
     weaknesses: 'Kỹ năng Skimming và Scanning bài đọc dài còn hạn chế, hay bị bẫy từ đồng nghĩa.',
     has_academic_risk: true,
     assessed_by: 'u0000000-0000-0000-0000-000000000005', // HRT Trâm
     created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  },
+  {
+    id: 'd0000000-0000-0000-0000-000000000005',
+    student_id: 'b0000000-0000-0000-0000-000000000009',
+    class_id: 'c0000000-0000-0000-0000-000000000005',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    period: 'Mid-Term',
+    assessment_date: '2026-11-13',
+    listening_score: 4.0,
+    speaking_score: 4.0,
+    reading_score: 4.0,
+    writing_score: 4.0,
+    listening_level: 'On Track',
+    speaking_level: 'On Track',
+    reading_level: 'On Track',
+    writing_level: 'On Track',
+    progress_status: 'Improved',
+    strengths: 'Active participation in group discussions, confident natural Oxford pronunciation.',
+    weaknesses: 'Needs to review irregular past tense verbs in creative storytelling.',
+    progress_notes: 'Consistent improvement across all 4 core competencies.',
+    has_academic_risk: false,
+    assessed_by: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
 ];
 
@@ -918,8 +1057,8 @@ if (typeof window !== 'undefined') {
 
 export class MockStorageService {
   private static ensureDevOnly(): void {
-    if (typeof window !== 'undefined' && !import.meta.env.DEV) {
-      if (hasValidSupabaseConfig && import.meta.env.VITE_ENABLE_DEV_MOCK === 'false') {
+    if (typeof window !== 'undefined' && !isDev) {
+      if (hasValidSupabaseConfig && env.VITE_ENABLE_DEV_MOCK === 'false') {
         throw new Error('Chính sách bảo mật KAPLA: Chế độ Mock bị từ chối vì hệ thống đang kết nối Supabase Cloud chính thức.');
       }
     }
@@ -1162,6 +1301,51 @@ export class MockStorageService {
     return JSON.parse(raw);
   }
 
+  static notifyChange(key?: string): void {
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('kapla-storage-change', { detail: { key } }));
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  static getCurrentActor(): { id: string; email: string; name: string; branch_id?: string; branch_name?: string } {
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.CURRENT_USER) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.email) {
+          const profiles = this.getProfiles();
+          const found = profiles.find(
+            (p) => p.email.toLowerCase() === parsed.email.toLowerCase() || p.id === parsed.id
+          );
+          const memberships = this.getMemberships();
+          const userMem = memberships.find((m) => m.user_id === (found?.id || parsed.id));
+          const branches = this.getBranches();
+          const branch = branches.find((b) => b.id === (userMem?.branch_id || found?.preferred_branch_id));
+          return {
+            id: parsed.id || found?.id || 'sys-actor',
+            email: parsed.email,
+            name: found?.full_name || parsed.email.split('@')[0],
+            branch_id: branch?.id,
+            branch_name: branch?.name,
+          };
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return {
+      id: 'system',
+      email: 'admin@kapla.edu.vn',
+      name: 'Quản trị viên Hệ thống',
+      branch_id: 'a0000000-0000-0000-0000-000000000001',
+      branch_name: 'KAPLA Phạm Hùng',
+    };
+  }
+
   static getAuditLogs(): AuditLog[] {
     const raw = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
     if (!raw) {
@@ -1172,14 +1356,20 @@ export class MockStorageService {
   }
 
   static appendAuditLog(log: Omit<AuditLog, 'id' | 'created_at'>): void {
+    const actor = this.getCurrentActor();
     const logs = this.getAuditLogs();
     const newLog: AuditLog = {
+      actor_id: log.actor_id || actor.id,
+      actor_email: log.actor_email || actor.email,
+      branch_id: log.branch_id || actor.branch_id,
+      branch_name: log.branch_name || actor.branch_name,
       ...log,
       id: 'log-' + Math.random().toString(36).substring(2, 9),
       created_at: new Date().toISOString(),
     };
     logs.unshift(newLog);
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(logs));
+    this.notifyChange(STORAGE_KEYS.AUDIT_LOGS);
   }
 
   static getStudents(): Student[] {
@@ -1231,6 +1421,7 @@ export class MockStorageService {
         ...s,
         branch: br,
         current_class: cls,
+        current_class_name: cls?.name,
         assigned_hrt: hrt,
         effective_hrt_name: hrt ? `${hrt.full_name} (HRT riêng)` : defHrt ? `${defHrt.full_name} (Theo lớp)` : 'Chưa phân công',
       };
@@ -1239,6 +1430,7 @@ export class MockStorageService {
 
   static addStudent(payload: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Student {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const students = this.getStudents();
     const newStudent: Student = {
       ...payload,
@@ -1263,11 +1455,54 @@ export class MockStorageService {
       localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(enrollments));
     }
 
+    // Auto-create renewal tracking entry
+    if (newStudent.tuition_expiry_date) {
+      const rawRen = localStorage.getItem(STORAGE_KEYS.RENEWAL);
+      const renList: RenewalRecord[] = rawRen ? JSON.parse(rawRen) : [];
+      const diffDays = Math.ceil(
+        (new Date(newStudent.tuition_expiry_date).getTime() - Date.now()) / 86400000
+      );
+      renList.push({
+        id: 'ren-' + Math.random().toString(36).substring(2, 9),
+        student_id: newStudent.id,
+        branch_id: newStudent.branch_id,
+        current_expiry_date: newStudent.tuition_expiry_date,
+        days_remaining: diffDays,
+        risk_level: diffDays <= 0 ? 'high' : diffDays <= 14 ? 'high' : diffDays <= 30 ? 'medium' : 'low',
+        status: 'monitoring',
+        assigned_hrt_id: newStudent.assigned_hrt_id,
+        contact_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renList));
+    }
+
+    const branches = this.getBranches();
+    const branch = branches.find((b) => b.id === newStudent.branch_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'CREATE_STUDENT',
+      branch_id: newStudent.branch_id,
+      branch_name: branch?.name || actor.branch_name,
+      details: {
+        actor_name: actor.name,
+        student_id: newStudent.id,
+        student_name: newStudent.full_name,
+        student_code: newStudent.student_code,
+        class_id: newStudent.current_class_id,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
     return newStudent;
   }
 
   static updateStudent(studentId: string, updates: Partial<Student>): Student {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const students = this.getStudents();
     const idx = students.findIndex((s) => s.id === studentId);
     if (idx === -1) throw new Error('Không tìm thấy học viên.');
@@ -1278,15 +1513,61 @@ export class MockStorageService {
     };
     students[idx] = updated;
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+
+    // Synchronize renewal record if tuition expiry or HRT changed
+    if (updates.tuition_expiry_date || updates.assigned_hrt_id !== undefined) {
+      const rawRen = localStorage.getItem(STORAGE_KEYS.RENEWAL);
+      if (rawRen) {
+        const renList = JSON.parse(rawRen) as RenewalRecord[];
+        const renIdx = renList.findIndex((r) => r.student_id === studentId);
+        if (renIdx !== -1) {
+          if (updates.tuition_expiry_date) {
+            const diffDays = Math.ceil(
+              (new Date(updates.tuition_expiry_date).getTime() - Date.now()) / 86400000
+            );
+            renList[renIdx].current_expiry_date = updates.tuition_expiry_date;
+            renList[renIdx].days_remaining = diffDays;
+            renList[renIdx].risk_level = diffDays <= 0 ? 'high' : diffDays <= 14 ? 'high' : diffDays <= 30 ? 'medium' : 'low';
+          }
+          if (updates.assigned_hrt_id !== undefined) {
+            renList[renIdx].assigned_hrt_id = updates.assigned_hrt_id || undefined;
+          }
+          renList[renIdx].updated_at = new Date().toISOString();
+          localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renList));
+        }
+      }
+    }
+
+    const branches = this.getBranches();
+    const branch = branches.find((b) => b.id === updated.branch_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'UPDATE_STUDENT',
+      branch_id: updated.branch_id,
+      branch_name: branch?.name || actor.branch_name,
+      details: {
+        actor_name: actor.name,
+        student_id: updated.id,
+        student_name: updated.full_name,
+        changed_fields: Object.keys(updates),
+        updates,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
     return updated;
   }
 
   static deleteStudent(studentId: string): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
+    const targetStudent = this.getStudents().find((s) => s.id === studentId);
     const students = this.getStudents().filter((s) => s.id !== studentId);
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
 
-    // Cascade delete enrollments, care tasks, assessments, interventions, feedback, renewal
+    // Cascade delete enrollments, care tasks, assessments, interventions, feedback, renewal, transfers, supplementary
     const enrollments = this.getEnrollments().filter((e) => e.student_id !== studentId);
     localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(enrollments));
 
@@ -1319,6 +1600,36 @@ export class MockStorageService {
       const renewal = (JSON.parse(rawRenewal) as RenewalRecord[]).filter((r) => r.student_id !== studentId);
       localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renewal));
     }
+
+    const rawTransfers = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
+    if (rawTransfers) {
+      const transfers = (JSON.parse(rawTransfers) as ClassTransfer[]).filter((t) => t.student_id !== studentId);
+      localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(transfers));
+    }
+
+    const rawSupp = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
+    if (rawSupp) {
+      const sessions = (JSON.parse(rawSupp) as SupplementarySession[]).map((s) => ({
+        ...s,
+        attendees: s.attendees ? s.attendees.filter((att) => att.student_id !== studentId) : [],
+      }));
+      localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(sessions));
+    }
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'DELETE_STUDENT',
+      branch_id: targetStudent?.branch_id,
+      details: {
+        actor_name: actor.name,
+        student_id: studentId,
+        student_name: targetStudent?.full_name,
+        student_code: targetStudent?.student_code,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
   }
 
   static addStaff(payload: {
@@ -1472,6 +1783,7 @@ export class MockStorageService {
 
   static transferStudentClass(studentId: string, toClassId: string, reason: string): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const students = this.getStudents();
     const classes = this.getClasses();
     const studentIdx = students.findIndex((s) => s.id === studentId);
@@ -1499,7 +1811,7 @@ export class MockStorageService {
       reason,
       from_class_name: fromClass?.name,
       to_class_name: targetClass.name,
-      transferred_by_name: 'Giám đốc cơ sở (CM)',
+      transferred_by_name: actor.name || 'Giám đốc cơ sở (CM)',
       created_at: new Date().toISOString(),
     });
     localStorage.setItem(STORAGE_KEYS.TRANSFERS, JSON.stringify(transfers));
@@ -1527,17 +1839,78 @@ export class MockStorageService {
       status: 'active',
     });
     localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(enrollments));
+
+    const branches = this.getBranches();
+    const toBranch = branches.find((b) => b.id === toBranchId);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'TRANSFER_CLASS',
+      branch_id: toBranchId,
+      branch_name: toBranch?.name || actor.branch_name,
+      details: {
+        actor_name: actor.name,
+        student_id: studentId,
+        student_name: student.full_name,
+        from_class: fromClass?.name,
+        to_class: targetClass.name,
+        reason,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
+    this.notifyChange(STORAGE_KEYS.TRANSFERS);
   }
 
   static assignStudentHrt(studentId: string, hrtId: string | null, reason?: string): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const students = this.getStudents();
     const studentIdx = students.findIndex((s) => s.id === studentId);
     if (studentIdx === -1) throw new Error('Không tìm thấy học viên.');
 
+    const profiles = this.getProfiles();
+    const newHrt = profiles.find((p) => p.id === hrtId);
+    const prevHrt = profiles.find((p) => p.id === students[studentIdx].assigned_hrt_id);
+
     students[studentIdx].assigned_hrt_id = hrtId || undefined;
     students[studentIdx].updated_at = new Date().toISOString();
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+
+    // Sync renewal record HRT
+    const rawRen = localStorage.getItem(STORAGE_KEYS.RENEWAL);
+    if (rawRen) {
+      const renList = JSON.parse(rawRen) as RenewalRecord[];
+      const renIdx = renList.findIndex((r) => r.student_id === studentId);
+      if (renIdx !== -1) {
+        renList[renIdx].assigned_hrt_id = hrtId || undefined;
+        renList[renIdx].updated_at = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renList));
+      }
+    }
+
+    const branches = this.getBranches();
+    const branch = branches.find((b) => b.id === students[studentIdx].branch_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'ASSIGN_HRT',
+      branch_id: students[studentIdx].branch_id,
+      branch_name: branch?.name || actor.branch_name,
+      details: {
+        actor_name: actor.name,
+        student_id: studentId,
+        student_name: students[studentIdx].full_name,
+        new_hrt_name: newHrt?.full_name || 'Chưa phân công',
+        new_hrt_email: newHrt?.email,
+        previous_hrt_name: prevHrt?.full_name || 'Chưa phân công',
+        reason: reason || 'Phân công lại nhân sự phụ trách',
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
   }
 
   static getCareTasks(callerId?: string, branchId?: string, isSysAdmin = false, isCm = false): StudentTask[] {
@@ -1572,12 +1945,29 @@ export class MockStorageService {
 
   static updateTaskStatus(taskId: string, status: CareTaskStatus): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const tasks = this.getCareTasks();
     const idx = tasks.findIndex((t) => t.id === taskId);
     if (idx !== -1) {
       tasks[idx].status = status;
       tasks[idx].updated_at = new Date().toISOString();
       localStorage.setItem(STORAGE_KEYS.CARE_TASKS, JSON.stringify(tasks));
+
+      this.appendAuditLog({
+        actor_id: actor.id,
+        actor_email: actor.email,
+        action: 'UPDATE_CARE_TASK',
+        details: {
+          actor_name: actor.name,
+          task_id: taskId,
+          student_id: tasks[idx].student_id,
+          student_name: tasks[idx].student?.full_name,
+          new_status: status,
+          task_type: tasks[idx].task_type,
+        },
+      });
+
+      this.notifyChange(STORAGE_KEYS.CARE_TASKS);
     }
   }
 
@@ -1608,8 +1998,14 @@ export class MockStorageService {
 
   static addAssessment(payload: Omit<StudentAssessment, 'id' | 'has_academic_risk' | 'created_at' | 'updated_at'>): StudentAssessment {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const assessments = this.getAssessments();
     const hasRisk =
+      payload.listening_level === 'Below Level' ||
+      payload.speaking_level === 'Below Level' ||
+      payload.reading_level === 'Below Level' ||
+      payload.writing_level === 'Below Level' ||
+      payload.progress_status === 'Needs Attention' ||
       payload.listening_score < 3.0 ||
       payload.speaking_score < 3.0 ||
       payload.reading_score < 3.0 ||
@@ -1624,7 +2020,39 @@ export class MockStorageService {
     };
     assessments.unshift(newAssessment);
     localStorage.setItem(STORAGE_KEYS.ASSESSMENTS, JSON.stringify(assessments));
-    return newAssessment;
+    const student = this.getStudents().find((s) => s.id === payload.student_id);
+    const cls = this.getClasses().find((c) => c.id === payload.class_id);
+    const assessor = this.getProfiles().find((p) => p.id === payload.assessed_by);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'CREATE_ASSESSMENT',
+      branch_id: cls?.branch_id,
+      details: {
+        actor_name: actor.name,
+        assessment_id: newAssessment.id,
+        student_id: payload.student_id,
+        student_name: student?.full_name,
+        class_name: cls?.name,
+        scores: {
+          listening: payload.listening_score,
+          speaking: payload.speaking_score,
+          reading: payload.reading_score,
+          writing: payload.writing_score,
+        },
+        progress_status: payload.progress_status,
+        has_academic_risk: hasRisk,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.ASSESSMENTS);
+    return {
+      ...newAssessment,
+      student,
+      class: cls,
+      assessed_by_name: assessor?.full_name || actor.name || 'Giáo viên',
+    };
   }
 
   static getInterventions(branchId?: string, classId?: string, status?: InterventionStatus): InterventionTicket[] {
@@ -1657,6 +2085,7 @@ export class MockStorageService {
 
   static addIntervention(payload: Omit<InterventionTicket, 'id' | 'status' | 'verified_by' | 'verified_at' | 'verification_notes' | 'created_at' | 'updated_at'>): InterventionTicket {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const interventions = this.getInterventions();
     const newIntervention: InterventionTicket = {
       ...payload,
@@ -1667,7 +2096,34 @@ export class MockStorageService {
     };
     interventions.unshift(newIntervention);
     localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
-    return newIntervention;
+    const student = this.getStudents().find((s) => s.id === payload.student_id);
+    const cls = this.getClasses().find((c) => c.id === payload.class_id);
+    const staff = this.getProfiles().find((p) => p.id === payload.assigned_staff_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'CREATE_INTERVENTION',
+      branch_id: payload.branch_id,
+      details: {
+        actor_name: actor.name,
+        ticket_id: newIntervention.id,
+        student_id: payload.student_id,
+        student_name: student?.full_name,
+        class_name: cls?.name,
+        issue_description: payload.issue_description,
+        root_cause: payload.root_cause,
+        action_plan: payload.action_plan,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.INTERVENTIONS);
+    return {
+      ...newIntervention,
+      student,
+      class: cls,
+      assigned_staff_name: staff?.full_name || 'Chưa gán',
+    };
   }
 
   static updateInterventionStatus(
@@ -1676,6 +2132,7 @@ export class MockStorageService {
     reassessmentResult?: string
   ): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const interventions = this.getInterventions();
     const idx = interventions.findIndex((i) => i.id === id);
     if (idx === -1) throw new Error('Không tìm thấy phiếu can thiệp.');
@@ -1690,6 +2147,21 @@ export class MockStorageService {
     }
     interventions[idx].updated_at = new Date().toISOString();
     localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'UPDATE_INTERVENTION',
+      branch_id: interventions[idx].branch_id,
+      details: {
+        actor_name: actor.name,
+        ticket_id: id,
+        new_status: status,
+        reassessment_result: reassessmentResult,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.INTERVENTIONS);
   }
 
   static verifyInterventionMock(
@@ -1704,6 +2176,7 @@ export class MockStorageService {
       throw new Error('Quyền bị từ chối: Chỉ Head Teacher hoặc CM chi nhánh mới có quyền xác minh phiếu can thiệp.');
     }
 
+    const actor = this.getCurrentActor();
     const interventions = this.getInterventions();
     const idx = interventions.findIndex((i) => i.id === id);
     if (idx === -1) throw new Error('Không tìm thấy phiếu can thiệp.');
@@ -1714,6 +2187,20 @@ export class MockStorageService {
     interventions[idx].verification_notes = verificationNotes;
     interventions[idx].updated_at = new Date().toISOString();
     localStorage.setItem(STORAGE_KEYS.INTERVENTIONS, JSON.stringify(interventions));
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'VERIFY_INTERVENTION',
+      branch_id: interventions[idx].branch_id,
+      details: {
+        actor_name: actor.name,
+        ticket_id: id,
+        verification_notes: verificationNotes,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.INTERVENTIONS);
   }
 
   static getFeedbacks(branchId?: string, status?: FeedbackStatus): ParentFeedback[] {
@@ -1740,6 +2227,7 @@ export class MockStorageService {
 
   static addFeedback(payload: Omit<ParentFeedback, 'id' | 'created_at' | 'updated_at'>): ParentFeedback {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
     const feedbacks: ParentFeedback[] = raw ? JSON.parse(raw) : DEFAULT_FEEDBACKS;
     const newFeedback: ParentFeedback = {
@@ -1750,17 +2238,59 @@ export class MockStorageService {
     };
     feedbacks.unshift(newFeedback);
     localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedbacks));
-    return newFeedback;
+    const student = this.getStudents().find((s) => s.id === payload.student_id);
+    const branch = this.getBranches().find((b) => b.id === payload.branch_id);
+    const staff = this.getProfiles().find((p) => p.id === payload.assigned_staff_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'CREATE_FEEDBACK',
+      branch_id: payload.branch_id,
+      details: {
+        actor_name: actor.name,
+        feedback_id: newFeedback.id,
+        student_id: payload.student_id,
+        student_name: student?.full_name,
+        feedback_type: payload.feedback_type,
+        channel: payload.channel,
+        content: payload.content,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.FEEDBACK);
+    return {
+      ...newFeedback,
+      student,
+      branch,
+      assigned_staff_name: staff?.full_name || 'Chưa phân công',
+    };
   }
 
   static updateFeedback(id: string, updates: Partial<ParentFeedback>): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const raw = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
     const feedbacks: ParentFeedback[] = raw ? JSON.parse(raw) : DEFAULT_FEEDBACKS;
     const idx = feedbacks.findIndex((f) => f.id === id);
     if (idx === -1) throw new Error('Không tìm thấy phản hồi.');
     feedbacks[idx] = { ...feedbacks[idx], ...updates, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedbacks));
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'UPDATE_FEEDBACK',
+      branch_id: feedbacks[idx].branch_id,
+      details: {
+        actor_name: actor.name,
+        feedback_id: id,
+        new_status: updates.status,
+        resolution_notes: updates.resolution_notes,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.FEEDBACK);
   }
 
   static getSupplementarySessions(branchId?: string, status?: SessionStatus): SupplementarySession[] {
@@ -1792,6 +2322,7 @@ export class MockStorageService {
 
   static addSupplementarySession(payload: Omit<SupplementarySession, 'id' | 'created_at' | 'updated_at'>): SupplementarySession {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const raw = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
     const sessions: SupplementarySession[] = raw ? JSON.parse(raw) : DEFAULT_SUPPLEMENTARY_SESSIONS;
     const newSession: SupplementarySession = {
@@ -1802,17 +2333,58 @@ export class MockStorageService {
     };
     sessions.unshift(newSession);
     localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(sessions));
-    return newSession;
+    const cls = this.getClasses().find((c) => c.id === payload.class_id);
+    const branch = this.getBranches().find((b) => b.id === payload.branch_id);
+    const teacher = this.getProfiles().find((p) => p.id === payload.teacher_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'CREATE_SUPPLEMENTARY',
+      branch_id: payload.branch_id,
+      details: {
+        actor_name: actor.name,
+        session_id: newSession.id,
+        title: payload.title,
+        class_name: cls?.name,
+        teacher_name: teacher?.full_name,
+        attendees_count: payload.attendees?.length || 0,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.SUPPLEMENTARY);
+    return {
+      ...newSession,
+      class: cls,
+      branch,
+      teacher_name: teacher?.full_name || 'Chưa gán',
+    };
   }
 
   static updateSupplementarySession(id: string, updates: Partial<SupplementarySession>): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const raw = localStorage.getItem(STORAGE_KEYS.SUPPLEMENTARY);
     const sessions: SupplementarySession[] = raw ? JSON.parse(raw) : DEFAULT_SUPPLEMENTARY_SESSIONS;
     const idx = sessions.findIndex((s) => s.id === id);
     if (idx === -1) throw new Error('Không tìm thấy buổi học.');
     sessions[idx] = { ...sessions[idx], ...updates, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.SUPPLEMENTARY, JSON.stringify(sessions));
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'UPDATE_SUPPLEMENTARY',
+      branch_id: sessions[idx].branch_id,
+      details: {
+        actor_name: actor.name,
+        session_id: id,
+        new_status: updates.status,
+        updates,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.SUPPLEMENTARY);
   }
 
   static getRenewalRecords(branchId?: string, status?: RenewalStatus): RenewalRecord[] {
@@ -1842,12 +2414,45 @@ export class MockStorageService {
 
   static updateRenewalRecord(id: string, updates: Partial<RenewalRecord>): void {
     this.ensureDevOnly();
+    const actor = this.getCurrentActor();
     const raw = localStorage.getItem(STORAGE_KEYS.RENEWAL);
     const records: RenewalRecord[] = raw ? JSON.parse(raw) : DEFAULT_RENEWAL_RECORDS;
     const idx = records.findIndex((r) => r.id === id);
     if (idx === -1) throw new Error('Không tìm thấy bản ghi tái tục.');
     records[idx] = { ...records[idx], ...updates, updated_at: new Date().toISOString() };
     localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(records));
+
+    // Cross-entity synchronization: When renewed with a new expiry date, update the student record
+    if (updates.status === 'renewed' && updates.new_expiry_date && records[idx].student_id) {
+      try {
+        this.updateStudent(records[idx].student_id, {
+          tuition_expiry_date: updates.new_expiry_date,
+          status: 'active',
+        });
+      } catch {
+        // student update optional fallback
+      }
+    }
+
+    const student = this.getStudents().find((s) => s.id === records[idx].student_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'UPDATE_RENEWAL',
+      branch_id: records[idx].branch_id,
+      details: {
+        actor_name: actor.name,
+        renewal_id: id,
+        student_id: records[idx].student_id,
+        student_name: student?.full_name,
+        new_status: updates.status,
+        new_expiry_date: updates.new_expiry_date,
+        notes: updates.notes,
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.RENEWAL);
   }
 
   static getSystemConfig(): SystemConfig {
@@ -2236,6 +2841,11 @@ export const AssessmentService = {
           speaking_score: payload.speaking_score,
           reading_score: payload.reading_score,
           writing_score: payload.writing_score,
+          listening_level: payload.listening_level,
+          speaking_level: payload.speaking_level,
+          reading_level: payload.reading_level,
+          writing_level: payload.writing_level,
+          progress_status: payload.progress_status,
           strengths: payload.strengths,
           weaknesses: payload.weaknesses,
           progress_notes: payload.progress_notes,

@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { InterventionTicket, InterventionStatus, Student, ClassRoom, UserProfile } from '../../types';
-import { InterventionService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
+import { InterventionTicket, InterventionStatus, Student, ClassRoom, UserProfile, DashboardNavSection } from '../../types';
+import { InterventionService, StudentService, realSupabase, MockStorageService, subscribeToTableChanges } from '../../lib/supabase';
+import { StudentProfileModal } from './StudentProfileModal';
 
 const getStatusMeta = (status: InterventionStatus, lang: 'vi' | 'en') => {
   if (lang === 'en') {
@@ -89,7 +90,11 @@ const getStatusMeta = (status: InterventionStatus, lang: 'vi' | 'en') => {
   }
 };
 
-export const InterventionsView: React.FC = () => {
+interface InterventionsViewProps {
+  onNavigate?: (section: DashboardNavSection) => void;
+}
+
+export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate }) => {
   const { currentBranch, profile, activeRole } = useAuth();
   const { language, tDb } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
@@ -108,6 +113,7 @@ export const InterventionsView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Modals
+  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<Student | null>(null);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [selectedForResolve, setSelectedForResolve] = useState<InterventionTicket | null>(null);
   const [selectedForVerify, setSelectedForVerify] = useState<InterventionTicket | null>(null);
@@ -172,6 +178,7 @@ export const InterventionsView: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    return subscribeToTableChanges('interventions', loadData);
   }, [currentBranch?.id]);
 
   const handleStudentSelect = (studentId: string) => {
@@ -455,9 +462,16 @@ export const InterventionsView: React.FC = () => {
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const s = ticket.student || students.find((st) => st.id === ticket.student_id);
+                        if (s) setSelectedStudentForProfile(s);
+                      }}
+                      className="font-bold text-slate-900 text-sm hover:text-[#026fd7] hover:underline cursor-pointer text-left"
+                    >
                       {ticket.student?.full_name || (language === 'en' ? 'Student' : 'Học viên')}
-                    </span>
+                    </button>
                     <span className="text-[11px] text-slate-500 font-mono">
                       ({ticket.class?.name || (language === 'en' ? 'Class' : 'Lớp')})
                     </span>
@@ -855,6 +869,22 @@ export const InterventionsView: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Student Profile & Logcall Modal */}
+      <StudentProfileModal
+        student={selectedStudentForProfile}
+        isOpen={Boolean(selectedStudentForProfile)}
+        onClose={() => setSelectedStudentForProfile(null)}
+        onOpenIntervention={(stu) => {
+          setNewForm((prev) => ({
+            ...prev,
+            student_id: stu.id,
+            class_id: stu.current_class_id || '',
+          }));
+          setShowCreateModal(true);
+        }}
+        onOpenAddAssessment={() => onNavigate?.('assessments')}
+        onOpenAddFeedback={() => onNavigate?.('feedback')}
+      />
     </div>
   );
 };

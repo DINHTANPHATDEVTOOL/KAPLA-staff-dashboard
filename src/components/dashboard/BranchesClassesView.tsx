@@ -36,6 +36,16 @@ export const BranchesClassesView: React.FC = () => {
 
   useEffect(() => {
     loadClasses();
+
+    const handleSync = () => {
+      loadClasses();
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('kapla-storage-change', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('kapla-storage-change', handleSync);
+    };
   }, [loadClasses]);
 
   const filteredClasses = classes.filter((c) => {

@@ -20,7 +20,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { AuditLog } from '../../types';
-import { MockStorageService, realSupabase } from '../../lib/supabase';
+import { MockStorageService, realSupabase, subscribeToTableChanges } from '../../lib/supabase';
 
 export const ActivityLogsView: React.FC = () => {
   const { currentBranch, profile } = useAuth();
@@ -58,6 +58,7 @@ export const ActivityLogsView: React.FC = () => {
     };
 
     fetchLogs();
+    return subscribeToTableChanges('audit_logs', fetchLogs);
   }, [currentBranch?.id, isSystemAdmin]);
 
   const filteredLogs = useMemo(() => {

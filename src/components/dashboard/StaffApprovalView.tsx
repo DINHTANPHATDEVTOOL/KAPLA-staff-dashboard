@@ -115,6 +115,16 @@ export const StaffApprovalView: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const handleSync = () => {
+      loadData();
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('kapla-storage-change', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('kapla-storage-change', handleSync);
+    };
   }, [loadData]);
 
   // Pending users calculation

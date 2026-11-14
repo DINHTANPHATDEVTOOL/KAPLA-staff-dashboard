@@ -6,12 +6,11 @@ import React, { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { RoleBadgeIcon } from '../common/CustomIcons';
 import { AuthLayout } from './AuthLayout';
 
 export const LoginForm: React.FC = () => {
   const { signIn, setAuthScreen } = useAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -159,50 +158,6 @@ export const LoginForm: React.FC = () => {
               {t('auth.registerNow', 'Đăng ký tài khoản ngay')}
             </button>
           </p>
-        </div>
-
-        {/* Quick Fill Test Accounts with Bespoke Role Badges */}
-        <div className="pt-4 border-t border-slate-200">
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-2.5">
-            <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#026fd7] animate-pulse"></span>
-              {t('auth.demoAccountsHeader', 'Tài khoản thử nghiệm phân quyền nội bộ:')}
-            </span>
-            <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-              PW: Kapla@2026
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {[
-              { role: 'system_admin', labelVi: 'Admin', labelEn: 'Admin', email: 'admin@kapla.edu.vn' },
-              { role: 'center_manager', labelVi: 'CM Phương Nhi', labelEn: 'CM Phuong Nhi', email: 'cm.nhi@kapla.edu.vn' },
-              { role: 'academic_lead', labelVi: 'Head Teacher Jamie', labelEn: 'Head Teacher Jamie', email: 'ht.jamie@kapla.edu.vn' },
-              { role: 'hrt', labelVi: 'HRT Minh', labelEn: 'HRT Minh', email: 'hrt.minh@kapla.edu.vn' },
-              { role: 'hrt', labelVi: 'HRT Trâm', labelEn: 'HRT Tram', email: 'hrt.tram@kapla.edu.vn' },
-              { role: 'hrt', labelVi: 'HRT Vy', labelEn: 'HRT Vy', email: 'hrt.vy@kapla.edu.vn' },
-            ].map((acc) => (
-              <button
-                key={acc.email}
-                type="button"
-                onClick={() => {
-                  setEmail(acc.email);
-                  setPassword('Kapla@2026');
-                }}
-                className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-white hover:border-[#026fd7]/50 border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all duration-200 hover:-translate-y-0.5 text-left group"
-                title={`${language === 'en' ? acc.labelEn : acc.labelVi} (${acc.email})`}
-              >
-                <RoleBadgeIcon role={acc.role} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <span className="block text-[11px] font-semibold text-slate-800 group-hover:text-[#026fd7] transition-colors truncate">
-                    {language === 'en' ? acc.labelEn : acc.labelVi}
-                  </span>
-                  <span className="block text-[9px] text-slate-400 font-mono truncate">
-                    {acc.email.split('@')[0]}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
         </div>
       </form>
     </AuthLayout>

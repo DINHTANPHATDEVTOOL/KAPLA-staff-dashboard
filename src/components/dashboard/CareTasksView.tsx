@@ -19,7 +19,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StudentTask, CareTaskStatus, CareTaskType } from '../../types';
-import { StudentService } from '../../lib/supabase';
+import { StudentService, subscribeToTableChanges } from '../../lib/supabase';
 
 export const CareTasksView: React.FC = () => {
   const { profile, activeRole, currentBranch } = useAuth();
@@ -58,6 +58,7 @@ export const CareTasksView: React.FC = () => {
 
   useEffect(() => {
     loadTasks();
+    return subscribeToTableChanges('student_tasks', loadTasks);
   }, [currentBranch?.id, profile?.id, isSysAdmin, isCM]);
 
   const handleToggleStatus = async (task: StudentTask) => {

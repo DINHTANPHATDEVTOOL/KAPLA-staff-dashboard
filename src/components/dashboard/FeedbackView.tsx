@@ -26,10 +26,15 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { ParentFeedback, FeedbackType, FeedbackChannel, FeedbackStatus, Student, UserProfile } from '../../types';
-import { FeedbackService, StudentService, realSupabase, MockStorageService } from '../../lib/supabase';
+import { ParentFeedback, FeedbackType, FeedbackChannel, FeedbackStatus, Student, UserProfile, DashboardNavSection } from '../../types';
+import { FeedbackService, StudentService, realSupabase, MockStorageService, subscribeToTableChanges } from '../../lib/supabase';
+import { StudentProfileModal } from './StudentProfileModal';
 
-export const FeedbackView: React.FC = () => {
+interface FeedbackViewProps {
+  onNavigate?: (section: DashboardNavSection) => void;
+}
+
+export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
   const { currentBranch, profile } = useAuth();
   const { language, t, tDb } = useLanguage();
 
@@ -64,6 +69,7 @@ export const FeedbackView: React.FC = () => {
 
   // Modals
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
+  const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<Student | null>(null);
   const [selectedFeedbackForResolve, setSelectedFeedbackForResolve] = useState<ParentFeedback | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState<string>('');
   const [resolveStatus, setResolveStatus] = useState<FeedbackStatus>('resolved');
@@ -115,6 +121,7 @@ export const FeedbackView: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    return subscribeToTableChanges('parent_feedbacks', loadData);
   }, [currentBranch?.id]);
 
   // Handle student select auto-fill parent info
@@ -398,7 +405,16 @@ export const FeedbackView: React.FC = () => {
                         <span className="text-slate-300">•</span>
                         <span className="text-slate-600 font-normal">
                           {language === 'en' ? 'Student: ' : 'Học viên: '}
-                          <strong className="text-slate-800">{f.student?.full_name || 'N/A'}</strong>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const s = f.student || students.find((st) => st.id === f.student_id);
+                              if (s) setSelectedStudentForProfile(s);
+                            }}
+                            className="font-bold text-slate-800 hover:text-[#026fd7] hover:underline cursor-pointer"
+                          >
+                            {f.student?.full_name || 'N/A'}
+                          </button>
                         </span>
                       </div>
 
@@ -713,6 +729,18 @@ export const FeedbackView: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Student Profile & Logcall Modal */}
+      <StudentProfileModal
+        student={selectedStudentForProfile}
+        isOpen={Boolean(selectedStudentForProfile)}
+        onClose={() => setSelectedStudentForProfile(null)}
+        onOpenAddFeedback={(stu) => {
+          handleStudentSelect(stu.id);
+          setShowAddModal(true);
+        }}
+        onOpenAddAssessment={() => onNavigate?.('assessments')}
+        onOpenIntervention={() => onNavigate?.('interventions')}
+      />
     </div>
   );
 };

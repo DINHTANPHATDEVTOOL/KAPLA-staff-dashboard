@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { RenewalRecord, RenewalStatus, RenewalRisk, SystemConfig, Student } from '../../types';
-import { RenewalService, SystemConfigService, StudentService } from '../../lib/supabase';
+import { RenewalService, SystemConfigService, StudentService, subscribeToTableChanges } from '../../lib/supabase';
 
 const getStatusConfig = (lang: 'vi' | 'en'): Record<RenewalStatus, { label: string; color: string; badge: string }> => {
   if (lang === 'en') {
@@ -116,6 +116,7 @@ export const RenewalView: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    return subscribeToTableChanges('renewal_tracking', loadData);
   }, [currentBranch?.id]);
 
   // Handle Admin Update Threshold
@@ -169,6 +170,19 @@ export const RenewalView: React.FC = () => {
       if (editNewExpiry) updates.new_expiry_date = editNewExpiry;
 
       await RenewalService.updateRecord(selectedRecord.id, updates);
+
+      // Synchronize with student record if renewal completed with new date
+      if (editStatus === 'renewed' && editNewExpiry && selectedRecord.student_id) {
+        try {
+          await StudentService.updateStudent(selectedRecord.student_id, {
+            tuition_expiry_date: editNewExpiry,
+            status: 'active',
+          });
+        } catch {
+          // ignore
+        }
+      }
+
       setMessage({ type: 'success', text: 'Cập nhật tiến trình tái tục thành công!' });
       setSelectedRecord(null);
       loadData();

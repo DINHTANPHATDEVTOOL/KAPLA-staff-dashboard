@@ -134,7 +134,7 @@ export const AppLayout: React.FC = () => {
           )}
 
           {activeSection === 'students' && (
-            <StudentListView />
+            <StudentListView onNavigate={setActiveSection} />
           )}
 
           {activeSection === 'care_tasks' && (
@@ -146,11 +146,11 @@ export const AppLayout: React.FC = () => {
           )}
 
           {activeSection === 'interventions' && (
-            <InterventionsView />
+            <InterventionsView onNavigate={setActiveSection} />
           )}
 
           {activeSection === 'feedback' && (
-            <FeedbackView />
+            <FeedbackView onNavigate={setActiveSection} />
           )}
 
           {activeSection === 'supplementary' && (

@@ -195,6 +195,9 @@ export interface StudentTask {
 // Phase T04: 4-Skill Assessments & Intervention Flow
 // -----------------------------------------------------------------------------
 
+export type SkillCompetencyLevel = 'Below Level' | 'On Track' | 'Above Level' | 'N/A';
+export type ProgressEvaluation = 'Improved' | 'Maintained' | 'Needs Attention' | 'First Assessment';
+
 export interface StudentAssessment {
   id: string;
   student_id: string;
@@ -206,6 +209,11 @@ export interface StudentAssessment {
   speaking_score: number;
   reading_score: number;
   writing_score: number;
+  listening_level?: SkillCompetencyLevel;
+  speaking_level?: SkillCompetencyLevel;
+  reading_level?: SkillCompetencyLevel;
+  writing_level?: SkillCompetencyLevel;
+  progress_status?: ProgressEvaluation | string;
   strengths?: string;
   weaknesses?: string;
   progress_notes?: string;
@@ -274,7 +282,7 @@ export interface ParentFeedback {
 }
 
 export type SessionStatus = 'scheduled' | 'completed' | 'cancelled';
-export type AttendanceStatus = 'present' | 'absent' | 'excused';
+export type AttendanceStatus = 'present' | 'absent' | 'excused' | 'attended';
 
 export interface SupplementaryAttendee {
   id: string;
