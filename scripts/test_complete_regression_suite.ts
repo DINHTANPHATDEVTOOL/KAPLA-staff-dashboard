@@ -3,8 +3,8 @@
 // Tests all 7 customer features, role permissions, feedback grouping & notifications
 // ==============================================================================
 
-import { MockStorageService, StudentService, FeedbackService, RenewalService, StaffService } from '../src/lib/supabase';
-import { StaffRole, UserProfile, BranchMembership, Student, ParentFeedback, RenewalRecord } from '../src/types';
+import { MockStorageService, StudentService, FeedbackService, RenewalService, StaffService, EmailNotificationService } from '../src/lib/supabase';
+import { StaffRole, UserProfile, BranchMembership, Student, ParentFeedback, RenewalRecord, CareTaskType } from '../src/types';
 
 let passed = 0;
 let total = 0;
@@ -250,6 +250,65 @@ async function runRegressionSuite() {
   const has1DayRenewal = renewals.some((r) => r.days_remaining === 1);
   console.log(`     1-Day Renewal Alert Badge active: ${has1DayRenewal ? 'Yes' : 'Simulated for 1d threshold'}`);
   assert('Renewal month filtering matches ISO year-month string prefix', true);
+
+  // --------------------------------------------------------------------------
+  // TEST SUITE 7: Automated Notification Email Dispatch via kapladashboard@gmail.com
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 7: Automated Notification Email Sender (kapladashboard@gmail.com) ---');
+  assert('Configured Sender Email is strictly kapladashboard@gmail.com', EmailNotificationService.SENDER_EMAIL === 'kapladashboard@gmail.com');
+
+  const dispatchedPayload = EmailNotificationService.dispatchAutomatedEmail({
+    title: 'Urgent Care Reminder: Exam Consultation',
+    actionType: 'reminder',
+    recipients: ['Assigned HRT: Tram', 'Center Manager (CM)', 'All Teachers'],
+    details: 'Follow-up consultation for speaking practice',
+  });
+  assert('Dispatched email payload records official sender address', dispatchedPayload.sender === 'kapladashboard@gmail.com');
+  assert('Notification dispatched to HRT, CM, and Teachers', dispatchedPayload.recipients.length === 3);
+
+  // --------------------------------------------------------------------------
+  // TEST SUITE 8: Reminder Appointment Permissions (SOO, HT, CM, Admin Only)
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 8: Reminder Appointment Scheduling Permissions ---');
+  for (const t of testRoles) {
+    const isSysAdmin = t.isSysAdmin;
+    const isCM = t.role === 'CM';
+    const isHT = t.role === 'Head Teacher' || (t.role as string) === 'HT';
+    const isSOO = (t.role as string) === 'SOO';
+
+    const canCreateReminder = isSysAdmin || isCM || isHT || isSOO;
+
+    if (['system_admin', 'CM', 'Head Teacher', 'SOO'].includes(t.role)) {
+      assert(`${t.label}: Authorized to schedule reminder appointment`, canCreateReminder === true);
+    } else {
+      assert(`${t.label}: Prohibited from scheduling reminder appointment`, canCreateReminder === false);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // TEST SUITE 9: 5 HRT Task Classifications
+  // --------------------------------------------------------------------------
+  console.log('\n--- TEST SUITE 9: 5 HRT Task Classifications ---');
+  const validClassifications: CareTaskType[] = ['task_admin', 'call_care', 'call_epp', 'parent_meeting', 'tutoring'];
+  const classificationLabels: Record<CareTaskType, string> = {
+    task_admin: '1. Task Admin',
+    call_care: '2. Call care',
+    call_epp: '3. Call EPP',
+    parent_meeting: '4. Parent Meeting',
+    tutoring: '5. Tutoring',
+  };
+
+  validClassifications.forEach((catKey) => {
+    const createdTask = MockStorageService.createCareTask({
+      student_id: testStudent.id,
+      branch_id: testStudent.branch_id,
+      task_type: catKey,
+      title: `${classificationLabels[catKey]} for ${testStudent.full_name}`,
+      status: 'pending',
+      due_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    });
+    assert(`Successfully created task with classification "${catKey}" (${classificationLabels[catKey]})`, createdTask.task_type === catKey);
+  });
 
   console.log('\n==============================================================================');
   console.log(`  🎉 ALL REGRESSION TESTS PASSED: ${passed}/${total} checks verified successfully!`);

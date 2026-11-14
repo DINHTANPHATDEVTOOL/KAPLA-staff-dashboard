@@ -52,6 +52,7 @@ import {
   DashboardNavSection,
   SkillCompetencyLevel,
   ProgressEvaluation,
+  CareTaskType,
 } from '../../types';
 import {
   StudentService,
@@ -62,6 +63,7 @@ import {
   realSupabase,
   MockStorageService,
   subscribeToTableChanges,
+  EmailNotificationService,
 } from '../../lib/supabase';
 import { StudentProfileModal } from './StudentProfileModal';
 
@@ -85,6 +87,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const canEditStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
   // ONLY Admin account can delete students
   const canDeleteStudent = isSysAdmin;
+  // Customer Specification: SOO, HT, CM, Admin can schedule reminder appointments
+  const canCreateReminder = isSysAdmin || isCM || isHT || isSOO;
 
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
@@ -151,6 +155,21 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const [selectedStudentForHrt, setSelectedStudentForHrt] = useState<Student | null>(null);
   const [selectedStudentForHistory, setSelectedStudentForHistory] = useState<Student | null>(null);
   const [transferHistory, setTransferHistory] = useState<ClassTransfer[]>([]);
+
+  // Reminder appointment state (SOO, HT, CM, Admin)
+  const [selectedStudentForReminder, setSelectedStudentForReminder] = useState<Student | null>(null);
+  const [reminderForm, setReminderForm] = useState<{
+    task_type: CareTaskType;
+    title: string;
+    due_date: string;
+    notes: string;
+  }>({
+    task_type: 'call_care',
+    title: '',
+    due_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    notes: '',
+  });
+  const [reminderSubmitting, setReminderSubmitting] = useState<boolean>(false);
 
   // Student CRUD Modals state
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -367,13 +386,15 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
   // Options matching CRM filter dropdown (Image 1)
   const DATE_FIELD_OPTIONS = useMemo(() => [
-    { id: 'assessment_date', label: 'Assessment Date', desc: 'Date of 4-skill Cambridge/Oxford evaluation' },
-    { id: 'created_at', label: 'Date Created / Enrolled', desc: 'Student enrollment & registration date' },
     { id: 'birthdate', label: 'Birthdate', desc: 'Student birthdate' },
     { id: 'birthdate_anniversary', label: 'Birthdate Anniversary', desc: 'Upcoming student birthday this month' },
-    { id: 'tuition_expiry', label: 'Tuition Expiry Date', desc: 'Tuition fee deadline & renewal cycle' },
-    { id: 'last_activity', label: 'Last Activity - Call Date', desc: 'Recent outbound CRM call or parent log' },
+    { id: 'date_performed', label: 'Date Performed', desc: 'Date of care task or assessment performed' },
+    { id: 'created_at', label: 'Date Created', desc: 'Student enrollment & registration date' },
     { id: 'updated_at', label: 'Date Modified', desc: 'Profile last modified timestamp' },
+    { id: 'last_activity', label: 'Last Activity - Call Date', desc: 'Recent outbound CRM call or parent log' },
+    { id: 'stopped_date', label: 'Stopped Date', desc: 'Student suspension or drop date' },
+    { id: 'assessment_date', label: 'Assessment Date', desc: 'Date of 4-skill Cambridge/Oxford evaluation' },
+    { id: 'tuition_expiry', label: 'Tuition Expiry Date', desc: 'Tuition fee deadline & renewal cycle' },
   ], []);
 
   // Map of studentId -> latest assessment in selectedMonth (Image 2)
@@ -492,7 +513,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       // 8. Date Field Type filtering (Image 1: Filter v -> Date Field dropdown)
       if (dateRangeFrom || dateRangeTo) {
         let targetDate = '';
-        if (dateFieldType === 'assessment_date') {
+        if (dateFieldType === 'assessment_date' || dateFieldType === 'date_performed') {
           const a = monthlyAssessmentsMap.get(s.id);
           targetDate = a ? a.assessment_date : '';
         } else if (dateFieldType === 'created_at') {
@@ -509,6 +530,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         } else if (dateFieldType === 'last_activity') {
           const act = studentActivitiesMap.get(s.id);
           targetDate = act ? act.date : '';
+        } else if (dateFieldType === 'stopped_date') {
+          targetDate = ((s.status as string) === 'stopped' || s.status === 'dropped') ? (s.updated_at ? s.updated_at.slice(0, 10) : '') : '';
         } else if (dateFieldType === 'updated_at') {
           targetDate = s.updated_at ? s.updated_at.slice(0, 10) : '';
         }
@@ -820,6 +843,49 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       });
     } finally {
       setQuickAssessSubmitting(false);
+    }
+  };
+
+  const handleScheduleReminderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentBranch || !selectedStudentForReminder) return;
+    setReminderSubmitting(true);
+    setActionMessage(null);
+    try {
+      const created = await StudentService.createCareTask({
+        student_id: selectedStudentForReminder.id,
+        branch_id: currentBranch.id,
+        title: reminderForm.title.trim(),
+        task_type: reminderForm.task_type,
+        due_date: reminderForm.due_date,
+        status: 'pending',
+        notes: reminderForm.notes.trim() || undefined,
+      });
+
+      EmailNotificationService.dispatchAutomatedEmail({
+        title: `Reminder Scheduled: ${created.title}`,
+        actionType: 'reminder',
+        recipients: [
+          `Assigned HRT: ${selectedStudentForReminder.effective_hrt_name || 'HRT Staff'}`,
+          `Center Manager (CM): Campus Reminders`,
+          `Supervisor: ${profile?.full_name || 'Management'} (${activeRole})`,
+          `All Teachers: Main Teacher & Academic Staff`,
+        ],
+      });
+
+      setActionMessage({
+        type: 'success',
+        text: `Reminder appointment scheduled for ${selectedStudentForReminder.full_name}! Notification dispatched from ${EmailNotificationService.SENDER_EMAIL}.`,
+      });
+      setSelectedStudentForReminder(null);
+      await loadData();
+    } catch (err: any) {
+      setActionMessage({
+        type: 'error',
+        text: err?.message || 'Failed to schedule reminder appointment.',
+      });
+    } finally {
+      setReminderSubmitting(false);
     }
   };
 
@@ -1450,6 +1516,26 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                               className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Schedule Reminder Appointment (SOO, HT, CM, Admin) */}
+                          {canCreateReminder && (
+                            <button
+                              type="button"
+                              title="Schedule Reminder / Task (SOO, HT, CM, Admin)"
+                              onClick={() => {
+                                setSelectedStudentForReminder(student);
+                                setReminderForm({
+                                  task_type: 'call_care',
+                                  title: `Follow-up reminder for ${student.full_name}`,
+                                  due_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                                  notes: '',
+                                });
+                              }}
+                              className="p-1.5 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                            >
+                              <Clock className="w-4 h-4" />
                             </button>
                           )}
 
@@ -2311,6 +2397,164 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   className="px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-70"
                 >
                   <span>{'Save Changes'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: SCHEDULE REMINDER APPOINTMENT / TASK (SOO, HT, CM, Admin)
+      ========================================================================= */}
+      {selectedStudentForReminder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-blue-100 text-[#043264] rounded-xl">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">Schedule Reminder Appointment / Task</h3>
+                  <p className="text-[11px] text-slate-500">
+                    Authorized roles (SOO, HT, CM, Admin) • Auto-dispatch via <strong className="font-mono text-blue-700">{EmailNotificationService.SENDER_EMAIL}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedStudentForReminder(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleScheduleReminderSubmit} className="p-6 overflow-y-auto space-y-4 text-xs">
+              {/* Target Student Info */}
+              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-slate-900 text-sm">{selectedStudentForReminder.full_name}</div>
+                  <div className="text-[11px] text-slate-600 flex items-center gap-2 mt-0.5">
+                    <span className="font-mono">{selectedStudentForReminder.student_code}</span>
+                    <span>• Class: {selectedStudentForReminder.current_class?.name || 'Unassigned'}</span>
+                    <span>• HRT: {selectedStudentForReminder.effective_hrt_name || 'Class Default'}</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  Target Student
+                </span>
+              </div>
+
+              {/* 5 HRT Task Classifications */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  HRT Task Classification <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {[
+                    { id: 'task_admin', label: '1. Task Admin', desc: 'Administrative paperwork & documentation' },
+                    { id: 'call_care', label: '2. Call care', desc: 'Routine student care & progress check-in' },
+                    { id: 'call_epp', label: '3. Call EPP', desc: 'Educational progression & tuition renewal' },
+                    { id: 'parent_meeting', label: '4. Parent Meeting', desc: 'In-person / online consultation conference' },
+                    { id: 'tutoring', label: '5. Tutoring', desc: '1-on-1 supplementary academic tutoring' },
+                  ].map((cat) => (
+                    <label
+                      key={cat.id}
+                      className={`flex flex-col p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        reminderForm.task_type === cat.id
+                          ? 'bg-blue-50/70 border-blue-400 ring-1 ring-blue-300'
+                          : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="reminder_task_type"
+                          checked={reminderForm.task_type === cat.id}
+                          onChange={() => setReminderForm({ ...reminderForm, task_type: cat.id as CareTaskType })}
+                          className="text-[#043264]"
+                        />
+                        <span className="font-bold text-slate-800">{cat.label}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 mt-1 pl-5">{cat.desc}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Reminder / Task Title <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={reminderForm.title}
+                  onChange={(e) => setReminderForm({ ...reminderForm, title: e.target.value })}
+                  placeholder="e.g. Follow-up consultation regarding grammar tutoring"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                />
+              </div>
+
+              {/* Due Date */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Due Date <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={reminderForm.due_date}
+                  onChange={(e) => setReminderForm({ ...reminderForm, due_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Notes / Instructions</label>
+                <textarea
+                  rows={2}
+                  value={reminderForm.notes}
+                  onChange={(e) => setReminderForm({ ...reminderForm, notes: e.target.value })}
+                  placeholder="Additional context or specific instructions for the assigned teacher / HRT..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                />
+              </div>
+
+              {/* Dispatch Info */}
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 text-[11px] space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-amber-950">
+                  <Mail className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Automated Dispatch via {EmailNotificationService.SENDER_EMAIL}</span>
+                </div>
+                <p>
+                  Upon submission, an automated notification email will be dispatched to: Assigned HRT (
+                  {selectedStudentForReminder.effective_hrt_name || 'Designated HRT'}), Center Manager (CM), and Academic Teachers.
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStudentForReminder(null)}
+                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={reminderSubmitting}
+                  className="px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white font-semibold rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-60"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{reminderSubmitting ? 'Scheduling...' : 'Schedule Reminder Appointment'}</span>
                 </button>
               </div>
             </form>

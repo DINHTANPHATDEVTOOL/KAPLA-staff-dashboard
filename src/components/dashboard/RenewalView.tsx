@@ -322,9 +322,12 @@ export const RenewalView: React.FC = () => {
         {emailSimulationResults && (
           <div className="mt-4 pt-4 border-t border-white/10 text-xs space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-sky-200 flex items-center gap-1.5">
+              <span className="font-semibold text-sky-200 flex items-center gap-1.5 flex-wrap">
                 <Check className="w-4 h-4 text-emerald-400" />
-                {`Scheduled Tuition Reminder Recipients (${emailSimulationResults.length} students):`}
+                <span>{`Scheduled Tuition Reminder Recipients (${emailSimulationResults.length} students)`}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/20">
+                  Mailer: kapladashboard@gmail.com
+                </span>
               </span>
               <button
                 type="button"

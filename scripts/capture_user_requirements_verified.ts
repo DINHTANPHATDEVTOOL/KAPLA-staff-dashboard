@@ -98,7 +98,7 @@ async function main() {
   await cdp.send('Page.navigate', { url: 'http://localhost:3000/login' });
   await sleep(2000);
 
-  // Sign in as CM Nhi
+  // Sign in as CM Nhi (Center Manager - authorized to schedule reminders)
   console.log('Signing in as Center Manager (cm.nhi@kapla.edu.vn)...');
   await cdp.eval(`
     (() => {
@@ -126,7 +126,7 @@ async function main() {
   await cdp.eval(`
     (() => {
       const btns = Array.from(document.querySelectorAll('button, a'));
-      const stuBtn = btns.find(b => b.innerText && b.innerText.includes('Student Records'));
+      const stuBtn = btns.find(b => b.innerText && (b.innerText.includes('Student Records') || b.innerText.includes('Students')));
       if (stuBtn) stuBtn.click();
     })()
   `);
@@ -146,11 +146,44 @@ async function main() {
   await cdp.captureScreenshot(screenDateFilter);
   console.log('Saved screenshot 1 (Date filter dropdown matching Image 1):', screenDateFilter);
 
-  // Close dropdown and filter for "Pending Evaluation" (Matching Customer Image 2)
+  // Close dropdown
+  await cdp.eval(`
+    (() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const filterBtn = btns.find(b => b.innerText && b.innerText.includes('Filter:'));
+      if (filterBtn) filterBtn.click();
+    })()
+  `);
+  await sleep(500);
+
+  // Open Schedule Reminder Modal in Student row (SOO, HT, CM, Admin)
+  await cdp.eval(`
+    (() => {
+      const reminderBtn = document.querySelector('button[title*="Schedule Reminder"]');
+      if (reminderBtn) reminderBtn.click();
+    })()
+  `);
+  await sleep(1000);
+
+  const screenReminderModal = path.join(artifactDir, 'customer_student_schedule_reminder_modal.png');
+  await cdp.captureScreenshot(screenReminderModal);
+  console.log('Saved screenshot 2 (Schedule reminder modal with 5 classifications & email notice):', screenReminderModal);
+
+  // Close modal
+  await cdp.eval(`
+    (() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const cancelBtn = btns.find(b => b.innerText && b.innerText.trim() === 'Cancel');
+      if (cancelBtn) cancelBtn.click();
+    })()
+  `);
+  await sleep(1000);
+
+  // Filter for "Pending Evaluation" (Matching Customer Image 2)
   await cdp.eval(`
     (() => {
       const chips = Array.from(document.querySelectorAll('button'));
-      const pendingChip = chips.find(c => c.innerText && c.innerText.includes('Pending Evaluation'));
+      const pendingChip = chips.find(c => c.innerText && (c.innerText.includes('Pending Evaluation') || c.innerText.includes('Not Evaluated Yet')));
       if (pendingChip) pendingChip.click();
     })()
   `);
@@ -158,9 +191,24 @@ async function main() {
 
   const screenPendingEvaluations = path.join(artifactDir, 'customer_students_monthly_evaluation_tracker.png');
   await cdp.captureScreenshot(screenPendingEvaluations);
-  console.log('Saved screenshot 2 (Monthly assessment tracker matching Image 2):', screenPendingEvaluations);
+  console.log('Saved screenshot 3 (Monthly assessment tracker matching Image 2):', screenPendingEvaluations);
 
-  // 2. Navigate to Parent Feedback (Matching Customer Image 3)
+  // 2. Navigate to HRT Tasks View (5 Classifications & kapladashboard@gmail.com)
+  console.log('Navigating to HRT Tasks...');
+  await cdp.eval(`
+    (() => {
+      const btns = Array.from(document.querySelectorAll('button, a'));
+      const hrtBtn = btns.find(b => b.innerText && (b.innerText.includes('HRT Tasks') || b.innerText.includes('Care Tasks')));
+      if (hrtBtn) hrtBtn.click();
+    })()
+  `);
+  await sleep(2000);
+
+  const screenHrtTasks = path.join(artifactDir, 'customer_hrt_tasks_5_classifications.png');
+  await cdp.captureScreenshot(screenHrtTasks);
+  console.log('Saved screenshot 4 (HRT Tasks with 5 classifications & kapladashboard@gmail.com):', screenHrtTasks);
+
+  // 3. Navigate to Parent Feedback (Matching Customer Image 3)
   console.log('Navigating to Parent Feedback...');
   await cdp.eval(`
     (() => {
@@ -173,9 +221,9 @@ async function main() {
 
   const screenFeedback = path.join(artifactDir, 'customer_feedback_grouped_by_student.png');
   await cdp.captureScreenshot(screenFeedback);
-  console.log('Saved screenshot 3 (Parent Feedback grouped by student matching Image 3 in 100% English):', screenFeedback);
+  console.log('Saved screenshot 5 (Parent Feedback grouped by student solving Image 3 in 100% English):', screenFeedback);
 
-  // 3. Navigate to Renewal View & Test Month Filter
+  // 4. Navigate to Renewal View & Test Month Filter
   console.log('Navigating to Renewal Tracking...');
   await cdp.eval(`
     (() => {
@@ -188,7 +236,7 @@ async function main() {
 
   const screenRenewal = path.join(artifactDir, 'customer_renewal_monthly_filter.png');
   await cdp.captureScreenshot(screenRenewal);
-  console.log('Saved screenshot 4 (Renewal monthly filter):', screenRenewal);
+  console.log('Saved screenshot 6 (Renewal monthly filter with kapladashboard@gmail.com):', screenRenewal);
 
   cdp.close();
   chromeProc.kill();

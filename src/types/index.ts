@@ -172,6 +172,11 @@ export interface StudentHrtAssignment {
 }
 
 export type CareTaskType =
+  | 'task_admin'
+  | 'call_care'
+  | 'call_epp'
+  | 'parent_meeting'
+  | 'tutoring'
   | 'care_call'
   | 'progress_report'
   | 'tuition_reminder'
@@ -353,6 +358,7 @@ export interface SystemConfig {
   auto_email_alerts_enabled: boolean;
   cambridge_scale_max: number; // 5.0 shields
   academic_risk_threshold: number; // < 3.0 shields
+  sender_email?: string; // Automated notification dispatch email (kapladashboard@gmail.com)
 }
 
 // -----------------------------------------------------------------------------

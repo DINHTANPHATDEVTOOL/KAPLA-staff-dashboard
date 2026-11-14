@@ -34,7 +34,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ParentFeedback, FeedbackType, FeedbackChannel, FeedbackStatus, Student, UserProfile, DashboardNavSection } from '../../types';
-import { FeedbackService, StudentService, realSupabase, MockStorageService, subscribeToTableChanges } from '../../lib/supabase';
+import { FeedbackService, StudentService, realSupabase, MockStorageService, subscribeToTableChanges, EmailNotificationService } from '../../lib/supabase';
 import { StudentProfileModal } from './StudentProfileModal';
 
 interface FeedbackViewProps {
@@ -424,7 +424,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                     : `Resolution Confirmed • Turnaround: ${emailNotification.turnaround}`}
                 </h4>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  Delivered
+                  From: {EmailNotificationService.SENDER_EMAIL}
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-800 mt-1">{emailNotification.title}</p>

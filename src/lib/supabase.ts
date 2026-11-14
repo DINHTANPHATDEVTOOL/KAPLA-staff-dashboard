@@ -610,7 +610,7 @@ const DEFAULT_CARE_TASKS: StudentTask[] = [
     student_id: 'b0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     title: 'Call parents of student Nguyen Binh An to report week 4 progress & writing sample',
-    task_type: 'care_call',
+    task_type: 'call_care',
     due_date: '2026-11-20',
     status: 'pending',
     notes: 'Discuss mini-check sentence writing test results and supplementary tutoring session with Head Teacher Jamie.',
@@ -619,8 +619,8 @@ const DEFAULT_CARE_TASKS: StudentTask[] = [
     id: '40000000-0000-0000-0000-000000000002',
     student_id: 'b0000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Remind parents of student Tran Thai Binh about upcoming tuition expiration',
-    task_type: 'tuition_reminder',
+    title: 'Call EPP: Remind parents of student Tran Thai Binh about upcoming tuition expiration & Starters 2 course',
+    task_type: 'call_epp',
     due_date: '2026-11-18',
     status: 'pending',
     notes: '7 days remaining on tuition; sent Oxford-standard Starters 2 course roadmap brochure.',
@@ -629,8 +629,8 @@ const DEFAULT_CARE_TASKS: StudentTask[] = [
     id: '40000000-0000-0000-0000-000000000003',
     student_id: 'b0000000-0000-0000-0000-000000000004',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Follow up on overdue tuition for student Dang Bao Nam',
-    task_type: 'tuition_reminder',
+    title: 'Task Admin: Follow up on tuition extension paperwork for student Dang Bao Nam',
+    task_type: 'task_admin',
     due_date: '2026-11-14',
     status: 'pending',
     notes: 'Overdue by 3 days; called to confirm the bank transfer schedule with the student mother.',
@@ -639,11 +639,21 @@ const DEFAULT_CARE_TASKS: StudentTask[] = [
     id: '40000000-0000-0000-0000-000000000004',
     student_id: 'b0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    title: 'Send in-class presentation video clip to parents of student Le Quoc Cuong',
-    task_type: 'progress_report',
+    title: 'Parent Meeting: Schedule in-person academic consultation with parents of student Le Quoc Cuong',
+    task_type: 'parent_meeting',
     due_date: '2026-11-19',
     status: 'pending',
     notes: 'Clip of the student giving a mini presentation on My Favorite Sport with Head Teacher Jamie.',
+  },
+  {
+    id: '40000000-0000-0000-0000-000000000005',
+    student_id: 'b0000000-0000-0000-0000-000000000005',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    title: 'Tutoring: Supplementary sentence structure coaching session for student Pham Minh Khoi',
+    task_type: 'tutoring',
+    due_date: '2026-11-21',
+    status: 'pending',
+    notes: 'Targeting Flyers writing accuracy and Cambridge exam reading skills.',
   },
 ];
 
@@ -825,10 +835,14 @@ const DEFAULT_FEEDBACKS: ParentFeedback[] = [
     channel: 'phone',
     content: 'Parents inquired about the Cambridge Starters preparation roadmap and requested supplementary tutoring for sentence writing.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000006', // HRT Vy
+    assigned_staff_name: 'HRT Vy',
+    owner_name: 'HRT Vy',
     due_date: '2026-11-20',
     status: 'resolved',
+    turnaround_time: '2h 10m',
     resolution_notes: 'HRT Vy called to consult in detail on the academic roadmap and scheduled Wednesday grammar tutoring.',
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    resolved_at: new Date(Date.now() - 5 * 86400000 + 7800000).toISOString(),
   },
   {
     id: 'f0000000-0000-0000-0000-000000000002',
@@ -840,10 +854,14 @@ const DEFAULT_FEEDBACKS: ParentFeedback[] = [
     channel: 'zalo',
     content: 'Mother shared positive feedback that the student proactively listens to English songs at home and speaks with greater confidence.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
+    assigned_staff_name: 'HRT Minh',
+    owner_name: 'HRT Minh',
     due_date: '2026-11-18',
     status: 'resolved',
+    turnaround_time: '45m',
     resolution_notes: 'Sent appreciation message to mother along with the video clip of the student mini in-class presentation.',
     created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    resolved_at: new Date(Date.now() - 3 * 86400000 + 2700000).toISOString(),
   },
   {
     id: 'f0000000-0000-0000-0000-000000000003',
@@ -855,13 +873,15 @@ const DEFAULT_FEEDBACKS: ParentFeedback[] = [
     channel: 'in_person',
     content: 'Family would like to explore enrolling in the Creative Robotics Club and weekend extracurricular activities.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000002', // CM Phuong Nhi
+    assigned_staff_name: 'CM Phuong Nhi',
+    owner_name: 'CM Phuong Nhi',
     due_date: '2026-11-21',
     status: 'in_progress',
     resolution_notes: 'CM Phuong Nhi consulted on Saturday Robotics Club trial schedule.',
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
-    id: 'f0000000-0000-0000-0000-000000000003',
+    id: 'f0000000-0000-0000-0000-000000000004',
     student_id: 'b0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     parent_name: 'Le Van Sang (Father)',
@@ -870,9 +890,67 @@ const DEFAULT_FEEDBACKS: ParentFeedback[] = [
     channel: 'app',
     content: 'Parents requested midterm comprehensive report card to cross-reference academic progress at primary school.',
     assigned_staff_id: 'u0000000-0000-0000-0000-000000000004', // HRT Minh
+    assigned_staff_name: 'HRT Minh',
+    owner_name: 'HRT Minh',
     due_date: '2026-11-22',
     status: 'open',
     created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+  // Pham Minh Khoi (b0000000-0000-0000-0000-000000000005) - 3 Feedbacks grouped under 1 student (Solves Image 3)
+  {
+    id: 'f0000000-0000-0000-0000-000000000005',
+    student_id: 'b0000000-0000-0000-0000-000000000005',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    parent_name: 'Pham Hai Dang (Father)',
+    parent_phone: '0905 667 788',
+    feedback_type: 'academic_concern',
+    channel: 'phone',
+    content: 'Parents requested teacher to assign supplementary speaking audio practice via Zalo.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000005', // HRT Tram
+    assigned_staff_name: 'HRT Tram',
+    owner_name: 'HRT Tram',
+    due_date: '2026-11-18',
+    status: 'resolved',
+    turnaround_time: '1h 45m',
+    resolution_notes: 'HRT Tram created a dedicated Zalo group and guided parents on the voice recording submission workflow.',
+    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+    resolved_at: new Date(Date.now() - 4 * 86400000 + 6300000).toISOString(),
+  },
+  {
+    id: 'f0000000-0000-0000-0000-000000000006',
+    student_id: 'b0000000-0000-0000-0000-000000000005',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    parent_name: 'Pham Hai Dang (Father)',
+    parent_phone: '0905 667 788',
+    feedback_type: 'inquiry',
+    channel: 'zalo',
+    content: 'Family requested Cambridge Flyers mock examination schedule and evaluation criteria.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000007', // David Miller
+    assigned_staff_name: 'Teacher David Miller',
+    owner_name: 'HRT Tram',
+    due_date: '2026-11-19',
+    status: 'in_progress',
+    resolution_notes: 'Academic coordinator shared the November mock exam timetable and sample assessment rubrics.',
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: 'f0000000-0000-0000-0000-000000000007',
+    student_id: 'b0000000-0000-0000-0000-000000000005',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    parent_name: 'Pham Hai Dang (Father)',
+    parent_phone: '0905 667 788',
+    feedback_type: 'compliment',
+    channel: 'phone',
+    content: 'Father commended the academic faculty for dedicated guidance and noticeable progress in speaking fluency.',
+    assigned_staff_id: 'u0000000-0000-0000-0000-000000000005', // HRT Tram
+    assigned_staff_name: 'HRT Tram',
+    owner_name: 'HRT Tram',
+    due_date: '2026-11-20',
+    status: 'resolved',
+    turnaround_time: '30m',
+    resolution_notes: 'Acknowledged compliment and logged appreciation note into student academic profile.',
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    resolved_at: new Date(Date.now() - 1 * 86400000 + 1800000).toISOString(),
   },
 ];
 
@@ -1042,11 +1120,12 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   auto_email_alerts_enabled: true,
   cambridge_scale_max: 5.0,
   academic_risk_threshold: 3.0,
+  sender_email: 'kapladashboard@gmail.com',
 };
 
 // Automatic LocalStorage Cache Invalidation for Clean Demo Testing
 const DATA_VERSION_KEY = 'kapla_demo_data_version';
-const CURRENT_DATA_VERSION = 'v2026_kapla_authentic_dataset_v4_english';
+const CURRENT_DATA_VERSION = 'v2026_kapla_authentic_dataset_v6_grouped_feedback_reminders';
 if (typeof window !== 'undefined') {
   const currentVer = localStorage.getItem(DATA_VERSION_KEY);
   if (currentVer !== CURRENT_DATA_VERSION) {
@@ -1977,6 +2056,44 @@ export class MockStorageService {
     }
   }
 
+  static createCareTask(task: Omit<StudentTask, 'id' | 'created_at' | 'updated_at'>): StudentTask {
+    this.ensureDevOnly();
+    const actor = this.getCurrentActor();
+    const tasks = this.getCareTasks();
+    const students = this.getStudents();
+    const student = students.find((s) => s.id === task.student_id);
+
+    const newTask: StudentTask = {
+      ...task,
+      id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      student,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    tasks.unshift(newTask);
+    localStorage.setItem(STORAGE_KEYS.CARE_TASKS, JSON.stringify(tasks));
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'CREATE_CARE_TASK',
+      branch_id: task.branch_id,
+      details: {
+        actor_name: actor.name,
+        task_id: newTask.id,
+        title: newTask.title,
+        task_type: newTask.task_type,
+        due_date: newTask.due_date,
+        student_id: newTask.student_id,
+        student_name: student?.full_name,
+        sender_email: 'kapladashboard@gmail.com',
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.CARE_TASKS);
+    return newTask;
+  }
+
   static getAssessments(branchId?: string, classId?: string): StudentAssessment[] {
     this.ensureDevOnly();
     const raw = localStorage.getItem(STORAGE_KEYS.ASSESSMENTS);
@@ -2666,6 +2783,22 @@ export const StudentService = {
     MockStorageService.updateTaskStatus(taskId, status);
   },
 
+  async createCareTask(task: Omit<StudentTask, 'id' | 'created_at' | 'updated_at'>): Promise<StudentTask> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('student_tasks')
+        .insert([{
+          ...task,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }])
+        .select(`*, student:students(*, current_class:classes(*))`)
+        .single();
+      if (!error && data) return data;
+    }
+    return MockStorageService.createCareTask(task);
+  },
+
   async updateStudent(studentId: string, updates: Partial<Student>): Promise<Student> {
     if (realSupabase) {
       const { data, error } = await realSupabase
@@ -3251,5 +3384,37 @@ export const SystemConfigService = {
         effective_hrt_id: s.assigned_hrt_id || s.current_class?.default_hrt_id,
         effective_hrt_name: s.effective_hrt_name,
       }));
+  },
+};
+
+// ==============================================================================
+// Automated Email Dispatch Service (Sender: kapladashboard@gmail.com)
+// ==============================================================================
+
+export interface AutomatedEmailPayload {
+  title: string;
+  recipients: string[];
+  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention';
+  turnaround?: string;
+  sender?: string;
+  metadata?: Record<string, any>;
+}
+
+export const EmailNotificationService = {
+  SENDER_EMAIL: 'kapladashboard@gmail.com',
+
+  getSenderEmail(): string {
+    return this.SENDER_EMAIL;
+  },
+
+  dispatchAutomatedEmail(payload: AutomatedEmailPayload) {
+    const from = this.SENDER_EMAIL;
+    const dispatched = {
+      ...payload,
+      sender: from,
+      dispatchedAt: new Date().toISOString(),
+    };
+    console.info(`[Automated Email Service] Dispatched from ${from} to ${payload.recipients.join(', ')} | ${payload.title}`);
+    return dispatched;
   },
 };
