@@ -49,7 +49,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { profile, activeRole, currentBranch, signOut } = useAuth();
   const { t, tDb } = useLanguage();
-  const isCMOrAdmin = profile?.system_role === 'system_admin' || activeRole === 'CM';
+  const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isSOO = (activeRole as string) === 'SOO';
+  // Admin, CM, SOO, HT are authorized to manage staff roles, teacher assignments & cohorts
+  const canManageStaffAndClasses = isSysAdmin || isCM || isHT || isSOO;
 
   const navItems: NavItem[] = useMemo(
     () => [
@@ -81,8 +86,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Strictly filter navigation items: hide unauthorized items completely
   const visibleNavItems = useMemo(() => {
-    return navItems.filter((item) => !item.adminOrCmOnly || isCMOrAdmin);
-  }, [navItems, isCMOrAdmin]);
+    return navItems.filter((item) => !item.adminOrCmOnly || canManageStaffAndClasses);
+  }, [navItems, canManageStaffAndClasses]);
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-[#012147] text-slate-200 w-64 xl:w-72 shrink-0 select-none border-r border-[#043264]/40">

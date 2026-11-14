@@ -5,11 +5,14 @@
 export type StaffRole =
   | 'CM'
   | 'Head Teacher'
+  | 'HT'
   | 'Main Teacher'
   | 'HRT'
   | 'TA'
   | 'Supplementary Teacher'
-  | 'CSKH';
+  | 'CSKH'
+  | 'EC'
+  | 'SOO';
 
 export type SystemRole = 'system_admin' | 'staff';
 
@@ -272,8 +275,12 @@ export interface ParentFeedback {
   content: string;
   assigned_staff_id?: string;
   assigned_staff_name?: string;
+  owner_id?: string;
+  owner_name?: string;
   due_date: string;
   resolution_notes?: string;
+  resolved_at?: string;
+  turnaround_time?: string;
   status: FeedbackStatus;
   student?: Student;
   branch?: Branch;
@@ -355,31 +362,40 @@ export interface SystemConfig {
 export const ALL_STAFF_ROLES: StaffRole[] = [
   'CM',
   'Head Teacher',
+  'HT',
   'Main Teacher',
   'HRT',
   'TA',
   'Supplementary Teacher',
   'CSKH',
+  'EC',
+  'SOO',
 ];
 
 export const ROLE_LABELS: Record<StaffRole, string> = {
-  CM: 'Giám đốc cơ sở (CM)',
-  'Head Teacher': 'Chủ nhiệm học thuật (Head Teacher)',
-  'Main Teacher': 'Giáo viên chính (Main Teacher)',
-  HRT: 'Giáo viên chủ nhiệm (HRT)',
-  TA: 'Trợ giảng (TA)',
-  'Supplementary Teacher': 'Giáo viên bổ trợ',
-  CSKH: 'Chăm sóc khách hàng (CSKH)',
+  CM: 'Center Manager (CM)',
+  'Head Teacher': 'Head Teacher (HT)',
+  HT: 'Head Teacher (HT)',
+  'Main Teacher': 'Main Teacher',
+  HRT: 'Homeroom Teacher (HRT)',
+  TA: 'Teaching Assistant (TA)',
+  'Supplementary Teacher': 'Supplementary Teacher',
+  CSKH: 'Customer Service (CSKH)',
+  EC: 'Educational Consultant (EC)',
+  SOO: 'Senior Operations Officer (SOO)',
 };
 
 export const ROLE_DESCRIPTIONS: Record<StaffRole, string> = {
-  CM: 'Quản lý nhân sự, lớp và hồ sơ trong chi nhánh. Duyệt nhân viên trong chi nhánh được giao.',
-  'Head Teacher': 'Theo dõi học thuật chi nhánh và xác minh phiếu can thiệp.',
-  'Main Teacher': 'Đánh giá học thuật và lập phiếu can thiệp cho lớp được phân công.',
-  HRT: 'Theo dõi danh sách học viên phụ trách, ghi phản hồi phụ huynh và theo dõi tái tục.',
-  TA: 'Ghi nhận hỗ trợ và cập nhật quan sát học thuật trong phạm vi được giao.',
-  'Supplementary Teacher': 'Ghi buổi bổ trợ, điểm danh, kết quả và nhận xét cho học viên được giao.',
-  CSKH: 'Xử lý phản hồi phụ huynh và chăm sóc tái tục trong phạm vi được giao.',
+  CM: 'Branch director managing personnel, classes, cohorts, and campus operations.',
+  'Head Teacher': 'Academic lead supervising curriculum quality, teacher assignments, and standard verification.',
+  HT: 'Academic lead supervising curriculum quality, teacher assignments, and standard verification.',
+  'Main Teacher': 'Classroom educator conducting academic evaluations and issuing intervention tickets.',
+  HRT: 'Homeroom teacher tracking designated students, parent care logs, and renewal follow-ups.',
+  TA: 'Teaching assistant recording classroom support notes and academic observations.',
+  'Supplementary Teacher': 'Tutoring educator conducting supplementary sessions, attendance, and progress assessments.',
+  CSKH: 'Customer care specialist handling inquiries, escalations, and parent feedback.',
+  EC: 'Educational consultant managing enrollments, consultations, and student records.',
+  SOO: 'Senior operations officer overseeing campus operations and teacher staffing.',
 };
 
 export const STATUS_LABELS: Record<AccountStatus, { label: string; color: string; badge: string }> = {

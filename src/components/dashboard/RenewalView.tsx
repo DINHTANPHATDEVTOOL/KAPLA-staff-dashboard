@@ -78,6 +78,7 @@ export const RenewalView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [riskFilter, setRiskFilter] = useState<string>('all');
+  const [monthFilter, setMonthFilter] = useState<string>('all');
 
   // Admin Config State
   const [adminDaysThreshold, setAdminDaysThreshold] = useState<number>(14);
@@ -202,10 +203,11 @@ export const RenewalView: React.FC = () => {
 
       const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
       const matchesRisk = riskFilter === 'all' || r.risk_level === riskFilter;
+      const matchesMonth = monthFilter === 'all' || (r.current_expiry_date && r.current_expiry_date.startsWith(monthFilter));
 
-      return matchesSearch && matchesStatus && matchesRisk;
+      return matchesSearch && matchesStatus && matchesRisk && matchesMonth;
     });
-  }, [records, searchTerm, statusFilter, riskFilter]);
+  }, [records, searchTerm, statusFilter, riskFilter, monthFilter]);
 
   const stats = useMemo(() => {
     const total = records.length;
@@ -470,6 +472,20 @@ export const RenewalView: React.FC = () => {
               <option value="medium">{language === 'en' ? 'Medium Risk' : 'Trung bình'}</option>
               <option value="low">{language === 'en' ? 'Low Risk' : 'Thấp'}</option>
             </select>
+
+            <select
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="text-sm border border-slate-200 rounded-lg px-2.5 py-2 bg-white text-slate-700 focus:outline-none focus:border-[#043264]"
+            >
+              <option value="all">{language === 'en' ? 'All Expiry Months' : 'Tất cả các tháng'}</option>
+              <option value="2026-10">{language === 'en' ? 'October 2026 (10/2026)' : 'Tháng 10/2026'}</option>
+              <option value="2026-11">{language === 'en' ? 'November 2026 (11/2026)' : 'Tháng 11/2026'}</option>
+              <option value="2026-12">{language === 'en' ? 'December 2026 (12/2026)' : 'Tháng 12/2026'}</option>
+              <option value="2027-01">{language === 'en' ? 'January 2027 (01/2027)' : 'Tháng 01/2027'}</option>
+              <option value="2027-02">{language === 'en' ? 'February 2027 (02/2027)' : 'Tháng 02/2027'}</option>
+              <option value="2027-03">{language === 'en' ? 'March 2027 (03/2027)' : 'Tháng 03/2027'}</option>
+            </select>
           </div>
         </div>
       </div>
@@ -527,25 +543,33 @@ export const RenewalView: React.FC = () => {
                       </td>
 
                       <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded font-bold text-xs ${
-                            r.days_remaining === 0
-                              ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                              : r.days_remaining < 0
-                              ? 'bg-slate-100 text-slate-700 border border-slate-300'
-                              : isUrgent
-                              ? 'bg-rose-100 text-rose-800'
-                              : isWarning
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}
-                        >
-                          {r.days_remaining === 0
-                            ? (language === 'en' ? 'Expires today' : 'Hết hạn hôm nay')
-                            : r.days_remaining > 0
-                            ? (language === 'en' ? `${r.days_remaining}d remaining` : `Còn ${r.days_remaining} ngày`)
-                            : (language === 'en' ? `Overdue by ${Math.abs(r.days_remaining)}d` : `Đã quá hạn ${Math.abs(r.days_remaining)} ngày`)}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded font-bold text-xs ${
+                              r.days_remaining === 0
+                                ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                : r.days_remaining < 0
+                                ? 'bg-slate-100 text-slate-700 border border-slate-300'
+                                : isUrgent
+                                ? 'bg-rose-100 text-rose-800'
+                                : isWarning
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {r.days_remaining === 0
+                              ? (language === 'en' ? 'Expires today' : 'Hết hạn hôm nay')
+                              : r.days_remaining > 0
+                              ? (language === 'en' ? `${r.days_remaining}d remaining` : `Còn ${r.days_remaining} ngày`)
+                              : (language === 'en' ? `Overdue by ${Math.abs(r.days_remaining)}d` : `Đã quá hạn ${Math.abs(r.days_remaining)} ngày`)}
+                          </span>
+
+                          {r.days_remaining === 1 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                              {language === 'en' ? '⏰ Due Tomorrow (1-Day Reminder)' : '⏰ Hạn ngày mai (Nhắc trước 1 ngày)'}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="px-4 py-3">

@@ -44,7 +44,10 @@ export const StaffApprovalView: React.FC = () => {
   const { t, language } = useLanguage();
   const isSystemAdmin = profile?.system_role === 'system_admin';
   const isCM = activeRole === 'CM';
-  const canApprove = isSystemAdmin || isCM;
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isSOO = (activeRole as string) === 'SOO';
+  // SOO, HT, CM, and Admin are authorized to approve and assign teacher roles
+  const canApprove = isSystemAdmin || isCM || isSOO || isHT;
 
   const [activeTab, setActiveTab] = useState<'pending' | 'staff' | 'audit'>(canApprove ? 'pending' : 'staff');
 
@@ -133,13 +136,13 @@ export const StaffApprovalView: React.FC = () => {
       if (p.status !== 'pending') return false;
       // System admin sees all pending users
       if (isSystemAdmin) return true;
-      // CM only sees pending users who selected CM's branch or have no branch preference
-      if (isCM && currentBranch) {
+      // CM, SOO, HT see pending users who selected branch or have no branch preference
+      if ((isCM || isSOO || isHT) && currentBranch) {
         return p.preferred_branch_id === currentBranch.id || !p.preferred_branch_id;
       }
       return false;
     });
-  }, [profiles, isSystemAdmin, isCM, currentBranch]);
+  }, [profiles, isSystemAdmin, isCM, isSOO, isHT, currentBranch]);
 
   // Open Approval Modal
   const handleOpenApproveModal = (target: UserProfile) => {

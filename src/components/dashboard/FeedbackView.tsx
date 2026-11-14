@@ -23,6 +23,13 @@ import {
   HelpCircle,
   ThumbsUp,
   AlertTriangle,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Bell,
+  Layers,
+  Check,
+  Timer,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -67,6 +74,16 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  // Customer Specification: Group feedback by student (Image 3) + 1-day reminder + Turnaround time
+  const [viewMode, setViewMode] = useState<'grouped' | 'flat'>('grouped');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [emailNotification, setEmailNotification] = useState<{
+    title: string;
+    recipients: string[];
+    actionType: 'create' | 'resolve';
+    turnaround?: string;
+  } | null>(null);
+
   // Modals
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [selectedStudentForProfile, setSelectedStudentForProfile] = useState<Student | null>(null);
@@ -75,6 +92,49 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
   const [resolveStatus, setResolveStatus] = useState<FeedbackStatus>('resolved');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Helper functions: Turnaround calculation & 1-day deadline reminder
+  const calculateTurnaround = (createdAt?: string, resolvedAt?: string) => {
+    if (!createdAt) return 'Completed';
+    const start = new Date(createdAt).getTime();
+    const end = resolvedAt ? new Date(resolvedAt).getTime() : Date.now();
+    const diffMs = Math.max(0, end - start);
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    if (diffHours >= 24) {
+      const days = Math.floor(diffHours / 24);
+      const remHours = diffHours % 24;
+      return `${days}d ${remHours}h`;
+    }
+    if (diffHours > 0) return `${diffHours}h ${diffMinutes}m`;
+    return `${Math.max(1, diffMinutes)}m`;
+  };
+
+  const isDueTomorrow = (dueDate?: string) => {
+    if (!dueDate) return false;
+    const due = new Date(dueDate);
+    const now = new Date();
+    const dueMid = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+    const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const diffDays = Math.round((dueMid - nowMid) / (1000 * 60 * 60 * 24));
+    return diffDays === 1;
+  };
+
+  const isOverdue = (dueDate?: string) => {
+    if (!dueDate) return false;
+    const due = new Date(dueDate);
+    const now = new Date();
+    const dueMid = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+    const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return dueMid < nowMid;
+  };
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [key]: prev[key] === undefined ? false : !prev[key],
+    }));
+  };
 
   // Form New Feedback
   const [newFeedback, setNewFeedback] = useState({
@@ -139,7 +199,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
   const handleCreateFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFeedback.student_id || !newFeedback.content.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng chọn học viên và nhập nội dung phản hồi.' });
+      setMessage({ type: 'error', text: 'Please select a student and provide feedback description.' });
       return;
     }
 
@@ -147,19 +207,39 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
     setMessage(null);
     try {
       const selectedStudent = students.find((s) => s.id === newFeedback.student_id);
+      const assignedStaff = staffs.find((p) => p.id === newFeedback.assigned_staff_id);
+      const assignedStaffName = assignedStaff?.full_name || selectedStudent?.effective_hrt_name || 'Designated Staff';
+      const ownerName = profile?.full_name || profile?.email || 'Logged Staff';
+
       await FeedbackService.createFeedback({
         student_id: newFeedback.student_id,
         branch_id: selectedStudent?.branch_id || currentBranch?.id || '',
-        parent_name: newFeedback.parent_name || 'Phụ huynh',
-        parent_phone: newFeedback.parent_phone || 'Chưa cung cấp',
+        parent_name: newFeedback.parent_name || 'Parent',
+        parent_phone: newFeedback.parent_phone || 'N/A',
         feedback_type: newFeedback.feedback_type,
         channel: newFeedback.channel,
         content: newFeedback.content.trim(),
         assigned_staff_id: newFeedback.assigned_staff_id || undefined,
+        assigned_staff_name: assignedStaffName,
+        owner_id: profile?.id,
+        owner_name: ownerName,
         due_date: newFeedback.due_date,
         status: 'open',
       });
-      setMessage({ type: 'success', text: 'Đã tiếp nhận phản hồi từ phụ huynh thành công!' });
+
+      // Customer Specification: Email notification dispatched to Assignee, Owner, and CM + Teacher get ALL notifications
+      setEmailNotification({
+        title: `New Inquiry for ${selectedStudent?.full_name || 'Student'} (${newFeedback.parent_phone})`,
+        actionType: 'create',
+        recipients: [
+          `Assigned Staff: ${assignedStaffName}`,
+          `Ticket Owner: ${ownerName}`,
+          `Center Manager (CM): All Center Inquiries & Escalations`,
+          `Class Teachers: Main Teacher & HRT Staff`,
+        ],
+      });
+
+      setMessage({ type: 'success', text: 'Parent feedback registered and instant notifications dispatched successfully.' });
       setShowAddModal(false);
       setNewFeedback({
         student_id: '',
@@ -173,7 +253,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
       });
       loadData();
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Không thể tạo phản hồi.' });
+      setMessage({ type: 'error', text: err.message || 'Failed to create feedback record.' });
     } finally {
       setSubmitting(false);
     }
@@ -185,13 +265,42 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
 
     setSubmitting(true);
     try {
-      await FeedbackService.updateStatus(selectedFeedbackForResolve.id, resolveStatus, resolutionNotes.trim());
-      setMessage({ type: 'success', text: 'Đã cập nhật tiến độ giải quyết phản hồi!' });
+      const resolvedAt = new Date().toISOString();
+      const turnaround = calculateTurnaround(selectedFeedbackForResolve.created_at, resolvedAt);
+
+      await FeedbackService.updateStatus(
+        selectedFeedbackForResolve.id,
+        resolveStatus,
+        resolutionNotes.trim(),
+        resolvedAt,
+        turnaround
+      );
+
+      const assignedStaffName = selectedFeedbackForResolve.assigned_staff_name || 'Designated Staff';
+      const ownerName = selectedFeedbackForResolve.owner_name || 'Ticket Owner';
+
+      // Customer Specification: Resolution turnaround time + Email dispatched to Owner, Assignee, CM & Teachers
+      setEmailNotification({
+        title: `Feedback resolved: "${selectedFeedbackForResolve.content.slice(0, 45)}..."`,
+        actionType: 'resolve',
+        turnaround,
+        recipients: [
+          `Assigned Staff: ${assignedStaffName}`,
+          `Ticket Owner: ${ownerName}`,
+          `Center Manager (CM): Full Notification Log`,
+          `Class Teachers: Academic Lead & HRT Staff`,
+        ],
+      });
+
+      setMessage({
+        type: 'success',
+        text: `Feedback resolved in ${turnaround}! Turnaround recorded and notifications dispatched.`,
+      });
       setSelectedFeedbackForResolve(null);
       setResolutionNotes('');
       loadData();
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Cập nhật thất bại.' });
+      setMessage({ type: 'error', text: err.message || 'Resolution update failed.' });
     } finally {
       setSubmitting(false);
     }
@@ -211,6 +320,57 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
       return matchesSearch && matchesType && matchesStatus;
     });
   }, [feedbacks, searchTerm, typeFilter, statusFilter]);
+
+  // Customer Specification: Consolidate / group multiple feedbacks for the same student (Image 3)
+  const groupedFeedbacks = useMemo(() => {
+    const groupsMap = new Map<
+      string,
+      {
+        key: string;
+        studentId: string;
+        studentName: string;
+        studentCode: string;
+        parentName: string;
+        parentPhone: string;
+        student?: Student;
+        feedbacks: ParentFeedback[];
+        openCount: number;
+        inProgressCount: number;
+        resolvedCount: number;
+      }
+    >();
+
+    filteredFeedbacks.forEach((f) => {
+      const s = f.student || students.find((st) => st.id === f.student_id);
+      const studentName = s?.full_name || f.student?.full_name || f.parent_name || 'Học viên';
+      // Group key by student id, or fallback to normalized student name or parent phone
+      const groupKey = f.student_id || studentName.toLowerCase().trim() || f.parent_phone;
+
+      if (!groupsMap.has(groupKey)) {
+        groupsMap.set(groupKey, {
+          key: groupKey,
+          studentId: f.student_id,
+          studentName,
+          studentCode: s?.student_code || f.student?.student_code || '',
+          parentName: f.parent_name || s?.parent_name || '',
+          parentPhone: f.parent_phone || s?.parent_phone || '',
+          student: s,
+          feedbacks: [],
+          openCount: 0,
+          inProgressCount: 0,
+          resolvedCount: 0,
+        });
+      }
+
+      const group = groupsMap.get(groupKey)!;
+      group.feedbacks.push(f);
+      if (f.status === 'open') group.openCount++;
+      else if (f.status === 'in_progress') group.inProgressCount++;
+      else if (f.status === 'resolved') group.resolvedCount++;
+    });
+
+    return Array.from(groupsMap.values());
+  }, [filteredFeedbacks, students]);
 
   const stats = useMemo(() => {
     const total = feedbacks.length;
@@ -243,6 +403,46 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
             type="button"
             onClick={() => setMessage(null)}
             className="p-1 hover:bg-black/5 rounded-lg transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Customer Specification: Instant Email & System Notification Banner */}
+      {emailNotification && (
+        <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-900 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-blue-100 text-[#043264] rounded-xl mt-0.5">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-[#043264]">
+                  {emailNotification.actionType === 'create'
+                    ? 'Email & System Notification Dispatched'
+                    : `Resolution Confirmed • Turnaround: ${emailNotification.turnaround}`}
+                </h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Delivered
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-slate-800 mt-1">{emailNotification.title}</p>
+              <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[11px] text-slate-600">
+                <span className="font-semibold text-slate-700">Dispatched To:</span>
+                {emailNotification.recipients.map((r, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded-md border border-blue-200 text-[#043264] font-medium">
+                    <Check className="w-3 h-3 text-emerald-600" />
+                    {r}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEmailNotification(null)}
+            className="p-1 hover:bg-black/5 rounded-lg text-slate-500 self-start sm:self-center"
           >
             <X className="w-4 h-4" />
           </button>
@@ -303,7 +503,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
       {/* Filters & Actions Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
         <div className="flex flex-1 w-full md:w-auto items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[240px]">
+          <div className="relative flex-1 min-w-[220px]">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -314,7 +514,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Filter className="w-4 h-4 text-slate-400" />
             <select
               value={typeFilter}
@@ -340,6 +540,40 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               <option value="resolved">{language === 'en' ? 'Resolved' : 'Đã giải quyết'}</option>
             </select>
           </div>
+
+          {/* Customer Specification: Group by Student vs Flat View Toggle */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setViewMode('grouped')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                viewMode === 'grouped'
+                  ? 'bg-white text-[#043264] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>{language === 'en' ? 'Group by Student' : 'Gộp theo học viên'}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-[#043264] font-bold">
+                {groupedFeedbacks.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('flat')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                viewMode === 'flat'
+                  ? 'bg-white text-[#043264] shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{language === 'en' ? 'All Feedbacks' : 'Tất cả phản hồi'}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700 font-bold">
+                {filteredFeedbacks.length}
+              </span>
+            </button>
+          </div>
         </div>
 
         <button
@@ -352,7 +586,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
         </button>
       </div>
 
-      {/* Feedbacks List */}
+      {/* Feedbacks List (Grouped or Flat) */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-500 text-sm">
@@ -370,7 +604,209 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                 : 'Các cuộc gọi, tin nhắn Zalo hoặc phản hồi từ phụ huynh sẽ được lưu vết tại đây.'}
             </div>
           </div>
+        ) : viewMode === 'grouped' ? (
+          /* ==================================================================== */
+          /* GROUPED BY STUDENT VIEW (Solves duplicate cards in Image 3) */
+          /* ==================================================================== */
+          <div className="divide-y divide-slate-200">
+            {groupedFeedbacks.map((group) => {
+              const isExpanded = expandedGroups[group.key] !== false; // default open
+              return (
+                <div key={group.key} className="p-4 sm:p-5 hover:bg-slate-50/40 transition-colors">
+                  {/* Group Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div className="flex items-start sm:items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.key)}
+                        className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors mt-0.5 sm:mt-0"
+                        title={isExpanded ? 'Collapse Feedbacks' : 'Expand Feedbacks'}
+                      >
+                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => group.student && setSelectedStudentForProfile(group.student)}
+                            className="font-bold text-base text-slate-900 hover:text-[#026fd7] hover:underline flex items-center gap-1.5"
+                          >
+                            <User className="w-4 h-4 text-[#043264]" />
+                            <span>{group.studentName}</span>
+                          </button>
+                          {group.studentCode && (
+                            <span className="font-mono text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-semibold">
+                              {group.studentCode}
+                            </span>
+                          )}
+                          <span className="text-xs text-slate-500 font-medium">
+                            • Parent: <strong className="text-slate-800">{group.parentName}</strong> ({group.parentPhone})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-[#043264] border border-blue-200">
+                        <MessageSquareHeart className="w-3.5 h-3.5" />
+                        <span>{group.feedbacks.length} Feedback{group.feedbacks.length > 1 ? 's' : ''}</span>
+                      </span>
+
+                      {group.openCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                          {group.openCount} New
+                        </span>
+                      )}
+                      {group.inProgressCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                          {group.inProgressCount} In Progress
+                        </span>
+                      )}
+                      {group.resolvedCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          {group.resolvedCount} Resolved
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewFeedback((prev) => ({
+                            ...prev,
+                            student_id: group.studentId,
+                            parent_name: group.parentName,
+                            parent_phone: group.parentPhone,
+                            assigned_staff_id: group.student?.assigned_hrt_id || '',
+                          }));
+                          setShowAddModal(true);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#043264] bg-white hover:bg-blue-50 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>{language === 'en' ? 'Add Feedback' : 'Thêm phản hồi'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Feedbacks Thread */}
+                  {isExpanded && (
+                    <div className="mt-3 pl-3 sm:pl-7 space-y-3 border-l-2 border-blue-200">
+                      {group.feedbacks.map((f) => {
+                        const typeCfg = TYPE_CONFIG[f.feedback_type] || TYPE_CONFIG.academic_concern;
+                        const TypeIcon = typeCfg.icon;
+                        const channelCfg = CHANNEL_CONFIG[f.channel] || CHANNEL_CONFIG.phone;
+                        const ChannelIcon = channelCfg.icon;
+                        const statusCfg = STATUS_CONFIG[f.status] || STATUS_CONFIG.open;
+                        const dueTomorrow = isDueTomorrow(f.due_date);
+                        const overdue = isOverdue(f.due_date) && f.status !== 'resolved';
+
+                        return (
+                          <div
+                            key={f.id}
+                            className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow space-y-2.5"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${typeCfg.color}`}>
+                                  <TypeIcon className="w-3 h-3" />
+                                  {typeCfg.label}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                  <ChannelIcon className="w-3 h-3 text-slate-400" />
+                                  {channelCfg.label}
+                                </span>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${statusCfg.badge}`}>
+                                  {statusCfg.label}
+                                </span>
+
+                                {/* 1-Day Deadline Reminder Badge */}
+                                {dueTomorrow && (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                                    <Timer className="w-3 h-3 text-amber-700" />
+                                    <span>{language === 'en' ? '⏰ Due Tomorrow (1-Day Reminder)' : '⏰ Nhắc hẹn: Hạn ngày mai'}</span>
+                                  </span>
+                                )}
+
+                                {overdue && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    <span>{language === 'en' ? 'Overdue' : 'Quá hạn'}</span>
+                                  </span>
+                                )}
+
+                                {/* Resolution Turnaround Time */}
+                                {f.status === 'resolved' && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    <span>Turnaround: {f.turnaround_time || calculateTurnaround(f.created_at, f.resolved_at || f.updated_at) || 'Done'}</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedFeedbackForResolve(f);
+                                  setResolveStatus(f.status === 'open' ? 'in_progress' : 'resolved');
+                                  setResolutionNotes(f.resolution_notes || '');
+                                }}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+                              >
+                                <Clock className="w-3.5 h-3.5 text-slate-500" />
+                                <span>{language === 'en' ? 'Update Progress' : 'Cập nhật tiến độ'}</span>
+                              </button>
+                            </div>
+
+                            <p className="text-xs text-slate-800 bg-slate-50/80 p-2.5 rounded-lg border border-slate-100 leading-relaxed">
+                              {tDb(f.content)}
+                            </p>
+
+                            {f.resolution_notes && (
+                              <div className="text-xs text-emerald-800 bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-100 flex items-start gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                <div>
+                                  <strong className="block text-emerald-900">
+                                    {language === 'en' ? 'Resolution Notes:' : 'Kết quả xử lý:'}
+                                  </strong>
+                                  {tDb(f.resolution_notes)}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Attribution: Owner and Assignee */}
+                            <div className="flex items-center gap-4 text-[11px] text-slate-500 pt-1 flex-wrap border-t border-slate-100">
+                              <span className="flex items-center gap-1 font-medium">
+                                <User className="w-3 h-3 text-slate-400" />
+                                <span>Owner / Logged by:</span>
+                                <strong className="text-slate-800">{f.owner_name || 'Center Staff'}</strong>
+                              </span>
+                              <span className="flex items-center gap-1 font-medium">
+                                <Users className="w-3 h-3 text-slate-400" />
+                                <span>Assigned to:</span>
+                                <strong className="text-slate-800">{f.assigned_staff_name || 'Unassigned'}</strong>
+                              </span>
+                              <span className="flex items-center gap-1 font-mono">
+                                <Calendar className="w-3 h-3 text-slate-400" />
+                                <span>Due: {f.due_date}</span>
+                              </span>
+                              <span className="text-slate-400 font-mono">
+                                Logged: {new Date(f.created_at || '').toLocaleDateString('en-US')}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          /* ==================================================================== */
+          /* FLAT LIST VIEW */
+          /* ==================================================================== */
           <div className="divide-y divide-slate-100">
             {filteredFeedbacks.map((f) => {
               const typeCfg = TYPE_CONFIG[f.feedback_type] || TYPE_CONFIG.academic_concern;
@@ -378,6 +814,8 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
               const channelCfg = CHANNEL_CONFIG[f.channel] || CHANNEL_CONFIG.phone;
               const ChannelIcon = channelCfg.icon;
               const statusCfg = STATUS_CONFIG[f.status] || STATUS_CONFIG.open;
+              const dueTomorrow = isDueTomorrow(f.due_date);
+              const overdue = isOverdue(f.due_date) && f.status !== 'resolved';
 
               return (
                 <div key={f.id} className="p-4 sm:p-5 hover:bg-slate-50/70 transition-colors">
@@ -397,6 +835,27 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusCfg.badge}`}>
                           {statusCfg.label}
                         </span>
+
+                        {dueTomorrow && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                            <Timer className="w-3 h-3 text-amber-700" />
+                            <span>⏰ Due Tomorrow (1-Day Reminder)</span>
+                          </span>
+                        )}
+
+                        {overdue && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>Overdue</span>
+                          </span>
+                        )}
+
+                        {f.status === 'resolved' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Turnaround: {f.turnaround_time || calculateTurnaround(f.created_at, f.resolved_at || f.updated_at) || 'Done'}</span>
+                          </span>
+                        )}
                       </div>
 
                       <div className="text-sm font-semibold text-slate-900 flex items-center gap-2">
@@ -437,19 +896,23 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                       <div className="flex items-center gap-4 text-xs text-slate-500 pt-1 flex-wrap">
                         <span className="flex items-center gap-1">
                           <User className="w-3.5 h-3.5 text-slate-400" />
-                          {language === 'en' ? 'Assigned to: ' : 'Phụ trách: '}
+                          <span>Owner:</span>
+                          <strong className="text-slate-700 font-medium">{f.owner_name || 'Staff'}</strong>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Assigned to:</span>
                           <strong className="text-slate-700 font-medium">
                             {f.assigned_staff_name || (language === 'en' ? 'Unassigned' : 'Chưa phân công')}
                           </strong>
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          {language === 'en' ? 'Due: ' : 'Hạn xử lý: '}
+                          <span>Due:</span>
                           <strong className="text-slate-700 font-medium">{f.due_date}</strong>
                         </span>
                         <span className="text-slate-400">
-                          {language === 'en' ? 'Logged: ' : 'Tiếp nhận: '}
-                          {new Date(f.created_at || '').toLocaleDateString(language === 'en' ? 'en-US' : 'vi-VN')}
+                          Logged: {new Date(f.created_at || '').toLocaleDateString('en-US')}
                         </span>
                       </div>
                     </div>

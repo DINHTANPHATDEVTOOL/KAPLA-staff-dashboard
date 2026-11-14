@@ -16,6 +16,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   Sparkles,
+  Edit,
+  X,
+  Save,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -31,6 +35,12 @@ export const ActivityLogsView: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [actionFilter, setActionFilter] = useState<string>('all');
+
+  // Edit Activity Log Note Modal (Customer: All activity can be edited, but NO deletion)
+  const [editingLog, setEditingLog] = useState<AuditLog | null>(null);
+  const [editNoteText, setEditNoteText] = useState<string>('');
+  const [savingNote, setSavingNote] = useState<boolean>(false);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -79,6 +89,45 @@ export const ActivityLogsView: React.FC = () => {
     });
   }, [logs, searchTerm, actionFilter]);
 
+  const handleOpenEdit = (log: AuditLog) => {
+    setEditingLog(log);
+    const existingNote = (log.details as any)?.notes || (log.details as any)?.comment || '';
+    setEditNoteText(existingNote);
+  };
+
+  const handleSaveEditNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLog) return;
+    setSavingNote(true);
+    setNotice(null);
+    try {
+      const updatedDetails = {
+        ...editingLog.details,
+        notes: editNoteText.trim(),
+        last_edited_by: profile?.email || 'Authorized Staff',
+        last_edited_at: new Date().toISOString(),
+      };
+
+      if (realSupabase) {
+        const { error } = await realSupabase
+          .from('audit_logs')
+          .update({ details: updatedDetails })
+          .eq('id', editingLog.id);
+        if (error) throw error;
+      }
+
+      setLogs((prev) =>
+        prev.map((l) => (l.id === editingLog.id ? { ...l, details: updatedDetails } : l))
+      );
+      setNotice({ type: 'success', text: 'Activity log notes updated successfully.' });
+      setEditingLog(null);
+    } catch (err: any) {
+      setNotice({ type: 'error', text: err?.message || 'Failed to update activity log note.' });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
   const getActionBadge = (action: string) => {
     if (action.includes('APPROVE') || action.includes('ROLE') || action.includes('MEMBERSHIP')) {
       return 'bg-purple-50 text-purple-700 border-purple-200';
@@ -114,11 +163,35 @@ export const ActivityLogsView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-stretch sm:self-auto justify-center">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>{language === 'en' ? 'Row-Level Security Active' : 'Bảo vệ RLS đang hoạt động'}</span>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{language === 'en' ? 'Audit Protection: Deletion Prohibited' : 'Bảo vệ nhật ký: Nghiêm cấm xóa'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 self-stretch sm:self-auto justify-center">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>{language === 'en' ? 'Row-Level Security Active' : 'Bảo vệ RLS đang hoạt động'}</span>
+          </div>
         </div>
       </div>
+
+      {notice && (
+        <div
+          className={`p-4 rounded-xl border flex items-center justify-between shadow-xs ${
+            notice.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{notice.text}</span>
+          </div>
+          <button type="button" onClick={() => setNotice(null)} className="p-1 hover:bg-black/5 rounded-lg">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
@@ -164,18 +237,19 @@ export const ActivityLogsView: React.FC = () => {
                 <th className="py-3 px-4">{language === 'en' ? 'Target Account' : 'Tài khoản đối tượng'}</th>
                 <th className="py-3 px-4">{language === 'en' ? 'Campus / Branch' : 'Chi nhánh'}</th>
                 <th className="py-3 px-5">{language === 'en' ? 'Recorded Details' : 'Chi tiết ghi nhận'}</th>
+                <th className="py-3 px-4 text-right">{language === 'en' ? 'Actions' : 'Thao tác'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500 text-sm">
+                  <td colSpan={7} className="p-8 text-center text-slate-500 text-sm">
                     {language === 'en' ? 'Loading activity logs...' : 'Đang tải nhật ký tác nghiệp...'}
                   </td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-slate-500 text-sm">
+                  <td colSpan={7} className="p-12 text-center text-slate-500 text-sm">
                     {language === 'en' ? 'No operational logs found.' : 'Không có nhật ký nào phù hợp.'}
                   </td>
                 </tr>
@@ -202,6 +276,17 @@ export const ActivityLogsView: React.FC = () => {
                     <td className="py-3.5 px-5 text-slate-600 font-mono text-[11px] max-w-md truncate">
                       {JSON.stringify(log.details)}
                     </td>
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(log)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-slate-100 hover:bg-blue-50 hover:text-[#043264] rounded-lg transition-colors border border-slate-200"
+                        title={language === 'en' ? 'Edit Activity Notes (Deletion Prohibited)' : 'Chỉnh sửa ghi chú (Không thể xóa)'}
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        <span>{language === 'en' ? 'Edit Note' : 'Sửa'}</span>
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -209,6 +294,85 @@ export const ActivityLogsView: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Edit Activity Note Modal */}
+      {editingLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="p-5 bg-gradient-to-r from-[#043264] to-[#026fd7] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit className="w-5 h-5" />
+                <h3 className="font-bold text-sm">
+                  {language === 'en' ? 'Edit Activity Details / Notes' : 'Chỉnh sửa ghi chú tác nghiệp'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingLog(null)}
+                className="p-1 text-white/80 hover:text-white rounded-lg hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditNote} className="p-5 space-y-4">
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong>{language === 'en' ? 'Audit Protection Policy:' : 'Quy định bảo vệ nhật ký:'}</strong>{' '}
+                  {language === 'en'
+                    ? 'Activity notes and follow-up annotations may be edited for accuracy. Deletion of activity entries is strictly prohibited by center compliance.'
+                    : 'Nhật ký được phép chỉnh sửa ghi chú bổ sung để đảm bảo tính chính xác. Mọi hành vi xóa nhật ký đều bị nghiêm cấm theo quy chế.'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Action / Event Code' : 'Mã hành động'}
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={editingLog.action}
+                  className="w-full px-3 py-2 text-xs font-mono bg-slate-100 border border-slate-200 rounded-lg text-slate-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  {language === 'en' ? 'Operational Notes & Follow-up Details' : 'Ghi chú tác nghiệp & Chi tiết theo dõi'}
+                </label>
+                <textarea
+                  rows={4}
+                  value={editNoteText}
+                  onChange={(e) => setEditNoteText(e.target.value)}
+                  placeholder={language === 'en' ? 'Enter updated activity notes or verification annotations...' : 'Nhập ghi chú cập nhật hoặc diễn giải nghiệp vụ...'}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#043264]/20 focus:border-[#043264]"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingLog(null)}
+                  className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl"
+                >
+                  {language === 'en' ? 'Cancel' : 'Hủy'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingNote}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#043264] hover:bg-[#032042] rounded-xl shadow-xs disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savingNote ? (language === 'en' ? 'Saving...' : 'Đang lưu...') : (language === 'en' ? 'Save Notes' : 'Lưu ghi chú')}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

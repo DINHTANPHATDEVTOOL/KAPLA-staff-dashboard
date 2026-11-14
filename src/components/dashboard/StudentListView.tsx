@@ -74,7 +74,17 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const { language, t, tDb } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
   const isCM = activeRole === 'CM';
-  const canManage = isSysAdmin || isCM;
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isHRT = activeRole === 'HRT';
+  const isEC = (activeRole as string) === 'EC' || activeRole === 'CSKH';
+  const isSOO = (activeRole as string) === 'SOO';
+
+  // Role permissions per customer specification:
+  // HRT, EC, SOO, HT, CM, Admin can create and edit students
+  const canCreateStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
+  const canEditStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
+  // ONLY Admin account can delete students
+  const canDeleteStudent = isSysAdmin;
 
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassRoom[]>([]);
@@ -509,6 +519,11 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       }
 
       return matchSearch && matchClass && matchLevel && matchTeacher && matchAcademic && matchRenewal;
+    }).sort((a, b) => {
+      // Customer Requirement: "case nào mới update là sẽ cập nhật lên đầu tiên"
+      const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return timeB - timeA;
     });
   }, [
     students,
@@ -707,6 +722,13 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
   const handleDeleteStudentSubmit = async () => {
     if (!deletingStudent) return;
+    if (!canDeleteStudent) {
+      setActionMessage({
+        type: 'error',
+        text: 'Permission denied: Only System Administrator can delete student records.',
+      });
+      return;
+    }
     setSubmitting(true);
     setActionMessage(null);
     try {
@@ -821,7 +843,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
           </p>
         </div>
 
-        {canManage && (
+        {canCreateStudent && (
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
@@ -1224,7 +1246,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   </th>
                   <th className="py-3 px-3">Tuition Expiry</th>
                   <th className="py-3 px-3">Assigned HRT</th>
-                  {canManage && <th className="py-3 px-3 text-right">Actions</th>}
+                  {(canEditStudent || canDeleteStudent) && <th className="py-3 px-3 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1385,7 +1407,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                       {/* Actions */}
                       <td className="py-3 px-3 text-right">
                         <div className="inline-flex items-center gap-1">
-                          {canManage && (
+                          {canEditStudent && (
                             <>
                               <button
                                 type="button"
@@ -1421,16 +1443,18 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
-
-                              <button
-                                type="button"
-                                title={language === 'en' ? 'Delete student' : 'Xóa học viên'}
-                                onClick={() => setDeletingStudent(student)}
-                                className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
                             </>
+                          )}
+
+                          {canDeleteStudent && (
+                            <button
+                              type="button"
+                              title={language === 'en' ? 'Delete student (Admin Only)' : 'Xóa học viên (Chỉ Admin)'}
+                              onClick={() => setDeletingStudent(student)}
+                              className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           )}
 
                           <button

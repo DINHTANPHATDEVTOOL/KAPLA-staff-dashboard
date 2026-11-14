@@ -1412,20 +1412,26 @@ export class MockStorageService {
       });
     }
 
-    return filtered.map((s) => {
-      const cls = classes.find((c) => c.id === s.current_class_id);
-      const br = branches.find((b) => b.id === s.branch_id);
-      const hrt = profiles.find((p) => p.id === s.assigned_hrt_id);
-      const defHrt = cls?.default_hrt_id ? profiles.find((p) => p.id === cls.default_hrt_id) : null;
-      return {
-        ...s,
-        branch: br,
-        current_class: cls,
-        current_class_name: cls?.name,
-        assigned_hrt: hrt,
-        effective_hrt_name: hrt ? `${hrt.full_name} (HRT riêng)` : defHrt ? `${defHrt.full_name} (Theo lớp)` : 'Chưa phân công',
-      };
-    });
+    return filtered
+      .map((s) => {
+        const cls = classes.find((c) => c.id === s.current_class_id);
+        const br = branches.find((b) => b.id === s.branch_id);
+        const hrt = profiles.find((p) => p.id === s.assigned_hrt_id);
+        const defHrt = cls?.default_hrt_id ? profiles.find((p) => p.id === cls.default_hrt_id) : null;
+        return {
+          ...s,
+          branch: br,
+          current_class: cls,
+          current_class_name: cls?.name,
+          assigned_hrt: hrt,
+          effective_hrt_name: hrt ? `${hrt.full_name} (HRT riêng)` : defHrt ? `${defHrt.full_name} (Theo lớp)` : 'Chưa phân công',
+        };
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
+        const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
+        return timeB - timeA;
+      });
   }
 
   static addStudent(payload: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Student {
@@ -2518,7 +2524,7 @@ export const StudentService = {
           current_class:classes(*),
           assigned_hrt:profiles!students_assigned_hrt_id_fkey(*)
         `)
-        .order('full_name');
+        .order('updated_at', { ascending: false, nullsFirst: false });
 
       if (branchId) {
         query = query.eq('branch_id', branchId);
@@ -3033,15 +3039,36 @@ export const FeedbackService = {
     return MockStorageService.addFeedback(payload);
   },
 
-  async updateStatus(id: string, status: FeedbackStatus, resolutionNotes?: string): Promise<void> {
+  async updateStatus(
+    id: string,
+    status: FeedbackStatus,
+    resolutionNotes?: string,
+    resolvedAt?: string,
+    turnaroundTime?: string
+  ): Promise<void> {
     if (realSupabase) {
       const updates: any = { status, updated_at: new Date().toISOString() };
       if (resolutionNotes) updates.resolution_notes = resolutionNotes;
-      const { error } = await realSupabase.from('parent_feedbacks').update(updates).eq('id', id);
-      if (error) throw error;
+      try {
+        if (resolvedAt) updates.resolved_at = resolvedAt;
+        if (turnaroundTime) updates.turnaround_time = turnaroundTime;
+        const { error } = await realSupabase.from('parent_feedbacks').update(updates).eq('id', id);
+        if (error) throw error;
+      } catch {
+        // Fallback without extended columns if schema cache does not have them
+        const baseUpdates: any = { status, updated_at: new Date().toISOString() };
+        if (resolutionNotes) baseUpdates.resolution_notes = resolutionNotes;
+        const { error: baseError } = await realSupabase.from('parent_feedbacks').update(baseUpdates).eq('id', id);
+        if (baseError) throw baseError;
+      }
       return;
     }
-    MockStorageService.updateFeedback(id, { status, resolution_notes: resolutionNotes });
+    MockStorageService.updateFeedback(id, {
+      status,
+      resolution_notes: resolutionNotes,
+      resolved_at: resolvedAt,
+      turnaround_time: turnaroundTime,
+    });
   },
 };
 

@@ -91,6 +91,16 @@ export const CareTasksView: React.FC = () => {
     return { total, completed, pending };
   }, [tasks]);
 
+  const isDueTomorrow = (dueDate?: string) => {
+    if (!dueDate) return false;
+    const due = new Date(dueDate);
+    const now = new Date();
+    const dueMid = new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime();
+    const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const diffDays = Math.round((dueMid - nowMid) / (1000 * 60 * 60 * 24));
+    return diffDays === 1;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -226,6 +236,12 @@ export const CareTasksView: React.FC = () => {
                           </span>
                           {task.student?.current_class && ` (${task.student.current_class.name})`}
                         </span>
+
+                        {isDueTomorrow(task.due_date) && !isDone && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                            ⏰ Due Tomorrow (1-Day Reminder)
+                          </span>
+                        )}
                       </div>
 
                       <h4

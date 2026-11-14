@@ -28,14 +28,18 @@ export const AppLayout: React.FC = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  const isCMOrAdmin = profile?.system_role === 'system_admin' || activeRole === 'CM';
+  const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isSOO = (activeRole as string) === 'SOO';
+  const canManageStaffAndClasses = isSysAdmin || isCM || isHT || isSOO;
 
   // Guard: if non-manager tries to access manager-only sections, redirect to overview
   useEffect(() => {
-    if (!isCMOrAdmin && (activeSection === 'staff_roles' || activeSection === 'branches_classes')) {
+    if (!canManageStaffAndClasses && (activeSection === 'staff_roles' || activeSection === 'branches_classes')) {
       setActiveSection('overview');
     }
-  }, [isCMOrAdmin, activeSection]);
+  }, [canManageStaffAndClasses, activeSection]);
 
   // Check pending approval count for sidebar badge
   const checkPendingCount = async () => {
