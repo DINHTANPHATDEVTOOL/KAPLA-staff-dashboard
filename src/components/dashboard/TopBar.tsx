@@ -139,12 +139,9 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* -------------------------------------------------------------------- */}
-      {/* Right: Language Switcher, Branch Selector, Role Badge & User Profile */}
+      {/* Right: Branch Selector, Role Badge & User Profile */}
       {/* -------------------------------------------------------------------- */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Bilingual Switcher (🇻🇳 Tiếng Việt / 🇺🇸 English (US)) */}
-        <LanguageToggle />
-
         {/* Branch Selector (Admins or Multi-Branch staff can switch; Single-branch staff is fixed) */}
         {isSystemAdmin || availableBranches.length > 1 ? (
           <div className="relative">

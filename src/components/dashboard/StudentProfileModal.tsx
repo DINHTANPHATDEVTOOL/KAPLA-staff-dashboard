@@ -271,7 +271,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         subtitle: `${language === 'en' ? 'Assigned to' : 'Phân công'}: ${i.assigned_staff_name || 'HRT'} • ${language === 'en' ? 'Due' : 'Hạn'}: ${i.due_date}`,
         content: `${language === 'en' ? 'Issue' : 'Vấn đề'}: ${tDb(i.issue_description)}`,
         secondaryContent: `${language === 'en' ? 'Action Plan' : 'Kế hoạch can thiệp'}: ${tDb(i.action_plan)}${
-          i.verification_notes ? ` | Duyệt: ${tDb(i.verification_notes)}` : ''
+          i.verification_notes ? ` | ${language === 'en' ? 'Verification' : 'Duyệt'}: ${tDb(i.verification_notes)}` : ''
         }`,
         statusBadge:
           i.status === 'verified'

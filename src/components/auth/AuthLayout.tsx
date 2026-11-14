@@ -441,12 +441,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             </div>
             <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold bg-blue-50 text-[#026fd7] px-2.5 py-1 rounded-full border border-blue-200">
               <span className="w-1.5 h-1.5 rounded-full bg-[#026fd7]" />
-              {t('brand.internalTag', 'Cổng thông tin nội bộ')}
+              {t('brand.internalTag', 'Internal Portal')}
             </span>
           </div>
-
-          {/* Bilingual Switcher */}
-          <LanguageToggle />
         </div>
 
         {/* Title & Subtitle */}

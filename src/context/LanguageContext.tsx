@@ -950,53 +950,42 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'vi' || saved === 'en') return saved;
-    } catch {
-      // ignore
-    }
-    return 'en';
-  });
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    try {
-      localStorage.setItem(STORAGE_KEY, lang);
-    } catch {
-      // ignore
-    }
-  };
+  const language: Language = 'en';
 
   useEffect(() => {
-    document.title =
-      language === 'vi'
-        ? 'KAPLA - Tiếng Anh Sáng Tạo | Staff Portal'
-        : 'KAPLA - Oxford Quality English | Staff Portal';
-  }, [language]);
+    try {
+      localStorage.setItem(STORAGE_KEY, 'en');
+    } catch {
+      // ignore
+    }
+    document.documentElement.lang = 'en';
+    document.title = 'KAPLA - Oxford Quality English | Staff Portal';
+  }, []);
+
+  const setLanguage = (_lang: Language) => {
+    // 100% English-only application
+  };
 
   const toggleLanguage = () => {
-    setLanguage(language === 'vi' ? 'en' : 'vi');
+    // 100% English-only application
   };
 
   const t = useMemo(() => {
     return (key: string, fallbackVi?: string): string => {
-      const translated = TRANSLATIONS[language]?.[key];
+      const translated = TRANSLATIONS.en?.[key];
       if (translated) return translated;
-      if (language === 'vi' && fallbackVi) return fallbackVi;
-      if (language === 'en') {
-        return TRANSLATIONS.en?.[key] || key;
+      if (fallbackVi) {
+        return translateDbText(fallbackVi, 'en') || key;
       }
-      return fallbackVi || key;
+      return key;
     };
-  }, [language]);
+  }, []);
 
   const tDb = useMemo(() => {
     return (text: string | null | undefined): string => {
-      return translateDbText(text, language);
+      return translateDbText(text, 'en');
     };
-  }, [language]);
+  }, []);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, tDb }}>
@@ -1014,79 +1003,9 @@ export const useLanguage = (): LanguageContextType => {
 };
 
 // ==============================================================================
-// Language Toggle Button Component (🇻🇳 Tiếng Việt / 🇺🇸 English (US))
+// Language Toggle Button Component (Hidden for 100% English Production)
 // ==============================================================================
 
-export const LanguageToggle: React.FC<{ className?: string; compact?: boolean }> = ({
-  className = '',
-  compact = false,
-}) => {
-  const { language, setLanguage } = useLanguage();
-
-  if (compact) {
-    return (
-      <button
-        type="button"
-        id="language-toggle-btn"
-        onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-        title={language === 'vi' ? 'Chuyển sang English (US)' : 'Switch to Tiếng Việt'}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-          language === 'vi'
-            ? 'bg-red-50/80 border-red-200 text-red-900 hover:bg-red-100'
-            : 'bg-blue-50/80 border-blue-200 text-blue-900 hover:bg-blue-100'
-        } ${className}`}
-      >
-        {language === 'vi' ? (
-          <>
-            <VietnamFlag className="w-4 h-3 shadow-2xs" />
-            <span>VI</span>
-          </>
-        ) : (
-          <>
-            <USFlag className="w-4 h-3 shadow-2xs" />
-            <span>EN</span>
-          </>
-        )}
-      </button>
-    );
-  }
-
-  return (
-    <div
-      role="group"
-      id="language-toggle-group"
-      aria-label="Language selection"
-      className={`inline-flex items-center rounded-xl p-1 bg-slate-100 border border-slate-200 text-xs font-semibold select-none shadow-2xs ${className}`}
-    >
-      <button
-        type="button"
-        id="language-btn-vi"
-        onClick={() => setLanguage('vi')}
-        aria-pressed={language === 'vi'}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
-          language === 'vi'
-            ? 'bg-white text-slate-900 shadow-xs font-bold'
-            : 'text-slate-500 hover:text-slate-800'
-        }`}
-      >
-        <VietnamFlag className="w-4 h-3 shadow-2xs" />
-        <span>Tiếng Việt</span>
-      </button>
-      <span className="text-slate-300 font-light mx-0.5">/</span>
-      <button
-        type="button"
-        id="language-btn-en"
-        onClick={() => setLanguage('en')}
-        aria-pressed={language === 'en'}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
-          language === 'en'
-            ? 'bg-white text-slate-900 shadow-xs font-bold'
-            : 'text-slate-500 hover:text-slate-800'
-        }`}
-      >
-        <USFlag className="w-4 h-3 shadow-2xs" />
-        <span>English (US)</span>
-      </button>
-    </div>
-  );
+export const LanguageToggle: React.FC<{ className?: string; compact?: boolean }> = () => {
+  return null;
 };
