@@ -51,15 +51,41 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const getInitialAuthScreen = (): AuthScreen => {
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname.toLowerCase();
+    const search = new URLSearchParams(window.location.search);
+    const screenParam = search.get('screen') as AuthScreen;
+    if (screenParam) return screenParam;
+    if (path.includes('register')) return 'register';
+    if (path.includes('forgot')) return 'forgot-password';
+    if (path.includes('reset')) return 'reset-password';
+  }
+  return 'login';
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [memberships, setMemberships] = useState<BranchMembership[]>([]);
   const [availableBranches, setAvailableBranches] = useState<Branch[]>([]);
   const [currentBranch, setCurrentBranch] = useState<Branch | null>(null);
-  const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
+  const [authScreen, setAuthScreenState] = useState<AuthScreen>(getInitialAuthScreen());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const setAuthScreen = useCallback((screen: AuthScreen) => {
+    setAuthScreenState(screen);
+    if (typeof window !== 'undefined') {
+      if (screen === 'register') {
+        window.history.replaceState(null, '', '/register');
+      } else if (screen === 'login') {
+        window.history.replaceState(null, '', '/login');
+      } else if (screen === 'forgot-password') {
+        window.history.replaceState(null, '', '/forgot-password');
+      }
+    }
+  }, []);
 
   // Load branches
   const loadBranches = useCallback(async () => {
@@ -214,7 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setUser(null);
               setProfile(null);
               setMemberships([]);
-              setAuthScreen('login');
+              setAuthScreenState((prev) => (prev === 'register' || prev === 'forgot-password' ? prev : getInitialAuthScreen()));
             }
 
             // Listen for auth changes
