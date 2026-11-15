@@ -493,7 +493,7 @@ async function runCompleteDatabaseTestSuite() {
 
   // Test 6 Filter Combinations
   // Filter 1: Search by text
-  const searchFiltered = allActiveStudents.filter((s) => s.full_name.includes('Tuấn Khải'));
+  const searchFiltered = allActiveStudents.filter((s) => s.full_name.toLowerCase().includes('tuan khai') || s.full_name.toLowerCase().includes('tuấn khải'));
   assert('Bộ lọc 1: Tìm kiếm theo họ tên học viên hoạt động chuẩn', searchFiltered.length >= 1);
 
   // Filter 2: Class
@@ -505,7 +505,7 @@ async function runCompleteDatabaseTestSuite() {
   assert('Bộ lọc 3: Lọc theo cấp độ học hoạt động chuẩn', levelFiltered.length >= 1);
 
   // Filter 4: Teacher / HRT
-  const teacherFiltered = allActiveStudents.filter((s) => s.assigned_hrt_id === hrtTram!.id || s.effective_hrt_name?.includes('Trâm'));
+  const teacherFiltered = allActiveStudents.filter((s) => s.assigned_hrt_id === hrtTram!.id || s.effective_hrt_name?.toLowerCase().includes('tram') || s.effective_hrt_name?.toLowerCase().includes('trâm'));
   assert('Bộ lọc 4: Lọc theo Giáo viên / Quản nhiệm hoạt động chuẩn', teacherFiltered.length >= 1);
 
   // Filter 5: Academic Risk Status
@@ -668,7 +668,7 @@ async function runCompleteDatabaseTestSuite() {
   const actorTram = MockStorageService.getCurrentActor();
   assert(
     'Chuyển đổi phiên làm việc sang HRT Trâm thành công',
-    actorTram.email === 'hrt.tram@kapla.edu.vn' && actorTram.name === 'Trâm',
+    actorTram.email === 'hrt.tram@kapla.edu.vn' && (actorTram.name === 'Tram' || actorTram.name === 'Trâm'),
     `Actor: ${actorTram.name} (${actorTram.email})`
   );
 

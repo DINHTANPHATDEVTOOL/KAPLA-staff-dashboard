@@ -266,17 +266,20 @@ async function runComprehensiveAccountTaskTests() {
   // Tác vụ 5.2: HRT Trâm theo dõi & cập nhật thông tin tái tục học phí
   const { data: renewalRec, error: renErr } = await clientTram
     .from('renewal_tracking')
-    .upsert({
-      student_id: 'b0000000-0000-0000-0000-000000000005',
-      branch_id: BRANCH_ID,
-      current_expiry_date: '2026-11-25',
-      risk_level: 'medium',
-      assigned_hrt_id: tramAuth.user?.id,
-      status: 'contacted',
-      last_contact_date: '2026-11-14',
-      contact_count: 1,
-      notes: 'Phụ huynh đã nghe máy, đang cân nhắc gói học 1 năm',
-    })
+    .upsert(
+      {
+        student_id: 'b0000000-0000-0000-0000-000000000005',
+        branch_id: BRANCH_ID,
+        current_expiry_date: '2026-11-25',
+        risk_level: 'medium',
+        assigned_hrt_id: tramAuth.user?.id,
+        status: 'contacted',
+        last_contact_date: '2026-11-14',
+        contact_count: 1,
+        notes: 'Phụ huynh đã nghe máy, đang cân nhắc gói học 1 năm',
+      },
+      { onConflict: 'student_id' }
+    )
     .select()
     .single();
   taskAssert('Tác vụ 5.2: HRT Trâm theo dõi tái tục & ghi nhận cuộc gọi nhắc phí', !renErr && !!renewalRec, `Trạng thái: ${renewalRec?.status}, Lần liên hệ: ${renewalRec?.contact_count}`);

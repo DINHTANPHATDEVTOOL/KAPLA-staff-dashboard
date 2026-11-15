@@ -18,6 +18,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
+live_test_artifacts/
+vietnamese_occurrences.json
 
 # Reference demo & archives
 _reference_demo
