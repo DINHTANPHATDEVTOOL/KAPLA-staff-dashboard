@@ -86,12 +86,12 @@ export const hasValidSupabaseConfig =
 // Real Supabase client instance (used when properly configured with reachable backend)
 export const realSupabase: SupabaseClient | null = hasValidSupabaseConfig
   ? createClient(rawSupabaseUrl, rawSupabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    })
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  })
   : null;
 
 // Mock mode is enabled if explicitly requested via VITE_ENABLE_DEV_MOCK=true
@@ -2765,8 +2765,8 @@ export const StudentService = {
           effective_hrt_name: s.assigned_hrt
             ? `${s.assigned_hrt.full_name} (Dedicated HRT)`
             : s.current_class?.default_hrt_name
-            ? `${s.current_class.default_hrt_name} (Class Default)`
-            : 'Unassigned',
+              ? `${s.current_class.default_hrt_name} (Class Default)`
+              : 'Unassigned',
         }));
       }
     }
@@ -3593,8 +3593,8 @@ export const EmailNotificationService = {
             resendApiKey: config?.resend_api_key,
             resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
           }),
-        }).catch(() => {});
-      } catch {}
+        }).catch(() => { });
+      } catch { }
     }
 
     return entry;
@@ -3643,8 +3643,8 @@ export const EmailNotificationService = {
             resendApiKey: config?.resend_api_key,
             resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
           }),
-        }).catch(() => {});
-      } catch {}
+        }).catch(() => { });
+      } catch { }
     }
 
     return entry;
