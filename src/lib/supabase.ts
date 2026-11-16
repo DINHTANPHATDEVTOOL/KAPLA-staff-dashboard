@@ -3604,15 +3604,21 @@ export const EmailNotificationService = {
     const from = this.getSenderEmail();
     const config = MockStorageService.getSystemConfig();
     const providerLabel = config?.email_provider === 'resend' && config?.resend_api_key ? 'Resend API' : 'Google SMTP';
-    const title = `[Test Notification] Automated Dispatch via ${from}: ${template}`;
-    const messageText = note || `Verification test email dispatched to validate automated delivery from ${providerLabel} (${from}) to ${recipient}. System operational 100%.`;
+    const title = `[KAPLA Notification] ${template}`;
+
+    let derivedActionType: 'reminder' | 'renewal' | 'feedback' | 'test' = 'test';
+    if (template.includes('Reminder') || template.includes('Deadline')) derivedActionType = 'reminder';
+    else if (template.includes('Feedback')) derivedActionType = 'feedback';
+    else if (template.includes('Renewal')) derivedActionType = 'renewal';
+
+    const messageText = note || `Thư kiểm tra tự động phát đi từ Hệ thống Vận hành Học vụ KAPLA (${providerLabel}).\n\nMục đích: Kiểm tra và xác thực đường truyền email tự động từ địa chỉ chính thức ${from} tới người nhận ${recipient}.\n\nTrạng thái hạ tầng: Hoạt động 100% bình thường.`;
     const entry: EmailDispatchLogEntry = {
       id: `em-test-${Date.now()}`,
       sender: from,
       recipients: [recipient.trim()],
       title,
-      action_type: 'test',
-      actionType: 'test',
+      action_type: derivedActionType,
+      actionType: derivedActionType,
       content: messageText,
       status: 'delivered',
       dispatched_at: new Date().toISOString(),
@@ -3632,7 +3638,7 @@ export const EmailNotificationService = {
             subject: title,
             title,
             text: messageText,
-            actionType: 'test',
+            actionType: derivedActionType,
             provider: config?.email_provider || 'gmail_smtp',
             resendApiKey: config?.resend_api_key,
             resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',

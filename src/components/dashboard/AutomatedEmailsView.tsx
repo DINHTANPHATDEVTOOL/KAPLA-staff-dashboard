@@ -39,6 +39,7 @@ import {
   MockStorageService,
   subscribeToTableChanges,
 } from '../../lib/supabase';
+import { buildKaplaEmailHtml } from '../../lib/emailTemplate';
 
 interface AutomatedEmailsViewProps {
   onNavigate?: (section: DashboardNavSection) => void;
@@ -51,6 +52,7 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedLog, setSelectedLog] = useState<EmailDispatchLogEntry | null>(null);
+  const [previewMode, setPreviewMode] = useState<'preview' | 'meta'>('preview');
 
   // Email Engine & Provider State
   const [engineTab, setEngineTab] = useState<'resend' | 'gmail_smtp'>('resend');
@@ -736,8 +738,8 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
       {/* Modal: View Full Dispatched Email Details */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+            <div className="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-blue-100 text-[#043264] rounded-xl">
                   <Mail className="w-5 h-5" />
@@ -747,61 +749,116 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
                   <p className="text-[11px] font-mono text-slate-500">ID: {selectedLog.id}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedLog(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex bg-slate-200/80 p-0.5 rounded-lg text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('preview')}
+                    className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                      previewMode === 'preview' ? 'bg-white text-[#043264] shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    KAPLA Email Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('meta')}
+                    className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                      previewMode === 'meta' ? 'bg-white text-[#043264] shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Delivery Meta
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLog(null)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 text-xs">
-              <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-500 w-20">From:</span>
-                  <span className="font-mono font-bold text-slate-900">{selectedLog.sender}</span>
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-50/50">
+              {previewMode === 'preview' ? (
+                <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+                  <iframe
+                    title="Email Preview"
+                    srcDoc={buildKaplaEmailHtml({
+                      subject: selectedLog.title,
+                      title: selectedLog.title,
+                      text: selectedLog.content || '',
+                      actionType: selectedLog.action_type || selectedLog.actionType || 'test',
+                      recipients: selectedLog.recipients,
+                      turnaround: selectedLog.turnaround,
+                      senderAddress: selectedLog.sender,
+                    })}
+                    className="w-full h-[480px] border-0"
+                  />
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="font-semibold text-slate-500 w-20 shrink-0">To:</span>
-                  <div className="flex flex-col gap-0.5">
-                    {selectedLog.recipients.map((r, i) => (
-                      <span key={i} className="font-medium text-slate-800">
-                        {r}
+              ) : (
+                <div className="space-y-4 text-xs">
+                  <div className="space-y-2 p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-500 w-24">From:</span>
+                      <span className="font-mono font-bold text-slate-900">{selectedLog.sender}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="font-semibold text-slate-500 w-24 shrink-0">To:</span>
+                      <div className="flex flex-col gap-0.5">
+                        {selectedLog.recipients.map((r, i) => (
+                          <span key={i} className="font-medium text-slate-800">
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-500 w-24">Sent Time:</span>
+                      <span className="font-mono text-slate-700">
+                        {new Date(selectedLog.dispatched_at).toLocaleString('vi-VN')}
                       </span>
-                    ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-500 w-24">Status:</span>
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>
+                          {selectedLog.sender.includes('no-reply@kapla.io.vn')
+                            ? 'Delivered via Resend Transactional Engine (Domain kapla.io.vn)'
+                            : 'Delivered via Google SMTP (TLS Encrypted)'}
+                        </span>
+                      </span>
+                    </div>
+                    {selectedLog.turnaround && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-500 w-24">Turnaround:</span>
+                        <span className="font-bold text-emerald-600">{selectedLog.turnaround}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <h4 className="font-bold text-slate-900 text-sm mb-1.5">{selectedLog.title}</h4>
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 text-slate-800 leading-relaxed font-sans text-xs whitespace-pre-wrap">
+                      {selectedLog.content || 'Automated system notification dispatched successfully.'}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-500 w-20">Sent Time:</span>
-                  <span className="font-mono text-slate-700">
-                    {new Date(selectedLog.dispatched_at).toLocaleString('en-US')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-slate-500 w-20">Status:</span>
-                  <span className="text-emerald-700 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Delivered via Google SMTP (TLS Encrypted)</span>
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-sm mb-1.5">{selectedLog.title}</h4>
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 leading-relaxed font-sans text-xs whitespace-pre-wrap">
-                  {selectedLog.content || 'Automated system notification dispatched successfully.'}
-                </div>
-              </div>
+              )}
             </div>
 
-            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500">
+                Official Sender: <strong className="font-mono text-[#043264]">{selectedLog.sender}</strong>
+              </span>
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl text-xs"
+                className="px-4 py-2 bg-[#043264] hover:bg-[#012147] text-white font-semibold rounded-xl text-xs transition-colors cursor-pointer"
               >
-                Close
+                Close Preview
               </button>
             </div>
           </div>

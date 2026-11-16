@@ -4,6 +4,7 @@
 // ==============================================================================
 
 import { MockStorageService, EmailNotificationService } from './supabase';
+import { buildKaplaEmailHtml } from './emailTemplate';
 
 export interface PendingRegistration {
   fullName: string;
@@ -73,32 +74,17 @@ export const RegistrationOtpService = {
       localStorage.setItem(OTP_STORAGE_KEY, JSON.stringify(pendingData));
     }
 
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background: #ffffff;">
-        <div style="background-color: #043264; padding: 24px; text-align: center; color: #ffffff;">
-          <h1 style="margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 0.5px;">KAPLA Educational Portal</h1>
-          <p style="margin: 6px 0 0 0; font-size: 13px; color: #93c5fd;">Staff Account Registration Verification</p>
-        </div>
-        <div style="padding: 28px 24px; color: #1e293b; font-size: 14px; line-height: 1.6;">
-          <p style="font-size: 15px; margin-top: 0;">Hello <strong>${payload.fullName.trim()}</strong>,</p>
-          <p>Thank you for registering an internal staff account on the KAPLA Operations Dashboard. Please enter the verification code below to verify your email address:</p>
-          
-          <div style="text-align: center; margin: 28px 0;">
-            <div style="display: inline-block; background-color: #f1f5f9; border: 2px dashed #043264; border-radius: 12px; padding: 14px 28px;">
-              <span style="font-size: 32px; font-family: 'Courier New', Courier, monospace; font-weight: bold; letter-spacing: 8px; color: #043264;">${otp}</span>
-            </div>
-            <p style="font-size: 12px; color: #64748b; margin-top: 8px;">Valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
-          </div>
-
-          <p style="font-size: 13px; color: #475569;">Upon successful verification, your registration will be reviewed by the Center Manager (CM) for campus onboarding and role authorization.</p>
-
-          <div style="border-top: 1px solid #f1f5f9; margin-top: 24px; padding-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
-            Dispatched automatically from <strong>kapladashboard@gmail.com</strong> via Google SMTP.<br/>
-            If you did not request this registration, please disregard this email.
-          </div>
-        </div>
-      </div>
-    `;
+    const emailHtml = buildKaplaEmailHtml({
+      subject: 'KAPLA Educational Portal — Staff Account Verification OTP',
+      title: 'Xác Thực Đăng Ký Tài Khoản Nhân Sự KAPLA',
+      userName: payload.fullName.trim(),
+      actionType: 'otp',
+      otpCode: otp,
+      otpExpiresMinutes: 10,
+      recipients: [cleanEmail],
+      senderAddress: EmailNotificationService.getSenderEmail(),
+      text: `Cảm ơn bạn đã đăng ký tài khoản nhân viên trên Hệ thống Vận hành Học vụ KAPLA (KAPLA Staff Operations Portal).\n\nVui lòng sử dụng mã xác thực bảo mật (OTP) dưới đây để kích hoạt tài khoản của bạn. Sau khi kích hoạt thành công, hồ sơ của bạn sẽ được chuyển đến Giám đốc Cơ sở (Center Manager - CM) phê duyệt và phân quyền truy cập chi nhánh.`,
+    });
 
     // Record in local outbox
     EmailNotificationService.dispatchAutomatedEmail({
