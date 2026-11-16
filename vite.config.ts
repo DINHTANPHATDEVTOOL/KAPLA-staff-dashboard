@@ -2,6 +2,7 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+import fs from 'fs';
 import nodemailer from 'nodemailer';
 
 function emailDispatcherPlugin(): Plugin {
@@ -49,8 +50,9 @@ function emailDispatcherPlugin(): Plugin {
               `;
 
               // Check if Resend is requested & key is provided
-              const effectiveResendKey = resendApiKey || process.env.RESEND_API_KEY;
-              const isResendTarget = (provider === 'resend' || (!provider && process.env.RESEND_API_KEY)) && effectiveResendKey;
+              const localEnvKey = fs.existsSync('.env') ? fs.readFileSync('.env', 'utf8').match(/RESEND_API_KEY=([^\s\r\n]+)/)?.[1] : '';
+              const effectiveResendKey = resendApiKey || process.env.RESEND_API_KEY || localEnvKey || '';
+              const isResendTarget = (provider === 'resend' || !provider || !!effectiveResendKey) && !!effectiveResendKey;
 
               if (isResendTarget) {
                 const fromAddress = resendSender || process.env.RESEND_FROM || 'KAPLA Operations <no-reply@kapla.io.vn>';

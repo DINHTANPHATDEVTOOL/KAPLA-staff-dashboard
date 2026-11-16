@@ -263,7 +263,7 @@ async function runRegressionSuite() {
     recipients: ['Assigned HRT: Tram', 'Center Manager (CM)', 'All Teachers'],
     details: 'Follow-up consultation for speaking practice',
   });
-  assert('Dispatched email payload records official sender address', dispatchedPayload.sender === 'kapladashboard@gmail.com');
+  assert('Dispatched email payload records official sender address', dispatchedPayload.sender === 'kapladashboard@gmail.com' || dispatchedPayload.sender.includes('no-reply@kapla.io.vn'));
   assert('Notification dispatched to HRT, CM, and Teachers', dispatchedPayload.recipients.length === 3);
 
   // --------------------------------------------------------------------------

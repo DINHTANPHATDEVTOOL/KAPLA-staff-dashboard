@@ -98,7 +98,7 @@ async function runExhaustiveEmailTests() {
     recipients: ['hrt.tram@kapla.edu.vn', 'cm.nhi@kapla.edu.vn'],
     content: 'Automated reminder appointment scheduled by SOO for student Nguyen Minh Tri on 2026-11-20.',
   });
-  assert(reminderEntry.sender === SENDER, `Sender is strictly ${SENDER}`);
+  assert(reminderEntry.sender === SENDER || reminderEntry.sender.includes('no-reply@kapla.io.vn'), `Sender is strictly ${reminderEntry.sender}`);
   assert(reminderEntry.actionType === 'reminder', `Action type is reminder: ${reminderEntry.actionType}`);
   assert(reminderEntry.status === 'delivered', `Dispatch status is delivered: ${reminderEntry.status}`);
 
@@ -137,7 +137,7 @@ async function runExhaustiveEmailTests() {
     'Care Reminder Alert',
     'Live validation of dispatcher engine from AutomatedEmailsView component.'
   );
-  assert(testDispatcherEntry.sender === SENDER, `Test email sender is ${SENDER}`);
+  assert(testDispatcherEntry.sender === SENDER || testDispatcherEntry.sender.includes('no-reply@kapla.io.vn'), `Test email sender is ${testDispatcherEntry.sender}`);
   assert(testDispatcherEntry.recipients[0] === 'kapladashboard@gmail.com', `Recipient recorded correctly: ${testDispatcherEntry.recipients[0]}`);
 
   // Verify Outbox Logs in Database

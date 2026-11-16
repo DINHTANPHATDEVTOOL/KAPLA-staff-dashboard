@@ -75,7 +75,7 @@ export const handler = async (event: any) => {
 
     // 1. Transactional API Dispatch (Resend: no-reply@kapla.io.vn)
     const effectiveResendKey = resendApiKey || process.env.RESEND_API_KEY;
-    const isResendTarget = (provider === 'resend' || (!provider && process.env.RESEND_API_KEY)) && effectiveResendKey;
+    const isResendTarget = (provider === 'resend' || !provider || !!process.env.RESEND_API_KEY) && !!effectiveResendKey;
 
     if (isResendTarget) {
       const fromAddress = resendSender || process.env.RESEND_FROM || 'KAPLA Operations <no-reply@kapla.io.vn>';

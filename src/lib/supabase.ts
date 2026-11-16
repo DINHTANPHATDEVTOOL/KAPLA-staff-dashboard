@@ -1123,8 +1123,9 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   cambridge_scale_max: 5.0,
   academic_risk_threshold: 3.0,
   email_provider: 'resend',
-  sender_email: 'kapladashboard@gmail.com',
+  sender_email: 'no-reply@kapla.io.vn',
   gmail_app_password: 'dewj kuyq uwho pahu',
+  resend_api_key: '',
   resend_sender: 'KAPLA Operations <no-reply@kapla.io.vn>',
   smtp_status: 'connected',
 };
