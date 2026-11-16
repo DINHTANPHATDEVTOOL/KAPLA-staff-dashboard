@@ -22,6 +22,11 @@
     "test:browser": "tsx scripts/test_browser_auth_verification_flow.ts",
     "test:bilingual": "tsx scripts/test_bilingual_toggle_browser.ts",
     "dispatch:tuition": "tsx scripts/dispatch_tuition_emails.ts",
+    "test:regression": "tsx scripts/test_complete_regression_suite.ts",
+    "test:email": "tsx scripts/test_all_email_functions_exhaustive.ts",
+    "test:tasks": "tsx scripts/test_every_account_tasks.ts",
+    "test:monthly": "tsx scripts/test_monthly_filter_and_pending_eval.ts",
+    "test:resend": "tsx scripts/test_resend_transactional_setup.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

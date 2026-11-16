@@ -25,6 +25,7 @@ vietnamese_occurrences.json
 # Reference demo & archives
 _reference_demo
 *.zip
+yeu cau chinh sua/
 
 # Supabase local
 .supabase
