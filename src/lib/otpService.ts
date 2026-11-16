@@ -45,7 +45,7 @@ export const RegistrationOtpService = {
     phone?: string;
     preferredBranchId?: string;
     password: string;
-  }): Promise<{ success: boolean; error?: string; otpPreview?: string }> {
+  }): Promise<{ success: boolean; error?: string; otpPreview?: string; networkDelivered?: boolean; networkStatusDetail?: string }> {
     const cleanEmail = payload.email.trim().toLowerCase();
 
     // Check if email already registered
@@ -94,10 +94,13 @@ export const RegistrationOtpService = {
       content: `Registration OTP [${otp}] dispatched to verify new staff account creation for ${cleanEmail}. Valid for 10 minutes.`,
     });
 
+    let networkDelivered = false;
+    let networkStatusDetail = '';
+
     // Real Google SMTP dispatch via /api/send-email
     if (typeof window !== 'undefined') {
       try {
-        await fetch('/api/send-email', {
+        const response = await fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -107,14 +110,29 @@ export const RegistrationOtpService = {
             html: emailHtml,
             text: `Hello ${payload.fullName}, your KAPLA staff verification OTP code is: ${otp}. Valid for 10 minutes.`,
             actionType: 'test',
+            otpCode: otp,
+            userName: payload.fullName.trim(),
           }),
         });
-      } catch (err) {
+
+        if (response.ok) {
+          networkDelivered = true;
+          networkStatusDetail = 'Email dispatched successfully via KAPLA Operations Mail Service.';
+        } else {
+          networkStatusDetail = `Server returned HTTP ${response.status} (${response.statusText || 'Function endpoint unavailable'}).`;
+        }
+      } catch (err: any) {
+        networkStatusDetail = err?.message || 'Network unreachable';
         console.warn('Network send-email error (falling back to in-app OTP preview):', err);
       }
     }
 
-    return { success: true, otpPreview: otp };
+    return {
+      success: true,
+      otpPreview: otp,
+      networkDelivered,
+      networkStatusDetail,
+    };
   },
 
   verifyOtp(enteredOtp: string): { success: boolean; payload?: PendingRegistration; error?: string } {

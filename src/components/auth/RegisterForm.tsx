@@ -109,7 +109,13 @@ export const RegisterForm: React.FC = () => {
       setStep('otp');
       setResendCooldown(60);
       setCanResend(false);
-      setSuccessNotice(`Verification code dispatched to ${email.trim()} via Google SMTP (kapladashboard@gmail.com).`);
+      if (res.networkDelivered) {
+        setSuccessNotice(`Verification code dispatched to ${email.trim()} via Google SMTP (kapladashboard@gmail.com).`);
+      } else {
+        setSuccessNotice(
+          `Verification code generated: [${res.otpPreview}]. (Network notice: ${res.networkStatusDetail || 'Serverless function offline'} — you can enter [${res.otpPreview}] directly to verify).`
+        );
+      }
     } catch (err: any) {
       setFormError(err?.message || 'Failed to dispatch verification code. Please check your network.');
     } finally {
@@ -140,7 +146,13 @@ export const RegisterForm: React.FC = () => {
 
       setResendCooldown(60);
       setCanResend(false);
-      setSuccessNotice(`A fresh verification code has been dispatched to ${email.trim()}.`);
+      if (res.networkDelivered) {
+        setSuccessNotice(`A fresh verification code has been dispatched to ${email.trim()}.`);
+      } else {
+        setSuccessNotice(
+          `Fresh code generated: [${res.otpPreview}]. (Network notice: ${res.networkStatusDetail || 'Endpoint offline'} — enter [${res.otpPreview}] to test).`
+        );
+      }
     } catch (err: any) {
       setFormError(err?.message || 'Failed to resend code.');
     } finally {

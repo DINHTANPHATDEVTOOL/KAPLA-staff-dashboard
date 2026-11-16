@@ -3649,4 +3649,58 @@ export const EmailNotificationService = {
 
     return entry;
   },
+
+  async sendTestEmailAsync(recipient: string, template: string, note?: string): Promise<{
+    entry: EmailDispatchLogEntry;
+    success: boolean;
+    provider?: string;
+    messageId?: string;
+    error?: string;
+  }> {
+    const entry = this.sendTestEmail(recipient, template, note);
+    const config = MockStorageService.getSystemConfig();
+
+    if (typeof window === 'undefined') {
+      return { entry, success: true, provider: 'mock_server' };
+    }
+
+    try {
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: [recipient.trim()],
+          subject: entry.title,
+          title: entry.title,
+          text: entry.content,
+          actionType: entry.actionType,
+          provider: config?.email_provider || 'gmail_smtp',
+          resendApiKey: config?.resend_api_key,
+          resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
+        }),
+      });
+
+      if (!res.ok) {
+        return {
+          entry,
+          success: false,
+          error: `HTTP ${res.status} (${res.statusText || 'Endpoint unavailable'})${res.status === 404 ? ' — Netlify Functions require Git connection' : ''}`,
+        };
+      }
+
+      const data = await res.json().catch(() => ({}));
+      return {
+        entry,
+        success: data?.success ?? true,
+        provider: data?.provider || config?.email_provider || 'email_dispatcher',
+        messageId: data?.messageId,
+      };
+    } catch (err: any) {
+      return {
+        entry,
+        success: false,
+        error: err?.message || 'Network dispatch failed',
+      };
+    }
+  },
 };

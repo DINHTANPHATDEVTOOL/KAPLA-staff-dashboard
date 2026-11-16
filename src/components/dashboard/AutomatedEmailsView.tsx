@@ -139,23 +139,31 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
   };
 
   // Handle Send Test Email
-  const handleSendTestEmail = (e: React.FormEvent) => {
+  const handleSendTestEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!testRecipient) return;
     setTestSending(true);
 
     try {
-      const dispatched = EmailNotificationService.sendTestEmail(
+      const res = await EmailNotificationService.sendTestEmailAsync(
         testRecipient,
         testTemplate,
         testNote || `Live test verification email generated from KAPLA Staff Operations Console.`
       );
-      setToastMessage({
-        type: 'success',
-        text: `Test email dispatched from ${dispatched.sender} to ${testRecipient}!`,
-      });
       loadData();
       setTestNote('');
+
+      if (res.success) {
+        setToastMessage({
+          type: 'success',
+          text: `Test email dispatched to ${testRecipient} via ${res.provider}!`,
+        });
+      } else {
+        setToastMessage({
+          type: 'error',
+          text: `Outbox logged, but network dispatch returned: ${res.error || 'Unavailable'}.`,
+        });
+      }
     } catch (err: any) {
       setToastMessage({
         type: 'error',
