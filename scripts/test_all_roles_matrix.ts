@@ -1,3 +1,5 @@
+import ws from 'ws';
+(globalThis as any).WebSocket = ws;
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://kzyrpbuoehwtlffelpxs.supabase.co';

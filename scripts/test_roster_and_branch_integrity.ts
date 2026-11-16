@@ -3,6 +3,8 @@
 // Verifies 100% English records and relational integrity
 // ==============================================================================
 
+import ws from 'ws';
+(globalThis as any).WebSocket = ws;
 import { MockStorageService } from '../src/lib/supabase';
 
 const EXPECTED_STAFF = [

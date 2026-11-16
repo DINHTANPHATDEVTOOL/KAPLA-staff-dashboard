@@ -1,3 +1,5 @@
+import ws from 'ws';
+(globalThis as any).WebSocket = ws;
 import { RegistrationOtpService } from '../src/lib/otpService';
 import { MockStorageService } from '../src/lib/supabase';
 
