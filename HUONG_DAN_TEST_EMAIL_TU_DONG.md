@@ -112,6 +112,23 @@ Ngoài gửi thử trực tiếp, hệ thống KAPLA tự động kích hoạt g
 4. Điền nội dung lịch hẹn (Tham vấn học thuật Cambridge / Kế hoạch kèm cặp), chọn ngày giờ hẹn -> Bấm **"Xác Nhận Đặt Lịch"**.
 5. Email nhắc nhở trang trọng sẽ tự động gửi tới Quản nhiệm (HRT) phụ trách và Trưởng cơ sở để theo sát lịch hẹn.
 
+### D. Thông Báo Nhân Viên Mới Đăng Ký Chờ Duyệt (Gửi Tới CM & Admin):
+1. **Tự động kích hoạt khi có nhân viên mới đăng ký**: Khi bất kỳ nhân viên nào đăng ký tài khoản tại trang Login và hoàn tất xác thực OTP 6 số, hệ thống sẽ **ngay lập tức gửi một bức email thông báo đặc biệt** đến cả:
+   - **Giám đốc cơ sở (CM Nhi)**: `cm.nhi@kapla.edu.vn`
+   - **Quản trị hệ thống (System Admin)**: `admin@kapla.edu.vn`
+2. **Nội dung email hiển thị đầy đủ thông tin ứng viên**:
+   - 👤 **Họ và tên nhân sự** (Applicant Full Name)
+   - ✉️ **Email làm việc** (Work Email)
+   - 📞 **Số điện thoại liên hệ** (Phone Number)
+   - 🏫 **Cơ sở trực thuộc / công tác mong muốn** (Assigned Campus / Branch)
+   - 🕒 **Thời gian đăng ký** (Registration Timestamp - ICT)
+   - ⚠️ **Trạng thái tài khoản**: `Awaiting Role Approval (status: pending)`
+   - 🔘 **Nút hành động nhanh**: Nút **"Review & Assign Staff Roles"** dẫn thẳng đến trang phân quyền để CM / Admin duyệt vai trò (HRT, Teacher, CSKH, TA, EC) cho nhân viên ngay lập tức.
+3. **Cách test thử nhanh mẫu email này**:
+   - Vào menu **"Email Tự Động"** (**"Automated Emails"**).
+   - Tại ô **Notification Template**, chọn mẫu số **5: Staff Onboarding & Role Approval Request (CM & Admin)**.
+   - Nhập email của bạn vào ô người nhận và bấm **"Dispatch Test Email Now"** để xem ngay bức email phê duyệt nhân sự thực tế!
+
 ---
 
 ## 💡 Mẹo & Lưu Ý Quan Trọng Khi Nhận Email

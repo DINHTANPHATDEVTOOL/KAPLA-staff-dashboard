@@ -57,7 +57,7 @@ export const handler = async (event: any) => {
 
   try {
     const data = JSON.parse(event.body || '{}');
-    const { to, subject, html, text, title, recipients, provider, resendApiKey, resendSender, actionType, turnaround, otpCode, userName } = data;
+    const { to, subject, html, text, title, recipients, provider, resendApiKey, resendSender, actionType, turnaround, otpCode, userName, applicantInfo, actionUrl, actionButtonText } = data;
 
     const recipientList = Array.isArray(to) ? to : (to ? [to] : (recipients || ['kapladashboard@gmail.com']));
     const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/;
@@ -90,6 +90,9 @@ export const handler = async (event: any) => {
       otpCode,
       userName,
       senderAddress: fromAddress,
+      applicantInfo,
+      actionUrl,
+      actionButtonText,
     });
 
     // 1. Transactional API Dispatch (Resend: no-reply@kapla.io.vn)

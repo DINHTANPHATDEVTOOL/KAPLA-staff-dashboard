@@ -186,6 +186,8 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
         return { label: 'Intervention Care', color: 'bg-purple-50 text-purple-800 border-purple-200' };
       case 'test':
         return { label: 'Live Test Email', color: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
+      case 'onboarding':
+        return { label: 'Staff Onboarding Approval', color: 'bg-teal-50 text-teal-800 border-teal-200' };
       default:
         return { label: 'System Notification', color: 'bg-slate-100 text-slate-800 border-slate-200' };
     }
@@ -555,6 +557,7 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
                 <option value="1-Day Deadline Warning">2. 1-Day Deadline Warning (Care Task Due Tomorrow)</option>
                 <option value="Parent Feedback Resolution Confirmation">3. Parent Feedback Resolution Notice (Turnaround SLA)</option>
                 <option value="Tuition Renewal Expiry Notice">4. Tuition Renewal Expiry Notice (14-Day Cycle)</option>
+                <option value="Staff Onboarding & Role Approval Request">5. Staff Onboarding & Role Approval Request (CM & Admin)</option>
               </select>
             </div>
 
@@ -624,6 +627,7 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
               <option value="reminder">Reminder Appointments</option>
               <option value="renewal">Tuition Renewals</option>
               <option value="feedback">Parent Feedback</option>
+              <option value="onboarding">Staff Onboarding</option>
               <option value="test">Test Emails</option>
             </select>
           </div>

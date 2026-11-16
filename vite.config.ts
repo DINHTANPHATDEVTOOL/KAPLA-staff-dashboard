@@ -19,7 +19,7 @@ function emailDispatcherPlugin(): Plugin {
           req.on('end', async () => {
             try {
               const data = JSON.parse(body || '{}');
-              const { to, subject, html, text, title, recipients, provider, resendApiKey, resendSender, actionType, turnaround, otpCode, userName } = data;
+              const { to, subject, html, text, title, recipients, provider, resendApiKey, resendSender, actionType, turnaround, otpCode, userName, applicantInfo, actionUrl, actionButtonText } = data;
               const recipientList = Array.isArray(to) ? to : (to ? [to] : (recipients || ['kapladashboard@gmail.com']));
               const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/;
               const cleanedRecipients: string[] = [];
@@ -48,6 +48,9 @@ function emailDispatcherPlugin(): Plugin {
                 otpCode,
                 userName,
                 senderAddress: isResendTarget ? fromAddress : 'kapladashboard@gmail.com',
+                applicantInfo,
+                actionUrl,
+                actionButtonText,
               });
 
               if (isResendTarget) {

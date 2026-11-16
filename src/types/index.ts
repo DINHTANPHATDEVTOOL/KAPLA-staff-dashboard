@@ -110,8 +110,8 @@ export interface EmailDispatchLogEntry {
   sender: string;
   recipients: string[];
   title: string;
-  action_type: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test';
-  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test';
+  action_type: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test' | 'onboarding';
+  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test' | 'onboarding';
   content?: string;
   turnaround?: string;
   status: 'delivered' | 'pending' | 'failed';

@@ -93,6 +93,15 @@ export const PendingApprovalScreen: React.FC = () => {
           </div>
         </div>
 
+        {/* Automated Email Notice */}
+        <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/90 text-blue-900 flex items-start gap-2.5 text-xs">
+          <Mail className="w-4 h-4 text-[#026fd7] shrink-0 mt-0.5" />
+          <div className="leading-relaxed">
+            <span className="font-semibold text-[#012147]">Automated Notification Dispatched:</span>{' '}
+            An email with your complete registration profile has been automatically dispatched to the <strong>Center Manager (CM)</strong> and <strong>System Administrator</strong> for role approval and campus onboarding.
+          </div>
+        </div>
+
         {/* Profile Card Summary */}
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-xs">
           <div className="flex items-center justify-between pb-2 border-b border-slate-200">

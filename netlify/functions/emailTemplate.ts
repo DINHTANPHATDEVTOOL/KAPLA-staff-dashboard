@@ -12,12 +12,22 @@
 // - Official Campus: Ground & Mezzanine Floor, Topaz Elite, Ward 4, District 8, HCMC
 // ==============================================================================
 
+export interface StaffApplicantInfo {
+  fullName: string;
+  email: string;
+  phone?: string;
+  preferredBranchName?: string;
+  applicantId?: string;
+  registeredAt?: string;
+  status?: string;
+}
+
 export interface BuildEmailHtmlOptions {
   subject: string;
   title?: string;
   text?: string;
   content?: string;
-  actionType?: 'reminder' | 'renewal' | 'feedback' | 'otp' | 'test' | string;
+  actionType?: 'reminder' | 'renewal' | 'feedback' | 'otp' | 'test' | 'onboarding' | string;
   recipients?: string[];
   metadata?: Record<string, any>;
   otpCode?: string;
@@ -25,6 +35,9 @@ export interface BuildEmailHtmlOptions {
   userName?: string;
   turnaround?: string;
   senderAddress?: string;
+  applicantInfo?: StaffApplicantInfo;
+  actionUrl?: string;
+  actionButtonText?: string;
 }
 
 function escapeHtml(str: string): string {
@@ -76,6 +89,16 @@ const CUSTOM_ICONS = {
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: -2px; margin-right: 6px;">
       <path d="M21 14.5C21 15.0304 20.7893 15.5391 20.4142 15.9142C20.0391 16.2893 19.5304 16.5 19 16.5H7L3 20.5V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V14.5Z" stroke="#ffffff" stroke-width="2" fill="rgba(255,255,255,0.2)" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M7.5 8.5H16.5M7.5 12H13.5" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  `,
+
+  // Staff Onboarding & Approval Badge Icon
+  onboardingBadge: `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: -2px; margin-right: 6px;">
+      <path d="M16 21V19C16 16.7909 14.2091 15 12 15H6C3.79086 15 2 16.7909 2 19V21" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="9" cy="7" r="4" stroke="#ffffff" stroke-width="2.2" fill="rgba(255,255,255,0.2)"/>
+      <line x1="19" y1="8" x2="19" y2="14" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="16" y1="11" x2="22" y2="11" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
     </svg>
   `,
 
@@ -172,6 +195,9 @@ export function buildKaplaEmailHtml(options: BuildEmailHtmlOptions): string {
     userName,
     turnaround,
     senderAddress = 'KAPLA Operations <no-reply@kapla.io.vn>',
+    applicantInfo,
+    actionUrl,
+    actionButtonText,
   } = options;
 
   const displayTitle = title || subject || 'Staff Operations Notification';
@@ -205,6 +231,12 @@ export function buildKaplaEmailHtml(options: BuildEmailHtmlOptions): string {
         ${CUSTOM_ICONS.feedbackBadge}Parent Feedback SLA
       </span>
     `;
+  } else if (normalizedType.includes('onboarding') || normalizedType.includes('approval') || normalizedType.includes('staff')) {
+    badgeHtml = `
+      <span style="display: inline-block; background-color: #0369a1; border: 1px solid #0ea5e9; color: #ffffff; font-size: 10px; font-weight: 800; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.8px;">
+        ${CUSTOM_ICONS.onboardingBadge}Staff Onboarding Approval
+      </span>
+    `;
   } else {
     badgeHtml = `
       <span style="display: inline-block; background-color: #1d4ed8; border: 1px solid #60a5fa; color: #ffffff; font-size: 10px; font-weight: 800; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.8px;">
@@ -234,6 +266,92 @@ export function buildKaplaEmailHtml(options: BuildEmailHtmlOptions): string {
         <div style="font-size: 12px; color: #475569; margin-top: 6px; font-weight: 500;">
           Valid for <strong>${otpExpiresMinutes} minutes</strong>. For your security, never share this code with anyone.
         </div>
+      </div>
+    `;
+  }
+
+  // Staff Applicant Profile Card (for onboarding/approval notifications)
+  let applicantCardHtml = '';
+  if (applicantInfo) {
+    applicantCardHtml = `
+      <div style="margin: 22px 0 24px 0; background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(1, 33, 71, 0.06);">
+        <div style="background-color: #012147; padding: 12px 18px; border-bottom: 2px solid #026fd7;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="color: #ffffff; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">
+                ${CUSTOM_ICONS.onboardingBadge}Staff Registration Application Profile
+              </td>
+              <td style="text-align: right;">
+                <span style="display: inline-block; background-color: #f59e0b; color: #012147; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Pending Approval
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; width: 160px; font-weight: 700; color: #475569; background-color: #f1f5f9;">
+              Applicant Name:
+            </td>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #012147; font-size: 14px;">
+              ${escapeHtml(applicantInfo.fullName)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; background-color: #f1f5f9;">
+              Work Email:
+            </td>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #026fd7; font-family: 'Courier New', Courier, monospace;">
+              ${escapeHtml(applicantInfo.email)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; background-color: #f1f5f9;">
+              Contact Phone:
+            </td>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #0f172a; font-family: 'Courier New', Courier, monospace;">
+              ${escapeHtml(applicantInfo.phone || 'N/A')}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; background-color: #f1f5f9;">
+              Campus / Branch:
+            </td>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #012147;">
+              ${escapeHtml(applicantInfo.preferredBranchName || 'KAPLA Phạm Hùng')}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; background-color: #f1f5f9;">
+              Registration Time:
+            </td>
+            <td style="padding: 11px 18px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #334155;">
+              ${escapeHtml(applicantInfo.registeredAt || 'Just now')}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 11px 18px; font-weight: 700; color: #475569; background-color: #f1f5f9;">
+              Workflow Status:
+            </td>
+            <td style="padding: 11px 18px; font-weight: 800; color: #b45309;">
+              ${escapeHtml(applicantInfo.status || 'Awaiting Role Approval (status: pending)')}
+            </td>
+          </tr>
+        </table>
+      </div>
+    `;
+  }
+
+  // Call-to-Action Action Button
+  let actionButtonHtml = '';
+  if (actionUrl) {
+    const btnText = actionButtonText || 'Review & Assign Staff Role';
+    actionButtonHtml = `
+      <div style="text-align: center; margin: 26px 0 20px 0;">
+        <a href="${escapeHtml(actionUrl)}" style="display: inline-block; background: linear-gradient(135deg, #026fd7 0%, #012147 100%); color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 800; padding: 13px 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(2, 111, 215, 0.35); text-transform: uppercase; letter-spacing: 0.6px;">
+          ${escapeHtml(btnText)} &rarr;
+        </a>
       </div>
     `;
   }
@@ -350,6 +468,12 @@ export function buildKaplaEmailHtml(options: BuildEmailHtmlOptions): string {
 
           <!-- Highlight Box (OTP or Key Meta Card) -->
           ${highlightBox}
+
+          <!-- Staff Applicant Profile Card -->
+          ${applicantCardHtml}
+
+          <!-- Action CTA Button -->
+          ${actionButtonHtml}
 
           <!-- Metadata Summary Card (High Contrast) -->
           <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px 20px; margin-top: 24px;">

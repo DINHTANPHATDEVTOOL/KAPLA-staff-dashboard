@@ -34,6 +34,7 @@ import {
   AccountStatus,
   EmailDispatchLogEntry,
 } from '../types';
+import { buildKaplaEmailHtml, StaffApplicantInfo } from './emailTemplate';
 
 // Safely resolve environment across Vite (import.meta.env) and Node.js test runners (process.env)
 const env: Record<string, string | boolean | undefined> =
@@ -3505,11 +3506,14 @@ export const SystemConfigService = {
 export interface AutomatedEmailPayload {
   title: string;
   recipients: string[];
-  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test';
+  actionType: 'reminder' | 'feedback' | 'renewal' | 'intervention' | 'test' | 'onboarding';
   content?: string;
   turnaround?: string;
   sender?: string;
   metadata?: Record<string, any>;
+  applicantInfo?: StaffApplicantInfo;
+  actionUrl?: string;
+  actionButtonText?: string;
 }
 
 export const EmailNotificationService = {
@@ -3580,6 +3584,19 @@ export const EmailNotificationService = {
     if (typeof window !== 'undefined') {
       try {
         const config = MockStorageService.getSystemConfig();
+        const emailHtml = buildKaplaEmailHtml({
+          subject: payload.title,
+          title: payload.title,
+          text: payload.content || `Automated notification: ${payload.title}`,
+          actionType: payload.actionType,
+          recipients: payload.recipients,
+          turnaround: payload.turnaround,
+          senderAddress: from,
+          applicantInfo: payload.applicantInfo,
+          actionUrl: payload.actionUrl,
+          actionButtonText: payload.actionButtonText,
+        });
+
         fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3587,8 +3604,119 @@ export const EmailNotificationService = {
             to: payload.recipients,
             subject: payload.title,
             title: payload.title,
+            html: emailHtml,
             text: payload.content || `Automated notification: ${payload.title}`,
             actionType: payload.actionType,
+            provider: config?.email_provider || 'gmail_smtp',
+            resendApiKey: config?.resend_api_key,
+            resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
+          }),
+        }).catch(() => { });
+      } catch { }
+    }
+
+    return entry;
+  },
+
+  notifyCmAndAdminNewStaffRegistration(applicant: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    preferredBranchId?: string;
+    applicantId?: string;
+  }): EmailDispatchLogEntry {
+    const from = this.getSenderEmail();
+    const branches = MockStorageService.getBranches();
+    const branch = branches.find((b) => b.id === applicant.preferredBranchId) || branches[0];
+    const branchName = branch ? branch.name : 'KAPLA Phạm Hùng';
+
+    // 1. Identify CM of this branch (prefer specific CM account over System Admin)
+    const memberships = MockStorageService.getMemberships();
+    const profiles = MockStorageService.getProfiles();
+    const cmMemberships = memberships.filter(
+      (m) => m.branch_id === branch?.id && m.role === 'CM' && m.status === 'active'
+    );
+    const cmProfiles = cmMemberships
+      .map((m) => profiles.find((p) => p.id === m.user_id))
+      .filter((p): p is UserProfile => Boolean(p && p.email !== 'admin@kapla.edu.vn'));
+
+    const primaryCm = cmProfiles[0];
+    const cmEmail = primaryCm?.email || 'cm.nhi@kapla.edu.vn';
+    const cmName = primaryCm?.full_name || 'Phương Nhi';
+
+    // 2. Identify System Admins
+    const adminProfiles = profiles.filter((p) => p.system_role === 'system_admin' && p.status === 'active');
+    const adminEmails = adminProfiles.length > 0 ? adminProfiles.map((a) => a.email) : ['admin@kapla.edu.vn'];
+
+    // 3. Consolidated target recipients: Both CM and Admin
+    const targetRecipients = Array.from(new Set([cmEmail, ...adminEmails].filter(Boolean))) as string[];
+
+    const nowFormatted = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const title = `[KAPLA Staff Onboarding] New Staff Registration Awaiting Approval: ${applicant.fullName.trim()} (${branchName})`;
+
+    const applicantInfo: StaffApplicantInfo = {
+      fullName: applicant.fullName.trim(),
+      email: applicant.email.trim(),
+      phone: applicant.phone?.trim() || 'N/A',
+      preferredBranchName: branchName,
+      applicantId: applicant.applicantId || `u-staff-${Date.now()}`,
+      registeredAt: `${nowFormatted} (ICT)`,
+      status: 'Awaiting Role Approval (status: pending)',
+    };
+
+    const mainMessage = `A new staff member has successfully registered and verified their email address on the KAPLA Operations Portal.\n\nIn accordance with institutional security policies, the account has been placed in 'Pending Approval' status. To grant access to academic records, class management, or student rosters, the Center Manager (CM) or System Admin must review and assign an appropriate operational role (Homeroom Teacher, Main Teacher, Teaching Assistant, Customer Service, or Educational Consultant).\n\nPlease review the complete applicant profile below and grant permissions in the Staff Approval Center.`;
+
+    const emailHtml = buildKaplaEmailHtml({
+      subject: title,
+      title: `Staff Role Approval Request: ${applicant.fullName.trim()}`,
+      userName: `Center Manager (${cmName}) & System Administrator`,
+      text: mainMessage,
+      actionType: 'onboarding',
+      recipients: targetRecipients,
+      turnaround: 'Within 24 Hours',
+      senderAddress: from,
+      applicantInfo,
+      actionUrl: 'https://kapla.io.vn/',
+      actionButtonText: 'Review & Assign Staff Roles',
+    });
+
+    const entry: EmailDispatchLogEntry = {
+      id: `em-onboarding-${Date.now()}`,
+      sender: from,
+      recipients: targetRecipients,
+      title,
+      action_type: 'onboarding',
+      actionType: 'onboarding',
+      content: mainMessage,
+      status: 'delivered',
+      dispatched_at: new Date().toISOString(),
+    };
+
+    MockStorageService.appendEmailLog(entry);
+    console.info(`[Staff Onboarding Notification] Dispatched to CM & Admin: ${targetRecipients.join(', ')} for applicant ${applicant.fullName}`);
+
+    // Asynchronously transmit real email via Transactional Engine / Google SMTP (/api/send-email)
+    if (typeof window !== 'undefined') {
+      try {
+        const config = MockStorageService.getSystemConfig();
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: targetRecipients,
+            subject: title,
+            title,
+            html: emailHtml,
+            text: mainMessage,
+            actionType: 'onboarding',
             provider: config?.email_provider || 'gmail_smtp',
             resendApiKey: config?.resend_api_key,
             resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
@@ -3606,10 +3734,24 @@ export const EmailNotificationService = {
     const providerLabel = config?.email_provider === 'resend' && config?.resend_api_key ? 'Resend API' : 'Google SMTP';
     const title = `[KAPLA Notification] ${template}`;
 
-    let derivedActionType: 'reminder' | 'renewal' | 'feedback' | 'test' = 'test';
+    let derivedActionType: 'reminder' | 'renewal' | 'feedback' | 'test' | 'onboarding' = 'test';
     if (template.includes('Reminder') || template.includes('Deadline')) derivedActionType = 'reminder';
     else if (template.includes('Feedback')) derivedActionType = 'feedback';
     else if (template.includes('Renewal')) derivedActionType = 'renewal';
+    else if (template.includes('Onboarding') || template.includes('Approval')) derivedActionType = 'onboarding';
+
+    let sampleApplicant: StaffApplicantInfo | undefined = undefined;
+    if (derivedActionType === 'onboarding') {
+      sampleApplicant = {
+        fullName: 'Dang Bao Ngoc (Applicant)',
+        email: recipient.trim(),
+        phone: '0908 123 456',
+        preferredBranchName: 'KAPLA Phạm Hùng',
+        applicantId: `u-test-${Date.now()}`,
+        registeredAt: new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }) + ' (ICT)',
+        status: 'Awaiting Role Approval (status: pending)',
+      };
+    }
 
     const messageText = note || `Automated verification dispatch from KAPLA Staff Operations Console (${providerLabel}).\n\nObjective: Verify live transactional routing from authorized domain sender ${from} to designated recipient ${recipient}.\n\nOperational Status: 100% Verified. All academic notification dispatch services are running smoothly.`;
     const entry: EmailDispatchLogEntry = {
@@ -3630,6 +3772,18 @@ export const EmailNotificationService = {
     // Asynchronously transmit real email via Transactional Engine / Google SMTP (/api/send-email)
     if (typeof window !== 'undefined') {
       try {
+        const emailHtml = buildKaplaEmailHtml({
+          subject: title,
+          title,
+          text: messageText,
+          actionType: derivedActionType,
+          recipients: [recipient.trim()],
+          senderAddress: from,
+          applicantInfo: sampleApplicant,
+          actionUrl: 'https://kapla.io.vn/',
+          actionButtonText: 'Review & Assign Staff Roles',
+        });
+
         fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3637,6 +3791,7 @@ export const EmailNotificationService = {
             to: [recipient.trim()],
             subject: title,
             title,
+            html: emailHtml,
             text: messageText,
             actionType: derivedActionType,
             provider: config?.email_provider || 'gmail_smtp',
@@ -3659,12 +3814,37 @@ export const EmailNotificationService = {
   }> {
     const entry = this.sendTestEmail(recipient, template, note);
     const config = MockStorageService.getSystemConfig();
+    const from = this.getSenderEmail();
 
     if (typeof window === 'undefined') {
       return { entry, success: true, provider: 'mock_server' };
     }
 
     try {
+      let sampleApplicant: StaffApplicantInfo | undefined = undefined;
+      if (entry.actionType === 'onboarding') {
+        sampleApplicant = {
+          fullName: 'Dang Bao Ngoc (Applicant)',
+          email: recipient.trim(),
+          phone: '0908 123 456',
+          preferredBranchName: 'KAPLA Phạm Hùng',
+          applicantId: `u-test-${Date.now()}`,
+          registeredAt: new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }) + ' (ICT)',
+          status: 'Awaiting Role Approval (status: pending)',
+        };
+      }
+      const emailHtml = buildKaplaEmailHtml({
+        subject: entry.title,
+        title: entry.title,
+        text: entry.content,
+        actionType: entry.actionType,
+        recipients: [recipient.trim()],
+        senderAddress: from,
+        applicantInfo: sampleApplicant,
+        actionUrl: 'https://kapla.io.vn/',
+        actionButtonText: 'Review & Assign Staff Roles',
+      });
+
       const res = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3672,6 +3852,7 @@ export const EmailNotificationService = {
           to: [recipient.trim()],
           subject: entry.title,
           title: entry.title,
+          html: emailHtml,
           text: entry.content,
           actionType: entry.actionType,
           provider: config?.email_provider || 'gmail_smtp',

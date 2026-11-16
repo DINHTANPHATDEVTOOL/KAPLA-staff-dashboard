@@ -10,7 +10,7 @@ import {
   StaffRole,
   UserProfile,
 } from '../types';
-import { isDevMockMode, MockStorageService, realSupabase } from '../lib/supabase';
+import { EmailNotificationService, isDevMockMode, MockStorageService, realSupabase } from '../lib/supabase';
 
 interface AuthUser {
   id: string;
@@ -371,6 +371,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(authUser);
           await syncUserData(authUser.id, authUser.email, authUser.emailConfirmed);
           setAuthScreen(authUser.emailConfirmed ? 'pending-approval' : 'verify-email');
+
+          // Trigger automated onboarding notification to CM & System Admin
+          EmailNotificationService.notifyCmAndAdminNewStaffRegistration({
+            fullName: fullName.trim(),
+            email: email.trim(),
+            phone: phone?.trim(),
+            preferredBranchId,
+            applicantId: data.user.id,
+          });
+
           return { success: true };
         }
       } else {
@@ -404,15 +414,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           details: { full_name: fullName.trim(), phone },
         });
 
+        // Trigger automated onboarding notification to CM & System Admin
+        EmailNotificationService.notifyCmAndAdminNewStaffRegistration({
+          fullName: fullName.trim(),
+          email: email.trim(),
+          phone: phone?.trim(),
+          preferredBranchId,
+          applicantId: newId,
+        });
+
         const authUser: AuthUser = {
           id: newId,
           email: email.trim(),
-          emailConfirmed: false, // New registration requires email verification first!
+          emailConfirmed: true, // Note: Since the applicant already successfully verified 6-digit OTP in RegisterForm, email is confirmed!
         };
         localStorage.setItem('kapla_mock_auth_user', JSON.stringify(authUser));
         setUser(authUser);
         await syncUserData(authUser.id, authUser.email, authUser.emailConfirmed);
-        setAuthScreen('verify-email');
+        setAuthScreen('pending-approval');
         return { success: true };
       }
       return { success: false, error: 'Registration failed.' };
