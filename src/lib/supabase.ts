@@ -3611,7 +3611,7 @@ export const EmailNotificationService = {
     else if (template.includes('Feedback')) derivedActionType = 'feedback';
     else if (template.includes('Renewal')) derivedActionType = 'renewal';
 
-    const messageText = note || `Thư kiểm tra tự động phát đi từ Hệ thống Vận hành Học vụ KAPLA (${providerLabel}).\n\nMục đích: Kiểm tra và xác thực đường truyền email tự động từ địa chỉ chính thức ${from} tới người nhận ${recipient}.\n\nTrạng thái hạ tầng: Hoạt động 100% bình thường.`;
+    const messageText = note || `Automated verification dispatch from KAPLA Staff Operations Console (${providerLabel}).\n\nObjective: Verify live transactional routing from authorized domain sender ${from} to designated recipient ${recipient}.\n\nOperational Status: 100% Verified. All academic notification dispatch services are running smoothly.`;
     const entry: EmailDispatchLogEntry = {
       id: `em-test-${Date.now()}`,
       sender: from,

@@ -76,14 +76,14 @@ export const RegistrationOtpService = {
 
     const emailHtml = buildKaplaEmailHtml({
       subject: 'KAPLA Educational Portal — Staff Account Verification OTP',
-      title: 'Xác Thực Đăng Ký Tài Khoản Nhân Sự KAPLA',
+      title: 'Staff Account Registration Verification',
       userName: payload.fullName.trim(),
       actionType: 'otp',
       otpCode: otp,
       otpExpiresMinutes: 10,
       recipients: [cleanEmail],
       senderAddress: EmailNotificationService.getSenderEmail(),
-      text: `Cảm ơn bạn đã đăng ký tài khoản nhân viên trên Hệ thống Vận hành Học vụ KAPLA (KAPLA Staff Operations Portal).\n\nVui lòng sử dụng mã xác thực bảo mật (OTP) dưới đây để kích hoạt tài khoản của bạn. Sau khi kích hoạt thành công, hồ sơ của bạn sẽ được chuyển đến Giám đốc Cơ sở (Center Manager - CM) phê duyệt và phân quyền truy cập chi nhánh.`,
+      text: `Thank you for registering an internal staff account on the KAPLA Operations Portal.\n\nPlease use the one-time security passcode (OTP) below to authenticate and activate your staff account. Once verified, your registration profile will be forwarded to the Center Manager (CM) for campus onboarding and role authorization.`,
     });
 
     // Record in local outbox
