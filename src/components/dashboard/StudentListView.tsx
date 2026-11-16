@@ -786,12 +786,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
       setActionMessage({
         type: 'success',
-        text: `Đã thêm học viên ${newStudent.full_name.trim()}${newStudent.nickname.trim() ? ` (${newStudent.nickname.trim()})` : ''} thành công!`,
+        text: `Student "${newStudent.full_name.trim()}"${newStudent.nickname.trim() ? ` (${newStudent.nickname.trim()})` : ''} added successfully!`,
       });
       setShowAddModal(false);
       await loadData();
     } catch (err: any) {
-      setActionMessage({ type: 'error', text: err.message || 'Lỗi khi thêm học viên' });
+      setActionMessage({ type: 'error', text: err.message || 'Failed to add student record.' });
     } finally {
       setSubmitting(false);
     }
@@ -849,7 +849,7 @@ Phạm Thảo My\tChloe
 
       setActionMessage({
         type: 'success',
-        text: `Đã nhập thành công ${payloads.length} học viên vào lớp ${targetClass?.name || 'mới'} từ Sheet!`,
+        text: `Successfully imported ${payloads.length} students into class ${targetClass?.name || 'Class'}!`,
       });
 
       setShowAddModal(false);
@@ -860,7 +860,7 @@ Phạm Thảo My\tChloe
       console.error('Bulk import error:', err);
       setActionMessage({
         type: 'error',
-        text: err.message || 'Lỗi khi nhập danh sách học viên hàng loạt.',
+        text: err.message || 'Failed to import bulk students.',
       });
     } finally {
       setBulkImporting(false);
@@ -1138,28 +1138,14 @@ Phạm Thảo My\tChloe
         </div>
 
         {canCreateStudent && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                handleOpenAddModal();
-                setAddModalTab('bulk');
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 transition-colors shadow-2xs"
-              title="Nhập danh sách học viên cả lớp từ Google Sheets / Excel"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>{'Nhập từ Sheet theo lớp'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{'Add New Student'}</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{'Add New Student'}</span>
+          </button>
         )}
       </div>
 
@@ -1992,23 +1978,23 @@ Phạm Thảo My\tChloe
       )}
 
       {/* =========================================================================
-          MODAL: ADD NEW STUDENT (Optimized per CM Phương Nhi: Single vs Bulk by Class)
+          MODAL: ADD NEW STUDENT (Streamlined 100% English per customer requirement)
       ========================================================================= */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className={`bg-white rounded-2xl w-full ${addModalTab === 'bulk' ? 'max-w-2xl' : 'max-w-lg'} p-5 sm:p-6 shadow-xl border border-slate-200 max-h-[92vh] overflow-y-auto transition-all`}>
+          <div className="bg-white rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-xl border border-slate-200 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <span className="p-2 rounded-xl bg-blue-50 text-[#043264] border border-blue-100">
-                  {addModalTab === 'bulk' ? <FileSpreadsheet className="w-5 h-5 text-emerald-600" /> : <GraduationCap className="w-5 h-5 text-[#043264]" />}
+                  <GraduationCap className="w-5 h-5 text-[#043264]" />
                 </span>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
-                    {addModalTab === 'bulk' ? 'Nhập danh sách học viên theo lớp từ Sheet' : 'Thêm hồ sơ học viên mới'}
+                    {'Add New Student Record'}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    {addModalTab === 'bulk' ? 'Tối ưu cho danh sách xuất từ CRM DotB / Google Sheet' : 'Biểu mẫu tinh gọn theo yêu cầu CM Phương Nhi'}
+                    {'Streamlined profile enrollment prioritized by Student Name & Nickname'}
                   </p>
                 </div>
               </div>
@@ -2021,416 +2007,214 @@ Phạm Thảo My\tChloe
               </button>
             </div>
 
-            {/* Tab Switcher */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl my-4 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setAddModalTab('single')}
-                className={`py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  addModalTab === 'single'
-                    ? 'bg-white text-[#043264] shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                <span>Thêm 1 học viên</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setAddModalTab('bulk')}
-                className={`py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  addModalTab === 'bulk'
-                    ? 'bg-white text-emerald-700 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>Nhập theo lớp từ Sheet</span>
-                <span className="ml-1 px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                  DotB
-                </span>
-              </button>
-            </div>
-
-            {/* TAB 1: SINGLE STUDENT ADD */}
-            {addModalTab === 'single' && (
-              <form onSubmit={handleCreateStudent} className="space-y-3.5 text-xs">
-                <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Chế độ rút gọn theo CRM DotB:</span>
-                    <p className="text-amber-800 mt-0.5">
-                      Chỉ yêu cầu <strong>Tên bé</strong> và <strong>Nickname</strong>. Không bắt buộc nhập tên phụ huynh và số điện thoại.
-                    </p>
-                  </div>
+            {/* Single Student Add Form */}
+            <form onSubmit={handleCreateStudent} className="space-y-3.5 pt-4 text-xs">
+              <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold">{'Streamlined Student Profile Form:'}</span>
+                  <p className="text-amber-800 mt-0.5">
+                    {'Student Full Name and Nickname are prioritized. Parent contact information is optional.'}
+                  </p>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Tên bé (Họ và tên) *'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newStudent.full_name}
-                      onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
-                      placeholder="VD: Nguyễn Gia Hân"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Nickname (Tên tiếng Anh ở lớp)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={newStudent.nickname}
-                      onChange={(e) => setNewStudent({ ...newStudent, nickname: e.target.value })}
-                      placeholder="VD: Jenny, Leo, Alex..."
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Lớp học (Class Cohort)'}
-                    </label>
-                    <select
-                      value={newStudent.current_class_id}
-                      onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                    >
-                      <option value="">{'-- Chưa gán lớp --'}</option>
-                      {classes.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.level})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Mã học viên (Student Code)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={newStudent.student_code}
-                      onChange={(e) => setNewStudent({ ...newStudent, student_code: e.target.value })}
-                      placeholder="VD: KAP-PH-010"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-mono bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Ngày sinh (Date of Birth)'}
-                    </label>
-                    <input
-                      type="date"
-                      value={newStudent.date_of_birth}
-                      onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Giới tính (Gender)'}
-                    </label>
-                    <select
-                      value={newStudent.gender}
-                      onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                    >
-                      <option value="male">{'Nam (Male)'}</option>
-                      <option value="female">{'Nữ (Female)'}</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Hạn học phí (Tuition Expiry Date)'}
-                    </label>
-                    <input
-                      type="date"
-                      value={newStudent.tuition_expiry_date}
-                      onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Giáo viên phụ trách (Designated HRT)'}
-                    </label>
-                    <select
-                      value={newStudent.assigned_hrt_id}
-                      onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                    >
-                      <option value="">{'Theo mặc định của lớp'}</option>
-                      {hrtStaffs.map((h) => (
-                        <option key={h.id} value={h.id}>
-                          {h.full_name} (HRT)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {'Ghi chú học vụ & đặc điểm của bé'}
+                    {'Student Full Name *'}
                   </label>
-                  <textarea
-                    rows={2}
-                    value={newStudent.notes}
-                    onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
-                    placeholder={'Ghi chú tính cách, khả năng tiếp thu, kỳ vọng của gia đình...'}
+                  <input
+                    type="text"
+                    required
+                    value={newStudent.full_name}
+                    onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
+                    placeholder="E.g., Alexander William"
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
                   />
                 </div>
-
-                {/* Collapsible Optional Parent Information */}
-                <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
-                  <button
-                    type="button"
-                    onClick={() => setShowParentInfoSection(!showParentInfoSection)}
-                    className="w-full px-3.5 py-2.5 text-left font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    <span className="flex items-center gap-1.5 text-xs text-slate-700">
-                      <Phone className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Thông tin phụ huynh (Tùy chọn - Không bắt buộc)</span>
-                    </span>
-                    {showParentInfoSection ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                  </button>
-                  {showParentInfoSection && (
-                    <div className="p-3.5 border-t border-slate-200 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-semibold text-slate-700 mb-1">
-                          {'Tên phụ huynh'}
-                        </label>
-                        <input
-                          type="text"
-                          value={newStudent.parent_name}
-                          onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
-                          placeholder="VD: Anh Nam (Bố)"
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-semibold text-slate-700 mb-1">
-                          {'Số điện thoại phụ huynh'}
-                        </label>
-                        <input
-                          type="tel"
-                          value={newStudent.parent_phone}
-                          onChange={(e) => setNewStudent({ ...newStudent, parent_phone: e.target.value })}
-                          placeholder="VD: 0901234567"
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
-                  >
-                    {'Cancel'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
-                  >
-                    {submitting ? 'Đang lưu...' : 'Lưu hồ sơ học viên'}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* TAB 2: BULK IMPORT FROM SHEET BY CLASS */}
-            {addModalTab === 'bulk' && (
-              <div className="space-y-4 text-xs">
-                <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-[11px] text-emerald-950 flex items-start gap-2.5">
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Quy trình nhập theo lớp từ Google Sheet / Excel:</span>
-                    <p className="text-emerald-900 mt-0.5">
-                      Chọn lớp học, sau đó copy các cột <strong>Tên bé</strong> và <strong>Nickname</strong> từ file sheet của lớp dán vào khung bên dưới. Hệ thống sẽ tự động phân tích và sinh mã học viên.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 1: Target Class */}
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-[#043264] text-white flex items-center justify-center text-[10px]">1</span>
-                    <span>Chọn lớp học đích cần nhập học viên *</span>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Nickname (English Name / Class Alias)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={newStudent.nickname}
+                    onChange={(e) => setNewStudent({ ...newStudent, nickname: e.target.value })}
+                    placeholder="E.g., Leo, Jenny, Alex, Tom..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Class Cohort'}
                   </label>
                   <select
-                    value={bulkTargetClassId}
-                    onChange={(e) => setBulkTargetClassId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-medium text-xs focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                    value={newStudent.current_class_id}
+                    onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
                   >
-                    <option value="">-- Vui lòng chọn lớp học --</option>
+                    <option value="">{'-- Unassigned --'}</option>
                     {classes.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.level}) — {currentBranch?.name || 'KAPLA'}
+                        {c.name} ({c.level})
                       </option>
                     ))}
                   </select>
                 </div>
-
-                {/* Step 2: Paste Raw Data */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="font-bold text-slate-800 flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-[#043264] text-white flex items-center justify-center text-[10px]">2</span>
-                      <span>Dán dữ liệu từ Google Sheet / Excel</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleLoadSampleBulkData}
-                        className="text-[11px] font-semibold text-[#026fd7] hover:underline flex items-center gap-1 cursor-pointer"
-                        title="Dán nhanh danh sách mẫu để kiểm tra tính năng"
-                      >
-                        <Sparkles className="w-3 h-3 text-[#026fd7]" />
-                        <span>Thử dữ liệu mẫu (5 bé)</span>
-                      </button>
-                      {bulkRawText && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setBulkRawText('');
-                            setBulkParsed([]);
-                          }}
-                          className="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
-                        >
-                          Xóa
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <textarea
-                    rows={4}
-                    value={bulkRawText}
-                    onChange={(e) => handleBulkTextChange(e.target.value)}
-                    placeholder={`Dán các dòng từ Sheet vào đây (hỗ trợ phân cách bởi Tab hoặc Dấu phẩy).\nVí dụ:\nNguyễn Minh Khôi\tLeo\nTrần Gia Hân\tJenny\nLê Bảo Long\tAlex`}
-                    className="w-full p-3 font-mono text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-slate-50 focus:bg-white transition-colors"
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Student Code *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newStudent.student_code}
+                    onChange={(e) => setNewStudent({ ...newStudent, student_code: e.target.value })}
+                    placeholder="E.g., KAP-PH-010"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-mono bg-white"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Hỗ trợ định dạng: <code>Tên bé [Tab] Nickname</code>, <code>Tên bé, Nickname</code>, hoặc mỗi dòng 1 tên bé. Dòng tiêu đề sẽ được tự động nhận diện và bỏ qua.
-                  </p>
                 </div>
+              </div>
 
-                {/* Step 3: Live Preview Table */}
-                {bulkParsed.length > 0 && (
-                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                    <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                        <Table className="w-4 h-4 text-slate-500" />
-                        <span>Xem trước ({bulkParsed.length} học viên hợp lệ)</span>
-                      </div>
-                      <span className="text-[11px] text-slate-500 font-medium">
-                        Lớp: <span className="font-bold text-[#043264]">{classes.find((c) => c.id === bulkTargetClassId)?.name || 'Chưa chọn'}</span>
-                      </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Date of Birth'}
+                  </label>
+                  <input
+                    type="date"
+                    value={newStudent.date_of_birth}
+                    onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Gender'}
+                  </label>
+                  <select
+                    value={newStudent.gender}
+                    onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                  >
+                    <option value="male">{'Male'}</option>
+                    <option value="female">{'Female'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Tuition Expiry Date *'}
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={newStudent.tuition_expiry_date}
+                    onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">
+                    {'Used for automatic retention alerts and tuition tracking.'}
+                  </span>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    {'Designated HRT'}
+                  </label>
+                  <select
+                    value={newStudent.assigned_hrt_id}
+                    onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                  >
+                    <option value="">{'Class Default'}</option>
+                    {hrtStaffs.map((h) => (
+                      <option key={h.id} value={h.id}>
+                        {h.full_name} (HRT)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {'Academic Notes'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={newStudent.notes}
+                  onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
+                  placeholder={'Student characteristics, learning goals, parent expectations...'}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                />
+              </div>
+
+              {/* Collapsible Optional Parent Information */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
+                <button
+                  type="button"
+                  onClick={() => setShowParentInfoSection(!showParentInfoSection)}
+                  className="w-full px-3.5 py-2.5 text-left font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-1.5 text-xs text-slate-700">
+                    <Phone className="w-3.5 h-3.5 text-slate-500" />
+                    <span>{'Parent Information (Optional)'}</span>
+                  </span>
+                  {showParentInfoSection ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                </button>
+                {showParentInfoSection && (
+                  <div className="p-3.5 border-t border-slate-200 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        {'Parent Full Name'}
+                      </label>
+                      <input
+                        type="text"
+                        value={newStudent.parent_name}
+                        onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
+                        placeholder="E.g., Mr. Nam (Father)"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                      />
                     </div>
-                    <div className="max-h-48 overflow-y-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-100/80 text-[10px] uppercase font-semibold text-slate-500 border-b border-slate-200 sticky top-0">
-                          <tr>
-                            <th className="py-2 px-3 text-center w-8">#</th>
-                            <th className="py-2 px-3">Mã học viên</th>
-                            <th className="py-2 px-3">Tên bé (Họ và tên)</th>
-                            <th className="py-2 px-3">Nickname</th>
-                            <th className="py-2 px-3 text-center w-12">Bỏ</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {bulkParsed.map((item, idx) => (
-                            <tr key={item.id} className="hover:bg-blue-50/40 transition-colors">
-                              <td className="py-2 px-3 text-center text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                              <td className="py-2 px-3 font-mono font-semibold text-[#043264]">{item.student_code}</td>
-                              <td className="py-2 px-3 font-semibold text-slate-900">{item.full_name}</td>
-                              <td className="py-2 px-3">
-                                {item.nickname ? (
-                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold">
-                                    {item.nickname}
-                                  </span>
-                                ) : (
-                                  <span className="text-slate-400 text-[11px]">—</span>
-                                )}
-                              </td>
-                              <td className="py-2 px-3 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveParsedRow(idx)}
-                                  className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
-                                  title="Bỏ học viên này"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        {'Parent Phone Number'}
+                      </label>
+                      <input
+                        type="tel"
+                        value={newStudent.parent_phone}
+                        onChange={(e) => setNewStudent({ ...newStudent, parent_phone: e.target.value })}
+                        placeholder="E.g., 0901234567"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                      />
                     </div>
                   </div>
                 )}
-
-                {/* Step 4: Expiry Option & Actions */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-slate-700">Hạn học phí:</span>
-                    <select
-                      value={bulkTuitionMonths}
-                      onChange={(e) => setBulkTuitionMonths(Number(e.target.value))}
-                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-medium"
-                    >
-                      <option value={3}>3 tháng</option>
-                      <option value={6}>6 tháng (Tiêu chuẩn)</option>
-                      <option value={12}>12 tháng (1 năm)</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddModal(false)}
-                      className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="button"
-                      disabled={bulkImporting || bulkParsed.length === 0 || !bulkTargetClassId}
-                      onClick={handleBulkImportSubmit}
-                      className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-xs cursor-pointer"
-                    >
-                      {bulkImporting && <Clock className="w-3.5 h-3.5 animate-spin" />}
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-                      <span>
-                        {bulkParsed.length > 0 && bulkTargetClassId
-                          ? `Nhập ${bulkParsed.length} học viên vào lớp`
-                          : 'Xác nhận nhập học viên'}
-                      </span>
-                    </button>
-                  </div>
-                </div>
               </div>
-            )}
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
+                >
+                  {'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                >
+                  {submitting ? 'Saving...' : 'Save Student Record'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -2703,7 +2487,7 @@ Phạm Thảo My\tChloe
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {'Student Full Name (Tên bé) *'}
+                    {'Student Full Name *'}
                   </label>
                   <input
                     type="text"
@@ -2716,13 +2500,13 @@ Phạm Thảo My\tChloe
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {'Nickname (Tên tiếng Anh ở lớp)'}
+                    {'Nickname (English Name / Class Alias)'}
                   </label>
                   <input
                     type="text"
                     value={editStudentForm.nickname}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, nickname: e.target.value })}
-                    placeholder="VD: Leo, Alex, Jenny..."
+                    placeholder="E.g., Leo, Alex, Jenny, Tom..."
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#026fd7]"
                   />
                 </div>
@@ -2772,26 +2556,26 @@ Phạm Thảo My\tChloe
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {'Parent Name (Tùy chọn)'}
+                    {'Parent Name (Optional)'}
                   </label>
                   <input
                     type="text"
                     value={editStudentForm.parent_name}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, parent_name: e.target.value })}
-                    placeholder="VD: Anh Nam (Bố)"
+                    placeholder="E.g., Mr. Nam (Father)"
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {'Parent Phone (Tùy chọn)'}
+                    {'Parent Phone (Optional)'}
                   </label>
                   <input
                     type="tel"
                     value={editStudentForm.parent_phone}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, parent_phone: e.target.value })}
-                    placeholder="VD: 0901234567"
+                    placeholder="E.g., 0901234567"
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white font-mono"
                   />
                 </div>
