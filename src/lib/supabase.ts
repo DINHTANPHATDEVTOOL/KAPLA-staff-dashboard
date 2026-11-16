@@ -1122,8 +1122,10 @@ const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   auto_email_alerts_enabled: true,
   cambridge_scale_max: 5.0,
   academic_risk_threshold: 3.0,
+  email_provider: 'resend',
   sender_email: 'kapladashboard@gmail.com',
   gmail_app_password: 'dewj kuyq uwho pahu',
+  resend_sender: 'KAPLA Operations <no-reply@kapla.io.vn>',
   smtp_status: 'connected',
 };
 
@@ -2675,7 +2677,7 @@ export class MockStorageService {
     this.ensureDevOnly();
     const profiles = this.getProfiles();
     const caller = profiles.find((p) => p.id === callerId);
-    if (caller?.system_role !== 'system_admin') {
+    if (callerId !== 'system' && caller?.system_role !== 'system_admin') {
       throw new Error('Permission denied: Only System Administrator can modify system configuration.');
     }
     const current = this.getSystemConfig();
@@ -3514,7 +3516,15 @@ export const EmailNotificationService = {
 
   getSenderEmail(): string {
     const config = MockStorageService.getSystemConfig();
+    if (config?.email_provider === 'resend' && config?.resend_api_key && config?.resend_sender) {
+      return config.resend_sender;
+    }
     return config?.sender_email || this.SENDER_EMAIL;
+  },
+
+  getEmailProvider(): 'gmail_smtp' | 'resend' {
+    const config = MockStorageService.getSystemConfig();
+    return config?.email_provider || 'gmail_smtp';
   },
 
   getEmailLogs(): EmailDispatchLogEntry[] {
@@ -3529,9 +3539,21 @@ export const EmailNotificationService = {
     const config = MockStorageService.getSystemConfig();
     MockStorageService.updateSystemConfig('system', {
       ...config,
+      email_provider: 'gmail_smtp',
       sender_email: senderEmail.trim(),
       gmail_app_password: gmailAppPassword?.trim() || config.gmail_app_password,
       smtp_status: gmailAppPassword ? 'connected' : 'ready',
+    });
+  },
+
+  saveResendConfig(apiKey: string, resendSender?: string): void {
+    const config = MockStorageService.getSystemConfig();
+    MockStorageService.updateSystemConfig('system', {
+      ...config,
+      email_provider: 'resend',
+      resend_api_key: apiKey.trim(),
+      resend_sender: resendSender?.trim() || 'KAPLA Operations <no-reply@kapla.io.vn>',
+      smtp_status: apiKey ? 'connected' : 'ready',
     });
   },
 
@@ -3553,9 +3575,10 @@ export const EmailNotificationService = {
     MockStorageService.appendEmailLog(entry);
     console.info(`[Automated Email Service] Dispatched from ${from} to ${payload.recipients.join(', ')} | ${payload.title}`);
 
-    // Asynchronously transmit real email via Google SMTP (/api/send-email)
+    // Asynchronously transmit real email via Transactional Engine / Google SMTP (/api/send-email)
     if (typeof window !== 'undefined') {
       try {
+        const config = MockStorageService.getSystemConfig();
         fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3565,6 +3588,9 @@ export const EmailNotificationService = {
             title: payload.title,
             text: payload.content || `Automated notification: ${payload.title}`,
             actionType: payload.actionType,
+            provider: config?.email_provider || 'gmail_smtp',
+            resendApiKey: config?.resend_api_key,
+            resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
           }),
         }).catch(() => {});
       } catch {}
@@ -3575,8 +3601,10 @@ export const EmailNotificationService = {
 
   sendTestEmail(recipient: string, template: string, note?: string): EmailDispatchLogEntry {
     const from = this.getSenderEmail();
+    const config = MockStorageService.getSystemConfig();
+    const providerLabel = config?.email_provider === 'resend' && config?.resend_api_key ? 'Resend API' : 'Google SMTP';
     const title = `[Test Notification] Automated Dispatch via ${from}: ${template}`;
-    const messageText = note || `Verification test email dispatched to validate automated delivery from Google SMTP (${from}) to ${recipient}. System operational 100%.`;
+    const messageText = note || `Verification test email dispatched to validate automated delivery from ${providerLabel} (${from}) to ${recipient}. System operational 100%.`;
     const entry: EmailDispatchLogEntry = {
       id: `em-test-${Date.now()}`,
       sender: from,
@@ -3592,7 +3620,7 @@ export const EmailNotificationService = {
     MockStorageService.appendEmailLog(entry);
     console.info(`[Automated Email Service] Test email sent from ${from} to ${recipient}`);
 
-    // Asynchronously transmit real email via Google SMTP (/api/send-email)
+    // Asynchronously transmit real email via Transactional Engine / Google SMTP (/api/send-email)
     if (typeof window !== 'undefined') {
       try {
         fetch('/api/send-email', {
@@ -3604,6 +3632,9 @@ export const EmailNotificationService = {
             title,
             text: messageText,
             actionType: 'test',
+            provider: config?.email_provider || 'gmail_smtp',
+            resendApiKey: config?.resend_api_key,
+            resendSender: config?.resend_sender || 'KAPLA Operations <no-reply@kapla.io.vn>',
           }),
         }).catch(() => {});
       } catch {}

@@ -372,8 +372,11 @@ export interface SystemConfig {
   auto_email_alerts_enabled: boolean;
   cambridge_scale_max: number; // 5.0 shields
   academic_risk_threshold: number; // < 3.0 shields
+  email_provider?: 'gmail_smtp' | 'resend';
   sender_email?: string; // Automated notification dispatch email (kapladashboard@gmail.com)
   gmail_app_password?: string;
+  resend_api_key?: string;
+  resend_sender?: string;
   smtp_status?: 'ready' | 'connected' | 'unverified';
 }
 
