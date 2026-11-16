@@ -388,6 +388,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-001',
     full_name: 'Nguyen Binh An',
+    nickname: 'Ben',
     date_of_birth: '2017-05-10',
     gender: 'male',
     parent_name: 'Nguyen Van Minh (Father)',
@@ -405,6 +406,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-002',
     full_name: 'Tran Thai Binh',
+    nickname: 'Leo',
     date_of_birth: '2017-08-20',
     gender: 'male',
     parent_name: 'Tran Thi Ha (Mother)',
@@ -422,6 +424,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-003',
     full_name: 'Le Quoc Cuong',
+    nickname: 'Alex',
     date_of_birth: '2016-03-15',
     gender: 'male',
     parent_name: 'Le Van Sang (Father)',
@@ -439,6 +442,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-004',
     full_name: 'Dang Bao Nam',
+    nickname: 'Sam',
     date_of_birth: '2017-11-02',
     gender: 'male',
     parent_name: 'Dang Quoc Tuan (Father)',
@@ -456,6 +460,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-005',
     full_name: 'Pham Minh Khoi',
+    nickname: 'Lucas',
     date_of_birth: '2015-09-18',
     gender: 'male',
     parent_name: 'Pham Hai Dang (Father)',
@@ -473,6 +478,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-006',
     full_name: 'Hoang Mai Chi',
+    nickname: 'Chloe',
     date_of_birth: '2016-07-25',
     gender: 'female',
     parent_name: 'Hoang Kim Loan (Mother)',
@@ -490,6 +496,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-007',
     full_name: 'Vu Hai Yen',
+    nickname: 'Jenny',
     date_of_birth: '2017-01-05',
     gender: 'female',
     parent_name: 'Vu Quoc Bao (Father)',
@@ -507,6 +514,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: 'KAP-PH-008',
     full_name: 'Do Tuan Kiet',
+    nickname: 'David',
     date_of_birth: '2015-12-14',
     gender: 'male',
     parent_name: 'Do Trong Hieu (Father)',
@@ -524,6 +532,7 @@ const DEFAULT_STUDENTS: Student[] = [
     branch_id: 'a0000000-0000-0000-0000-000000000001',
     student_code: '0003',
     full_name: 'Nguyen Tuan Khai',
+    nickname: 'Kevin',
     date_of_birth: '2016-04-12',
     gender: 'male',
     parent_name: 'Nguyen Van Hung (Father)',
@@ -1232,7 +1241,7 @@ export class MockStorageService {
 
   static purgeStaleMockCacheIfOutdated(): void {
     if (typeof window === 'undefined') return;
-    const currentVersion = '2026.11.13_v6_clean_names_only';
+    const currentVersion = '2026.11.16_v7_nicknames_and_bulk';
     const savedVersion = localStorage.getItem('kapla_demo_data_version');
     const studentsRaw = localStorage.getItem(STORAGE_KEYS.STUDENTS) || '';
     const profilesRaw = localStorage.getItem(STORAGE_KEYS.PROFILES) || '';
@@ -1670,6 +1679,88 @@ export class MockStorageService {
 
     this.notifyChange(STORAGE_KEYS.STUDENTS);
     return newStudent;
+  }
+
+  static addStudentsBulk(payloads: Omit<Student, 'id' | 'created_at' | 'updated_at'>[]): Student[] {
+    this.ensureDevOnly();
+    if (!payloads || payloads.length === 0) return [];
+    const actor = this.getCurrentActor();
+    const students = this.getStudents();
+    const enrollments = this.getEnrollments();
+    const rawRen = localStorage.getItem(STORAGE_KEYS.RENEWAL);
+    const renList: RenewalRecord[] = rawRen ? JSON.parse(rawRen) : [];
+    const branches = this.getBranches();
+
+    const createdList: Student[] = [];
+
+    for (const payload of payloads) {
+      const newStudent: Student = {
+        ...payload,
+        id: 's' + Math.random().toString(36).substring(2, 9),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      students.unshift(newStudent);
+      createdList.push(newStudent);
+
+      if (payload.current_class_id) {
+        enrollments.push({
+          id: 'e' + Math.random().toString(36).substring(2, 9),
+          student_id: newStudent.id,
+          class_id: payload.current_class_id,
+          branch_id: payload.branch_id,
+          start_date: new Date().toISOString().split('T')[0],
+          status: 'active',
+        });
+      }
+
+      if (newStudent.tuition_expiry_date) {
+        const diffDays = Math.ceil(
+          (new Date(newStudent.tuition_expiry_date).getTime() - Date.now()) / 86400000
+        );
+        renList.push({
+          id: 'ren-' + Math.random().toString(36).substring(2, 9),
+          student_id: newStudent.id,
+          branch_id: newStudent.branch_id,
+          current_expiry_date: newStudent.tuition_expiry_date,
+          days_remaining: diffDays,
+          risk_level: diffDays <= 0 ? 'high' : diffDays <= 14 ? 'high' : diffDays <= 30 ? 'medium' : 'low',
+          status: 'monitoring',
+          assigned_hrt_id: newStudent.assigned_hrt_id,
+          contact_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+    localStorage.setItem(STORAGE_KEYS.ENROLLMENTS, JSON.stringify(enrollments));
+    localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renList));
+
+    const branch = branches.find((b) => b.id === payloads[0]?.branch_id);
+
+    this.appendAuditLog({
+      actor_id: actor.id,
+      actor_email: actor.email,
+      action: 'BULK_IMPORT_STUDENTS',
+      branch_id: payloads[0]?.branch_id,
+      branch_name: branch?.name || actor.branch_name,
+      details: {
+        actor_name: actor.name,
+        count: createdList.length,
+        class_id: payloads[0]?.current_class_id,
+        students: createdList.map((s) => ({
+          id: s.id,
+          name: s.full_name,
+          nickname: s.nickname,
+          code: s.student_code,
+        })),
+      },
+    });
+
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
+    return createdList;
   }
 
   static updateStudent(studentId: string, updates: Partial<Student>): Student {
@@ -2782,10 +2873,11 @@ export const StudentService = {
           branch_id: payload.branch_id,
           student_code: payload.student_code,
           full_name: payload.full_name,
+          nickname: payload.nickname,
           date_of_birth: payload.date_of_birth,
           gender: payload.gender,
-          parent_name: payload.parent_name,
-          parent_phone: payload.parent_phone,
+          parent_name: payload.parent_name || 'N/A',
+          parent_phone: payload.parent_phone || '',
           parent_email: payload.parent_email,
           tuition_expiry_date: payload.tuition_expiry_date,
           status: payload.status || 'active',
@@ -2808,6 +2900,46 @@ export const StudentService = {
       return data;
     }
     return MockStorageService.addStudent(payload);
+  },
+
+  async createStudentsBulk(payloads: Omit<Student, 'id' | 'created_at' | 'updated_at'>[]): Promise<Student[]> {
+    if (realSupabase) {
+      const toInsert = payloads.map((p) => ({
+        branch_id: p.branch_id,
+        student_code: p.student_code,
+        full_name: p.full_name,
+        nickname: p.nickname,
+        date_of_birth: p.date_of_birth,
+        gender: p.gender,
+        parent_name: p.parent_name || 'N/A',
+        parent_phone: p.parent_phone || '',
+        parent_email: p.parent_email,
+        tuition_expiry_date: p.tuition_expiry_date,
+        status: p.status || 'active',
+        current_class_id: p.current_class_id,
+        assigned_hrt_id: p.assigned_hrt_id,
+        notes: p.notes,
+      }));
+      const { data, error } = await realSupabase
+        .from('students')
+        .insert(toInsert)
+        .select('*, branch:branches(*), current_class:classes(*)');
+      if (error) throw error;
+
+      const enrollmentsToInsert = (data || [])
+        .filter((s: any) => s.current_class_id)
+        .map((s: any) => ({
+          student_id: s.id,
+          class_id: s.current_class_id,
+          branch_id: s.branch_id,
+          status: 'active',
+        }));
+      if (enrollmentsToInsert.length > 0) {
+        await realSupabase.from('enrollments').insert(enrollmentsToInsert);
+      }
+      return data || [];
+    }
+    return MockStorageService.addStudentsBulk(payloads);
   },
 
   async transferClass(studentId: string, toClassId: string, reason: string): Promise<void> {

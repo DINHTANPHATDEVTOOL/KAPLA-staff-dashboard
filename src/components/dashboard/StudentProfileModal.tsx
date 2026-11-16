@@ -409,6 +409,11 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-bold tracking-tight text-white">{student.full_name}</h2>
+                  {student.nickname && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-amber-950 font-bold text-xs shadow-xs">
+                      {student.nickname}
+                    </span>
+                  )}
                   <span className="px-2 py-0.5 rounded-md bg-white/20 text-white font-mono text-xs font-semibold border border-white/20">
                     {student.student_code}
                   </span>

@@ -129,10 +129,11 @@ export interface Student {
   branch_id: string;
   student_code: string;
   full_name: string;
+  nickname?: string;
   date_of_birth?: string;
   gender?: 'male' | 'female' | 'other';
-  parent_name: string;
-  parent_phone: string;
+  parent_name?: string;
+  parent_phone?: string;
   parent_email?: string;
   tuition_expiry_date: string;
   status: StudentStatus;

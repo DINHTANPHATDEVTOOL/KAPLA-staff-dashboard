@@ -28,6 +28,7 @@
     "test:monthly": "tsx scripts/test_monthly_filter_and_pending_eval.ts",
     "test:resend": "tsx scripts/test_resend_transactional_setup.ts",
     "test:onboarding": "tsx scripts/test_onboarding_notification_flow.ts",
+    "test:students": "tsx scripts/test_student_add_and_bulk_import.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
