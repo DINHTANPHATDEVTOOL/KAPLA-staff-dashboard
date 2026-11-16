@@ -7,6 +7,8 @@
 // ==============================================================================
 
 import { createClient } from '@supabase/supabase-js';
+import ws from 'ws';
+(globalThis as any).WebSocket = ws;
 
 const SUPABASE_URL = 'https://kzyrpbuoehwtlffelpxs.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_WTt5wBZDemqTJu74efq1Uw_FZREcmKe';
@@ -36,12 +38,12 @@ async function run() {
   console.log('  KAPLA — KIỂM THỬ LỌC THEO THÁNG & PHÁT HIỆN HỌC VIÊN CHƯA ĐÁNH GIÁ');
   console.log('======================================================================\n');
 
-  // Đăng nhập HRT Minh
+  // Đăng nhập Center Manager (CM Phương Nhi) phụ trách học vụ toàn cơ sở
   const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-    email: 'hrt.minh@kapla.edu.vn',
+    email: 'cm.nhi@kapla.edu.vn',
     password: 'Kapla@2026',
   });
-  assert('1. Đăng nhập tài khoản HRT phụ trách học vụ', !authErr && !!authData.user, `User: ${authData.user?.email}`);
+  assert('1. Đăng nhập tài khoản Quản lý học vụ (CM)', !authErr && !!authData.user, `User: ${authData.user?.email}`);
 
   // Tải danh sách toàn bộ học sinh
   const { data: allStudents, error: stuErr } = await supabase.from('students').select('*');

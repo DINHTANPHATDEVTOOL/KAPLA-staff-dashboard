@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs';
 
-const CHROME_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const CHROME_PATH = process.platform === 'win32' ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' : '/usr/bin/google-chrome';
 const CHROME_PORT = 9245;
 
 class CDPClient {
@@ -119,7 +119,7 @@ async function main() {
   `);
   await sleep(3000);
 
-  const artifactDir = 'C:\\Users\\phatd\\.gemini\\antigravity\\brain\\77ba75ed-6481-4e36-9bb5-1d93d9f37f2d';
+  const artifactDir = '/home/rd/Desktop/KAPLA/docs/screenshots/verified';
 
   // 1. Navigate to Student Directory (Images 1 & 2)
   console.log('Navigating to Student Records Directory...');
