@@ -875,7 +875,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
       setActionMessage({
         type: 'success',
-        text: `Reminder appointment scheduled for ${selectedStudentForReminder.full_name}! Notification dispatched from ${EmailNotificationService.SENDER_EMAIL}.`,
+        text: `Reminder appointment scheduled for ${selectedStudentForReminder.full_name}! Notification dispatched from ${EmailNotificationService.getSenderEmail()}.`,
       });
       setSelectedStudentForReminder(null);
       await loadData();
@@ -2419,7 +2419,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">Schedule Reminder Appointment / Task</h3>
                   <p className="text-[11px] text-slate-500">
-                    Authorized roles (SOO, HT, CM, Admin) • Auto-dispatch via <strong className="font-mono text-blue-700">{EmailNotificationService.SENDER_EMAIL}</strong>
+                    Authorized roles (SOO, HT, CM, Admin) • Auto-dispatch via <strong className="font-mono text-blue-700">{EmailNotificationService.getSenderEmail()}</strong>
                   </p>
                 </div>
               </div>
@@ -2531,7 +2531,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900 text-[11px] space-y-1">
                 <div className="font-bold flex items-center gap-1.5 text-amber-950">
                   <Mail className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Automated Dispatch via {EmailNotificationService.SENDER_EMAIL}</span>
+                  <span>Automated Dispatch via {EmailNotificationService.getSenderEmail()}</span>
                 </div>
                 <p>
                   Upon submission, an automated notification email will be dispatched to: Assigned HRT (

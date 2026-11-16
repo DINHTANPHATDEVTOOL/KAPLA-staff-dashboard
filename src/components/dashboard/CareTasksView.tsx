@@ -178,7 +178,7 @@ export const CareTasksView: React.FC = () => {
       setEmailNotification(mailPayload);
       setActionMessage({
         type: 'success',
-        text: `Reminder scheduled successfully! Automated notification dispatched from ${EmailNotificationService.SENDER_EMAIL}.`,
+        text: `Reminder scheduled successfully! Automated notification dispatched from ${EmailNotificationService.getSenderEmail()}.`,
       });
 
       setShowCreateModal(false);
@@ -253,7 +253,7 @@ export const CareTasksView: React.FC = () => {
           {/* Automated Email Sender Tag */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-[#043264] font-medium">
             <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            <span>Auto Dispatch: <strong className="font-mono">{EmailNotificationService.SENDER_EMAIL}</strong></span>
+            <span>Auto Dispatch: <strong className="font-mono">{EmailNotificationService.getSenderEmail()}</strong></span>
           </div>
 
           {/* Customer Requirement: SOO, HT, CM (and Admin) can create reminder appointments */}
@@ -299,7 +299,7 @@ export const CareTasksView: React.FC = () => {
                   Automated Notification Dispatched
                 </h4>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  From: {EmailNotificationService.SENDER_EMAIL}
+                  From: {EmailNotificationService.getSenderEmail()}
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-800 mt-1">{emailNotification.title}</p>
@@ -498,7 +498,7 @@ export const CareTasksView: React.FC = () => {
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">Schedule Reminder Appointment / Task</h3>
                   <p className="text-[11px] text-slate-500">
-                    Authorized roles (SOO, HT, CM, Admin) • Auto-dispatch via <strong className="font-mono text-blue-700">{EmailNotificationService.SENDER_EMAIL}</strong>
+                    Authorized roles (SOO, HT, CM, Admin) • Auto-dispatch via <strong className="font-mono text-blue-700">{EmailNotificationService.getSenderEmail()}</strong>
                   </p>
                 </div>
               </div>
@@ -627,7 +627,7 @@ export const CareTasksView: React.FC = () => {
                 <div>
                   <span className="font-semibold text-slate-800">Automated Notification Dispatch:</span>{' '}
                   Submitting will record the task in the database and automatically dispatch notification emails from{' '}
-                  <span className="font-mono font-bold text-blue-700">{EmailNotificationService.SENDER_EMAIL}</span> to the assigned HRT, Class Teachers, and Center Manager.
+                  <span className="font-mono font-bold text-blue-700">{EmailNotificationService.getSenderEmail()}</span> to the assigned HRT, Class Teachers, and Center Manager.
                 </div>
               </div>
 

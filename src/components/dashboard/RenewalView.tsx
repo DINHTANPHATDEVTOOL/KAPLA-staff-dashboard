@@ -26,7 +26,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { RenewalRecord, RenewalStatus, RenewalRisk, SystemConfig, Student } from '../../types';
-import { RenewalService, SystemConfigService, StudentService, subscribeToTableChanges } from '../../lib/supabase';
+import { RenewalService, SystemConfigService, StudentService, subscribeToTableChanges, EmailNotificationService } from '../../lib/supabase';
 
 const getStatusConfig = (lang: 'vi' | 'en'): Record<RenewalStatus, { label: string; color: string; badge: string }> => {
   if (lang === 'en') {
@@ -144,9 +144,26 @@ export const RenewalView: React.FC = () => {
     try {
       const results = await SystemConfigService.getStudentsDueForTuitionAlert(config.tuition_warning_days_threshold, false);
       setEmailSimulationResults(results);
+
+      // Dispatch automated renewal alert emails to HRTs and Outbox
+      if (results && results.length > 0) {
+        for (const item of results) {
+          EmailNotificationService.dispatchAutomatedEmail({
+            title: `Tuition Expiry Alert: ${item.full_name} (${item.tuition_expiry_date})`,
+            actionType: 'renewal',
+            recipients: [
+              item.effective_hrt_email || `Assigned HRT: ${item.effective_hrt_name || 'Staff'}`,
+              'cm.nhi@kapla.edu.vn',
+              'ec.huong@kapla.edu.vn',
+            ],
+            content: `Tuition expiry warning for student ${item.full_name}. Tuition ends on ${item.tuition_expiry_date}. Please contact parent ${item.parent_name || 'Parent'} (${item.parent_phone || 'N/A'}) to confirm retention.`,
+          });
+        }
+      }
+
       setMessage({
         type: 'success',
-        text: `Found expected recipients: ${results.length} students in warning window. Alerts routed to assigned HRT!`,
+        text: `Found expected recipients: ${results.length} students in warning window. Alerts dispatched to assigned HRT & Outbox!`,
       });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Could not test email tasks.' });
@@ -326,7 +343,7 @@ export const RenewalView: React.FC = () => {
                 <Check className="w-4 h-4 text-emerald-400" />
                 <span>{`Scheduled Tuition Reminder Recipients (${emailSimulationResults.length} students)`}</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/20">
-                  Mailer: kapladashboard@gmail.com
+                  Mailer: {EmailNotificationService.getSenderEmail()}
                 </span>
               </span>
               <button

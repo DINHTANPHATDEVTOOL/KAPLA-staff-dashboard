@@ -228,15 +228,23 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
       });
 
       // Customer Specification: Email notification dispatched to Assignee, Owner, and CM + Teacher get ALL notifications
+      const recipientsList = [
+        `Assigned Staff: ${assignedStaffName}`,
+        `Ticket Owner: ${ownerName}`,
+        `Center Manager (CM): All Center Inquiries & Escalations`,
+        `Class Teachers: Main Teacher & HRT Staff`,
+      ];
+      EmailNotificationService.dispatchAutomatedEmail({
+        title: `New Inquiry for ${selectedStudent?.full_name || 'Student'} (${newFeedback.parent_phone})`,
+        actionType: 'feedback',
+        recipients: recipientsList,
+        content: `Parent inquiry registered: "${newFeedback.content.trim()}". Assigned to: ${assignedStaffName}. Due date: ${newFeedback.due_date}`,
+      });
+
       setEmailNotification({
         title: `New Inquiry for ${selectedStudent?.full_name || 'Student'} (${newFeedback.parent_phone})`,
         actionType: 'create',
-        recipients: [
-          `Assigned Staff: ${assignedStaffName}`,
-          `Ticket Owner: ${ownerName}`,
-          `Center Manager (CM): All Center Inquiries & Escalations`,
-          `Class Teachers: Main Teacher & HRT Staff`,
-        ],
+        recipients: recipientsList,
       });
 
       setMessage({ type: 'success', text: 'Parent feedback registered and instant notifications dispatched successfully.' });
@@ -280,16 +288,25 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
       const ownerName = selectedFeedbackForResolve.owner_name || 'Ticket Owner';
 
       // Customer Specification: Resolution turnaround time + Email dispatched to Owner, Assignee, CM & Teachers
+      const resolveRecipients = [
+        `Assigned Staff: ${assignedStaffName}`,
+        `Ticket Owner: ${ownerName}`,
+        `Center Manager (CM): Full Notification Log`,
+        `Class Teachers: Academic Lead & HRT Staff`,
+      ];
+      EmailNotificationService.dispatchAutomatedEmail({
+        title: `Parent Feedback Resolved: "${selectedFeedbackForResolve.content.slice(0, 45)}..."`,
+        actionType: 'feedback',
+        turnaround,
+        recipients: resolveRecipients,
+        content: `Parent feedback ticket resolved in ${turnaround}. Resolution notes: ${resolutionNotes.trim() || 'No additional notes'}. Handled by: ${assignedStaffName}.`,
+      });
+
       setEmailNotification({
         title: `Feedback resolved: "${selectedFeedbackForResolve.content.slice(0, 45)}..."`,
         actionType: 'resolve',
         turnaround,
-        recipients: [
-          `Assigned Staff: ${assignedStaffName}`,
-          `Ticket Owner: ${ownerName}`,
-          `Center Manager (CM): Full Notification Log`,
-          `Class Teachers: Academic Lead & HRT Staff`,
-        ],
+        recipients: resolveRecipients,
       });
 
       setMessage({
@@ -424,7 +441,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                     : `Resolution Confirmed • Turnaround: ${emailNotification.turnaround}`}
                 </h4>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  From: {EmailNotificationService.SENDER_EMAIL}
+                  From: {EmailNotificationService.getSenderEmail()}
                 </span>
               </div>
               <p className="text-xs font-semibold text-slate-800 mt-1">{emailNotification.title}</p>
