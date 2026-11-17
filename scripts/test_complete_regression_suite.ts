@@ -131,7 +131,7 @@ async function runRegressionSuite() {
 
   // Seed multiple feedbacks for student Phạm Minh Khôi (as in customer screenshot)
   const students = MockStorageService.getStudents();
-  let testStudent = students.find((s) => s.full_name === 'Phạm Minh Khôi');
+  let testStudent = students.find((s) => s.student_code === 'KAP-PH-005' || s.full_name.toLowerCase().includes('pham minh khoi'));
   if (!testStudent) {
     testStudent = MockStorageService.addStudent({
       branch_id: 'a0000000-0000-0000-0000-000000000001',

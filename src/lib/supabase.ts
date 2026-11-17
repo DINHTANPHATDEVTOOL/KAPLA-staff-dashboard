@@ -35,6 +35,7 @@ import {
   EmailDispatchLogEntry,
 } from '../types';
 import { buildKaplaEmailHtml, StaffApplicantInfo } from './emailTemplate';
+import { findDuplicateStudent, isSameStudent } from '../utils/dotbParser';
 
 // Safely resolve environment across Vite (import.meta.env) and Node.js test runners (process.env)
 const env: Record<string, string | boolean | undefined> =
@@ -1676,6 +1677,24 @@ export class MockStorageService {
     this.ensureDevOnly();
     const actor = this.getCurrentActor();
     const students = this.getStudents();
+
+    // Anti-duplicate protection: check if a student already exists
+    const duplicate = findDuplicateStudent(
+      {
+        student_code: payload.student_code,
+        full_name: payload.full_name,
+        date_of_birth: payload.date_of_birth,
+        nickname: payload.nickname,
+      },
+      students
+    );
+
+    if (duplicate) {
+      throw new Error(
+        `Duplicate Record: A student named "${duplicate.full_name}" is already registered in the system (Student Code: ${duplicate.student_code}). Duplicate enrollment is not permitted.`
+      );
+    }
+
     const newStudent: Student = {
       ...payload,
       id: 's' + Math.random().toString(36).substring(2, 9),
@@ -1755,8 +1774,27 @@ export class MockStorageService {
     const branches = this.getBranches();
 
     const createdList: Student[] = [];
+    let duplicatesSkipped = 0;
 
     for (const payload of payloads) {
+      // Anti-duplicate protection: check against current directory and students created in this batch
+      const isDup = students.some((s) =>
+        isSameStudent(
+          {
+            student_code: payload.student_code,
+            full_name: payload.full_name,
+            date_of_birth: payload.date_of_birth,
+            nickname: payload.nickname,
+          },
+          s
+        )
+      );
+
+      if (isDup) {
+        duplicatesSkipped++;
+        continue;
+      }
+
       const newStudent: Student = {
         ...payload,
         id: 's' + Math.random().toString(36).substring(2, 9),
@@ -1812,6 +1850,7 @@ export class MockStorageService {
       details: {
         actor_name: actor.name,
         count: createdList.length,
+        duplicates_skipped: duplicatesSkipped,
         class_id: payloads[0]?.current_class_id,
         students: createdList.map((s) => ({
           id: s.id,

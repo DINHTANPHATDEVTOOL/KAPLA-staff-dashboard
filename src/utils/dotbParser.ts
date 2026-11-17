@@ -1,11 +1,15 @@
 /**
- * DotB Student List Parser
+ * DotB Student List Parser & Deduplication Engine
  * Parses DotB CRM student list exports (.xls HTML format, CSV, TSV, or copy-pasted text)
  * Designed to meet KAPLA Center Manager (CM Phương Nhi) requirements:
- * - Prioritizes Student Full Name & Nickname
- * - Parses classes, birthdates (DD/MM/YYYY -> YYYY-MM-DD), status, and source
- * - Generates clean student payloads ready for bulk enrollment
+ * - Prioritizes Student Full Name, Class Name, Birthdate, and Nick-name
+ * - Built-in anti-duplicate engine: detects existing students in the system and within the file
+ * - Converts birthdates (DD/MM/YYYY -> YYYY-MM-DD ISO)
+ * - Auto-generates unique sequential student codes (KAP-PH-xxx) without wasting codes on duplicates
+ * - 100% English terminology and notifications
  */
+
+import { Student } from '../types';
 
 export interface ParsedDotbStudent {
   id: string;
@@ -17,11 +21,15 @@ export interface ParsedDotbStudent {
   class_name: string;
   status: string;
   source?: string;
+  is_duplicate?: boolean;
+  duplicate_reason?: string;
+  matched_student_code?: string;
 }
 
 export interface ParsedDotbClassSummary {
   name: string;
   studentCount: number;
+  newStudentCount: number;
   inferredLevel: string;
 }
 
@@ -30,6 +38,76 @@ export interface DotbParseResult {
   classes: ParsedDotbClassSummary[];
   totalWithNicknames: number;
   totalWithBirthdate: number;
+  totalDuplicates: number;
+  totalNew: number;
+}
+
+/**
+ * Normalizes student name for comparison (lowercased, accents/diacritics stripped, spaces normalized)
+ */
+export function normalizeStudentName(name: string): string {
+  if (!name) return '';
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+/**
+ * Checks if two student records represent the same individual
+ */
+export function isSameStudent(
+  cand: { full_name: string; date_of_birth?: string; nickname?: string; student_code?: string },
+  existing: { full_name: string; date_of_birth?: string; nickname?: string; student_code?: string }
+): boolean {
+  // 1. Same student code
+  if (cand.student_code && existing.student_code) {
+    if (cand.student_code.trim().toUpperCase() === existing.student_code.trim().toUpperCase()) {
+      return true;
+    }
+  }
+
+  // 2. Name comparison (both exact with diacritics, and accent-insensitive)
+  const candNameExact = (cand.full_name || '').trim().toLowerCase();
+  const existNameExact = (existing.full_name || '').trim().toLowerCase();
+  const candNameNorm = normalizeStudentName(cand.full_name);
+  const existNameNorm = normalizeStudentName(existing.full_name);
+
+  if (candNameExact === existNameExact || candNameNorm === existNameNorm) {
+    // 2a. If both have nicknames and they match, it is the same student (e.g., Tran Thai Binh "Leo")
+    if (cand.nickname && existing.nickname) {
+      if (cand.nickname.trim().toLowerCase() === existing.nickname.trim().toLowerCase()) {
+        return true;
+      }
+    }
+
+    // 2b. If both have DOB, compare DOB
+    if (cand.date_of_birth && existing.date_of_birth) {
+      const cDob = cand.date_of_birth.trim();
+      const eDob = existing.date_of_birth.trim();
+      if (cDob === eDob) return true;
+      // If birthdates are explicitly different and nicknames were not matched
+      return false;
+    }
+
+    // 2c. Default to true if names are identical
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Finds an existing student in the directory matching the candidate
+ */
+export function findDuplicateStudent(
+  candidate: { full_name: string; date_of_birth?: string; nickname?: string; student_code?: string },
+  existingStudents: Student[]
+): Student | undefined {
+  if (!candidate.full_name?.trim()) return undefined;
+  return existingStudents.find((s) => isSameStudent(candidate, s));
 }
 
 /**
@@ -116,21 +194,50 @@ export function generateStudentCodes(
 }
 
 /**
- * Main parser: handles DotB HTML/XLS, TSV, or CSV text
+ * Main parser & deduplication engine: handles DotB HTML/XLS, TSV, or CSV text
+ * Prevents importing duplicate records that already exist in the database or earlier in the file.
  */
 export function parseDotbExport(
   rawContent: string,
   branchCode = 'PH',
-  existingCodes: string[] = []
+  existingStudentsOrCodes: Student[] | string[] = []
 ): DotbParseResult {
   const content = rawContent.trim();
   if (!content) {
-    return { students: [], classes: [], totalWithNicknames: 0, totalWithBirthdate: 0 };
+    return {
+      students: [],
+      classes: [],
+      totalWithNicknames: 0,
+      totalWithBirthdate: 0,
+      totalDuplicates: 0,
+      totalNew: 0,
+    };
   }
+
+  // Normalize existingStudents array
+  const existingStudents: Student[] = existingStudentsOrCodes.map((item) =>
+    typeof item === 'string'
+      ? ({
+          id: item,
+          student_code: item,
+          full_name: '',
+          branch_id: '',
+          gender: 'male' as const,
+          parent_name: '',
+          parent_phone: '',
+          tuition_expiry_date: '',
+          status: 'active' as const,
+        } as Student)
+      : item
+  );
+
+  const existingCodes = existingStudents
+    .map((s) => s.student_code)
+    .filter(Boolean);
 
   const isHtml = /<tr[^>]*>|<table|class=["']report/i.test(content);
 
-  let rawList: Array<{
+  const rawList: Array<{
     className: string;
     fullName: string;
     nickname?: string;
@@ -265,33 +372,93 @@ export function parseDotbExport(
     }
   }
 
-  // Pre-generate unique student codes for all parsed students
+  // Pre-generate unique student codes for candidate students
   const autoCodes = generateStudentCodes(branchCode, existingCodes, rawList.length);
 
   // Group classes and count students
-  const classCountMap = new Map<string, number>();
+  const classCountMap = new Map<string, { total: number; newCount: number }>();
   for (const s of rawList) {
-    classCountMap.set(s.className, (classCountMap.get(s.className) || 0) + 1);
+    if (!classCountMap.has(s.className)) {
+      classCountMap.set(s.className, { total: 0, newCount: 0 });
+    }
+    const current = classCountMap.get(s.className)!;
+    current.total += 1;
   }
 
-  const classSummaries: ParsedDotbClassSummary[] = Array.from(classCountMap.entries()).map(
-    ([name, count]) => ({
-      name,
-      studentCount: count,
-      inferredLevel: inferClassLevel(name),
-    })
-  );
+  // Deduplication tracker: tracks seen students in this batch
+  const seenBatchMap = new Map<
+    string,
+    { className: string; student_code: string; dob?: string; nickname?: string }
+  >();
 
   let totalWithNicknames = 0;
   let totalWithBirthdate = 0;
+  let totalDuplicates = 0;
+  let totalNew = 0;
+  let codeIndex = 0;
 
   const students: ParsedDotbStudent[] = rawList.map((item, index) => {
     if (item.nickname) totalWithNicknames++;
     if (item.birthdate) totalWithBirthdate++;
 
+    const normName = normalizeStudentName(item.fullName);
+    let isDuplicate = false;
+    let duplicateReason: string | undefined = undefined;
+    let matchedStudentCode: string | undefined = undefined;
+
+    // Check 1: Does this student already exist in the system database?
+    const existingDbMatch = findDuplicateStudent(
+      {
+        full_name: item.fullName,
+        date_of_birth: item.birthdate,
+        nickname: item.nickname,
+      },
+      existingStudents
+    );
+
+    if (existingDbMatch) {
+      isDuplicate = true;
+      matchedStudentCode = existingDbMatch.student_code;
+      duplicateReason = `Already enrolled in system (${existingDbMatch.student_code}${
+        existingDbMatch.current_class?.name ? ` - ${existingDbMatch.current_class.name}` : ''
+      })`;
+    } else {
+      // Check 2: Does this student appear earlier in this file batch?
+      const batchSeen = seenBatchMap.get(normName);
+      if (batchSeen) {
+        // If both have DOB and differ, they might be different students
+        if (item.birthdate && batchSeen.dob && item.birthdate !== batchSeen.dob) {
+          isDuplicate = false;
+        } else {
+          isDuplicate = true;
+          matchedStudentCode = batchSeen.student_code;
+          duplicateReason = `Duplicate in file (already listed under cohort ${batchSeen.className})`;
+        }
+      }
+    }
+
+    let assignedCode = matchedStudentCode;
+    if (isDuplicate) {
+      totalDuplicates++;
+    } else {
+      totalNew++;
+      assignedCode = autoCodes[codeIndex] || `KAP-${branchCode}-${String(index + 1).padStart(3, '0')}`;
+      codeIndex++;
+      seenBatchMap.set(normName, {
+        className: item.className,
+        student_code: assignedCode,
+        dob: item.birthdate,
+        nickname: item.nickname,
+      });
+
+      // Update new count for class
+      const clsEntry = classCountMap.get(item.className);
+      if (clsEntry) clsEntry.newCount += 1;
+    }
+
     return {
       id: `dotb-${Date.now()}-${index}`,
-      student_code: autoCodes[index] || `KAP-${branchCode}-${String(index + 1).padStart(3, '0')}`,
+      student_code: assignedCode || `KAP-${branchCode}-${String(index + 1).padStart(3, '0')}`,
       full_name: item.fullName,
       nickname: item.nickname,
       date_of_birth: item.birthdate,
@@ -299,13 +466,27 @@ export function parseDotbExport(
       class_name: item.className,
       status: item.status,
       source: item.source,
+      is_duplicate: isDuplicate,
+      duplicate_reason: duplicateReason,
+      matched_student_code: matchedStudentCode,
     };
   });
+
+  const classSummaries: ParsedDotbClassSummary[] = Array.from(classCountMap.entries()).map(
+    ([name, counts]) => ({
+      name,
+      studentCount: counts.total,
+      newStudentCount: counts.newCount,
+      inferredLevel: inferClassLevel(name),
+    })
+  );
 
   return {
     students,
     classes: classSummaries,
     totalWithNicknames,
     totalWithBirthdate,
+    totalDuplicates,
+    totalNew,
   };
 }

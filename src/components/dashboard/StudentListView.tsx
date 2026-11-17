@@ -76,6 +76,8 @@ import {
   inferClassLevel,
   ParsedDotbStudent,
   DotbParseResult,
+  findDuplicateStudent,
+  isSameStudent,
 } from '../../utils/dotbParser';
 
 interface ParsedBulkStudent {
@@ -334,18 +336,15 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     classes: [],
     totalWithNicknames: 0,
     totalWithBirthdate: 0,
+    totalDuplicates: 0,
+    totalNew: 0,
   });
   const [bulkPreviewFilterClass, setBulkPreviewFilterClass] = useState<string>('all');
+  const [bulkDuplicateFilter, setBulkDuplicateFilter] = useState<'all' | 'new_only' | 'duplicates_only'>('new_only');
+  const [autoSkipDuplicates, setAutoSkipDuplicates] = useState<boolean>(true);
   const [bulkTuitionMonths, setBulkTuitionMonths] = useState<number>(6);
   const [bulkImporting, setBulkImporting] = useState<boolean>(false);
   const [autoCreateMissingClasses, setAutoCreateMissingClasses] = useState<boolean>(true);
-
-  const previewStudents = useMemo(() => {
-    if (bulkPreviewFilterClass === 'all') {
-      return dotbResult.students;
-    }
-    return dotbResult.students.filter((s) => s.class_name === bulkPreviewFilterClass);
-  }, [dotbResult.students, bulkPreviewFilterClass]);
 
   // Form states
   const [newStudent, setNewStudent] = useState({
@@ -362,6 +361,33 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     assigned_hrt_id: '',
     notes: '',
   });
+
+  const previewStudents = useMemo(() => {
+    let list = dotbResult.students;
+    if (bulkPreviewFilterClass !== 'all') {
+      list = list.filter((s) => s.class_name === bulkPreviewFilterClass);
+    }
+    if (bulkDuplicateFilter === 'new_only') {
+      list = list.filter((s) => !s.is_duplicate);
+    } else if (bulkDuplicateFilter === 'duplicates_only') {
+      list = list.filter((s) => s.is_duplicate);
+    }
+    return list;
+  }, [dotbResult.students, bulkPreviewFilterClass, bulkDuplicateFilter]);
+
+  // Real-time duplicate detection for single student add (User requirement: khi nhập tay cũng vậy, có rồi là báo đã có học sinh trong danh sách)
+  const singleStudentDuplicate = useMemo(() => {
+    if (!newStudent.full_name?.trim()) return null;
+    return findDuplicateStudent(
+      {
+        student_code: newStudent.student_code,
+        full_name: newStudent.full_name,
+        date_of_birth: newStudent.date_of_birth,
+        nickname: newStudent.nickname,
+      },
+      students
+    );
+  }, [newStudent.full_name, newStudent.date_of_birth, newStudent.nickname, newStudent.student_code, students]);
 
   const [transferClassId, setTransferClassId] = useState<string>('');
   const [transferReason, setTransferReason] = useState<string>('');
@@ -776,6 +802,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       classes: [],
       totalWithNicknames: 0,
       totalWithBirthdate: 0,
+      totalDuplicates: 0,
+      totalNew: 0,
     });
     setBulkPreviewFilterClass('all');
     setBulkTuitionMonths(6);
@@ -788,6 +816,16 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentBranch) return;
+
+    // Strict Anti-Duplicate Validation per customer requirement
+    if (singleStudentDuplicate) {
+      setActionMessage({
+        type: 'error',
+        text: `Duplicate Student Alert: "${singleStudentDuplicate.full_name}" is already in the student directory (Code: ${singleStudentDuplicate.student_code}${singleStudentDuplicate.current_class?.name ? ` - ${singleStudentDuplicate.current_class.name}` : ''}). Duplicate enrollment is prohibited.`,
+      });
+      return;
+    }
+
     setSubmitting(true);
     setActionMessage(null);
 
@@ -825,8 +863,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
   const handleBulkTextChange = (text: string) => {
     setBulkRawText(text);
-    const existingCodes = students.map((s) => s.student_code);
-    const parsed = parseDotbExport(text, 'PH', existingCodes);
+    const parsed = parseDotbExport(text, 'PH', students);
     setDotbResult(parsed);
     setBulkPreviewFilterClass('all');
   };
@@ -837,13 +874,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     try {
       setBulkImporting(true);
       const text = await file.text();
-      const existingCodes = students.map((s) => s.student_code);
-      const res = parseDotbExport(text, 'PH', existingCodes);
+      const res = parseDotbExport(text, 'PH', students);
       setDotbResult(res);
       setBulkPreviewFilterClass('all');
       setActionMessage({
         type: 'success',
-        text: `Extracted ${res.students.length} students across ${res.classes.length} cohorts from "${file.name}"!`,
+        text: `Extracted ${res.students.length} students (${res.totalNew} new, ${res.totalDuplicates} duplicates identified) across ${res.classes.length} cohorts from "${file.name}"!`,
       });
     } catch (err: any) {
       console.error('File parsing error:', err);
@@ -863,13 +899,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       const resp = await fetch('/sample-dotb-export.xls');
       if (!resp.ok) throw new Error('Could not fetch sample DotB export file');
       const text = await resp.text();
-      const existingCodes = students.map((s) => s.student_code);
-      const res = parseDotbExport(text, 'PH', existingCodes);
+      const res = parseDotbExport(text, 'PH', students);
       setDotbResult(res);
       setBulkPreviewFilterClass('all');
       setActionMessage({
         type: 'success',
-        text: `Loaded official DotB export: ${res.students.length} students across ${res.classes.length} cohorts detected!`,
+        text: `Loaded official DotB export: ${res.students.length} records parsed (${res.totalNew} new unique students, ${res.totalDuplicates} duplicates identified) across ${res.classes.length} cohorts!`,
       });
     } catch (err: any) {
       console.error('Load sample error:', err);
@@ -889,6 +924,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         .map((c) => ({
           ...c,
           studentCount: remaining.filter((s) => s.class_name === c.name).length,
+          newStudentCount: remaining.filter((s) => s.class_name === c.name && !s.is_duplicate).length,
         }))
         .filter((c) => c.studentCount > 0);
 
@@ -898,6 +934,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         classes: remainingClasses,
         totalWithNicknames: remaining.filter((s) => s.nickname).length,
         totalWithBirthdate: remaining.filter((s) => s.date_of_birth).length,
+        totalDuplicates: remaining.filter((s) => s.is_duplicate).length,
+        totalNew: remaining.filter((s) => !s.is_duplicate).length,
       };
     });
   };
@@ -908,8 +946,22 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     setActionMessage(null);
 
     try {
+      // Deduplication check: Filter out duplicate students if autoSkipDuplicates is enabled
+      const studentsToImport = autoSkipDuplicates
+        ? previewStudents.filter((s) => !s.is_duplicate)
+        : previewStudents;
+
+      if (studentsToImport.length === 0) {
+        setActionMessage({
+          type: 'error',
+          text: 'All selected students already exist in the database directory. No duplicate records were added.',
+        });
+        setBulkImporting(false);
+        return;
+      }
+
       let currentClasses = [...classes];
-      const uniqueClassNames = Array.from(new Set(previewStudents.map((s) => s.class_name)));
+      const uniqueClassNames = Array.from(new Set(studentsToImport.map((s) => s.class_name)));
 
       if (autoCreateMissingClasses) {
         const missingClasses = uniqueClassNames.filter(
@@ -932,7 +984,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         .toISOString()
         .split('T')[0];
 
-      const payloads = previewStudents.map((item) => {
+      const payloads = studentsToImport.map((item) => {
         const matchedClass = currentClasses.find(
           (c) => c.name.toLowerCase() === item.class_name.toLowerCase()
         );
@@ -957,9 +1009,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
       await StudentService.createStudentsBulk(payloads);
 
+      const skippedCount = previewStudents.length - studentsToImport.length;
       setActionMessage({
         type: 'success',
-        text: `Successfully imported ${payloads.length} students across ${uniqueClassNames.length} cohorts into KAPLA!`,
+        text: `Successfully imported ${payloads.length} new student(s) across ${uniqueClassNames.length} cohort(s)!${
+          skippedCount > 0 ? ` (${skippedCount} duplicate student(s) automatically skipped)` : ''
+        }`,
       });
 
       setShowAddModal(false);
@@ -2189,8 +2244,40 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                       value={newStudent.full_name}
                       onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
                       placeholder="E.g., Alexander William"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                      className={`w-full px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 bg-white ${
+                        singleStudentDuplicate
+                          ? 'border-amber-400 focus:ring-amber-300 ring-1 ring-amber-200'
+                          : 'border-slate-300 focus:ring-[#043264]/20'
+                      }`}
                     />
+                    {singleStudentDuplicate && (
+                      <div className="mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-start gap-2 shadow-2xs">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-[11px] text-amber-900">
+                            {'⚠️ Duplicate Student Detected in Directory!'}
+                          </span>
+                          <p className="text-[10px] text-amber-800 leading-tight">
+                            {`A student named "${singleStudentDuplicate.full_name}" is already registered in the system.`}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-1 pt-1 text-[9px] font-mono">
+                            <span className="px-1.5 py-0.5 rounded bg-amber-100 font-bold border border-amber-200">
+                              {`Code: ${singleStudentDuplicate.student_code}`}
+                            </span>
+                            {singleStudentDuplicate.nickname && (
+                              <span className="px-1.5 py-0.5 rounded bg-blue-50 text-[#043264] font-bold border border-blue-200">
+                                {`Alias: ${singleStudentDuplicate.nickname}`}
+                              </span>
+                            )}
+                            {singleStudentDuplicate.current_class?.name && (
+                              <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                                {`Class: ${singleStudentDuplicate.current_class.name}`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
@@ -2367,10 +2454,23 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   </button>
                   <button
                     type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                    disabled={submitting || Boolean(singleStudentDuplicate)}
+                    className={`px-4 py-2 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-1.5 ${
+                      singleStudentDuplicate
+                        ? 'bg-amber-600 hover:bg-amber-700 cursor-not-allowed'
+                        : 'bg-[#043264] hover:bg-[#012147]'
+                    }`}
                   >
-                    {submitting ? 'Saving...' : 'Save Student Record'}
+                    {singleStudentDuplicate ? (
+                      <>
+                        <AlertTriangle className="w-3.5 h-3.5 text-white" />
+                        <span>{'Duplicate Exists in Directory'}</span>
+                      </>
+                    ) : submitting ? (
+                      'Saving...'
+                    ) : (
+                      'Save Student Record'
+                    )}
                   </button>
                 </div>
               </form>
@@ -2452,43 +2552,43 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 {/* Parsed Results Overview & Configuration */}
                 {dotbResult.students.length > 0 ? (
                   <div className="space-y-3 pt-2">
-                    {/* Summary KPI Badges */}
+                    {/* Summary KPI Badges (Deduplication Enabled) */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-xl">
                         <span className="text-[10px] uppercase font-bold text-[#043264]">Total Extracted</span>
                         <div className="text-xl font-bold text-slate-900 mt-0.5">
                           {dotbResult.students.length}
                         </div>
-                        <span className="text-[10px] text-slate-500">Students parsed</span>
+                        <span className="text-[10px] text-slate-500">Records in file</span>
+                      </div>
+                      <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+                        <span className="text-[10px] uppercase font-bold text-emerald-700">New Students</span>
+                        <div className="text-xl font-bold text-emerald-900 mt-0.5">
+                          {dotbResult.totalNew}
+                        </div>
+                        <span className="text-[10px] text-emerald-600 font-medium">Ready to enroll</span>
+                      </div>
+                      <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl">
+                        <span className="text-[10px] uppercase font-bold text-amber-700">⚠️ Duplicates</span>
+                        <div className="text-xl font-bold text-amber-900 mt-0.5">
+                          {dotbResult.totalDuplicates}
+                        </div>
+                        <span className="text-[10px] text-amber-600 font-medium">Skipped automatically</span>
                       </div>
                       <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl">
-                        <span className="text-[10px] uppercase font-bold text-indigo-700">Cohorts / Classes</span>
+                        <span className="text-[10px] uppercase font-bold text-indigo-700">Cohorts Identified</span>
                         <div className="text-xl font-bold text-slate-900 mt-0.5">
                           {dotbResult.classes.length}
                         </div>
-                        <span className="text-[10px] text-slate-500">Cohorts identified</span>
-                      </div>
-                      <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
-                        <span className="text-[10px] uppercase font-bold text-emerald-700">English Nicknames</span>
-                        <div className="text-xl font-bold text-slate-900 mt-0.5">
-                          {dotbResult.totalWithNicknames}
-                        </div>
-                        <span className="text-[10px] text-slate-500">With aliases</span>
-                      </div>
-                      <div className="p-3 bg-purple-50/60 border border-purple-200 rounded-xl">
-                        <span className="text-[10px] uppercase font-bold text-purple-700">Birthdates Parsed</span>
-                        <div className="text-xl font-bold text-slate-900 mt-0.5">
-                          {dotbResult.totalWithBirthdate}
-                        </div>
-                        <span className="text-[10px] text-slate-500">ISO converted</span>
+                        <span className="text-[10px] text-slate-500">Classes found</span>
                       </div>
                     </div>
 
                     {/* Class Filter & Enrollment Options */}
                     <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-                      <div className="sm:col-span-2">
+                      <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          {'Select Cohort to Import (CM Filter by Class)'}
+                          {'Select Cohort (CM Filter by Class)'}
                         </label>
                         <select
                           value={bulkPreviewFilterClass}
@@ -2508,6 +2608,27 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
+                          {'Deduplication View Filter'}
+                        </label>
+                        <select
+                          value={bulkDuplicateFilter}
+                          onChange={(e) => setBulkDuplicateFilter(e.target.value as any)}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800"
+                        >
+                          <option value="new_only">
+                            {`✨ New Students Only (${dotbResult.totalNew}) [Recommended]`}
+                          </option>
+                          <option value="all">
+                            {`All Records (${dotbResult.students.length})`}
+                          </option>
+                          <option value="duplicates_only">
+                            {`⚠️ Duplicates Only (${dotbResult.totalDuplicates})`}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
                           {'Tuition Validity'}
                         </label>
                         <select
@@ -2521,20 +2642,33 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                         </select>
                       </div>
 
-                      <div className="sm:col-span-3 flex items-center justify-between pt-1 border-t border-slate-200/60">
-                        <label className="inline-flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={autoCreateMissingClasses}
-                            onChange={(e) => setAutoCreateMissingClasses(e.target.checked)}
-                            className="rounded border-slate-300 text-[#043264] focus:ring-[#043264]"
-                          />
-                          <span className="text-[11px] font-medium text-slate-700">
-                            {'Automatically register any missing classes in the database'}
-                          </span>
-                        </label>
+                      <div className="sm:col-span-3 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
+                        <div className="flex flex-wrap items-center gap-4">
+                          <label className="inline-flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={autoSkipDuplicates}
+                              onChange={(e) => setAutoSkipDuplicates(e.target.checked)}
+                              className="rounded border-slate-300 text-[#043264] focus:ring-[#043264]"
+                            />
+                            <span className="text-[11px] font-semibold text-emerald-800">
+                              {'🛡️ Automatically skip duplicate students (Prevents duplicate profiles)'}
+                            </span>
+                          </label>
+                          <label className="inline-flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={autoCreateMissingClasses}
+                              onChange={(e) => setAutoCreateMissingClasses(e.target.checked)}
+                              className="rounded border-slate-300 text-[#043264] focus:ring-[#043264]"
+                            />
+                            <span className="text-[11px] font-medium text-slate-700">
+                              {'Automatically register missing classes in database'}
+                            </span>
+                          </label>
+                        </div>
                         <span className="text-[11px] text-slate-500 font-semibold">
-                          {`Ready to import: ${previewStudents.length} students`}
+                          {`Filtered: ${previewStudents.length} records`}
                         </span>
                       </div>
                     </div>
@@ -2550,14 +2684,21 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                               <th className="py-2 px-2.5">Student Full Name</th>
                               <th className="py-2 px-2.5">Nickname</th>
                               <th className="py-2 px-2.5">Birthdate</th>
-                              <th className="py-2 px-2.5">Status</th>
-                              <th className="py-2 px-2.5">Auto Code</th>
+                              <th className="py-2 px-2.5">Profile Status</th>
+                              <th className="py-2 px-2.5">Student Code</th>
                               <th className="py-2 px-2 text-center w-12">Action</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-[11px]">
                             {previewStudents.slice(0, 50).map((item, idx) => (
-                              <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                              <tr
+                                key={item.id}
+                                className={`transition-colors ${
+                                  item.is_duplicate
+                                    ? 'bg-amber-50/40 hover:bg-amber-50/70 text-slate-600'
+                                    : 'hover:bg-slate-50/60'
+                                }`}
+                              >
                                 <td className="py-2 px-2.5 text-center text-slate-400 font-mono">
                                   {idx + 1}
                                 </td>
@@ -2580,20 +2721,36 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                                   {item.date_of_birth || '—'}
                                 </td>
                                 <td className="py-2 px-2.5">
-                                  <span
-                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                                      item.status === 'In Progress'
-                                        ? 'bg-emerald-50 text-emerald-700'
-                                        : item.status === 'Delayed'
-                                        ? 'bg-amber-50 text-amber-700'
-                                        : 'bg-slate-100 text-slate-600'
-                                    }`}
-                                  >
-                                    {item.status}
-                                  </span>
+                                  {item.is_duplicate ? (
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 w-fit">
+                                        <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
+                                        <span>{'Duplicate - Skipped'}</span>
+                                      </span>
+                                      <span
+                                        className="text-[9px] text-amber-700 font-normal truncate max-w-[150px]"
+                                        title={item.duplicate_reason}
+                                      >
+                                        {item.duplicate_reason || 'Already enrolled'}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                                      <span>{'New Student'}</span>
+                                    </span>
+                                  )}
                                 </td>
-                                <td className="py-2 px-2.5 font-mono text-[#043264] font-semibold">
-                                  {item.student_code}
+                                <td className="py-2 px-2.5 font-mono">
+                                  {item.is_duplicate ? (
+                                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-100/60 px-1 py-0.5 rounded border border-amber-200">
+                                      {item.matched_student_code ? `Exists: ${item.matched_student_code}` : item.student_code}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[#043264] font-semibold">
+                                      {item.student_code}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="py-2 px-2 text-center">
                                   <button
@@ -2612,39 +2769,57 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                       </div>
                       {previewStudents.length > 50 && (
                         <div className="p-2.5 bg-slate-50 border-t border-slate-200 text-center text-[11px] text-slate-500 font-medium">
-                          {`Showing first 50 rows of ${previewStudents.length} students. All ${previewStudents.length} records will be imported.`}
+                          {`Showing first 50 rows of ${previewStudents.length} records. All ${previewStudents.length} records will be processed.`}
                         </div>
                       )}
                     </div>
 
-                    {/* Bottom Actions */}
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                      <span className="text-xs text-slate-500 font-semibold">
-                        {`Target: ${previewStudents.length} students ready to enroll`}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setShowAddModal(false)}
-                          className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
-                        >
-                          {'Cancel'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleBulkImportSubmit}
-                          disabled={bulkImporting || previewStudents.length === 0}
-                          className="px-5 py-2.5 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-2"
-                        >
-                          <FileSpreadsheet className="w-4 h-4" />
-                          <span>
-                            {bulkImporting
-                              ? 'Importing...'
-                              : `Import ${previewStudents.length} Students into KAPLA`}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
+                    {/* Bottom Actions with Deduplication Summary */}
+                    {(() => {
+                      const importableCount = autoSkipDuplicates
+                        ? previewStudents.filter((s) => !s.is_duplicate).length
+                        : previewStudents.length;
+                      const skippedCount = previewStudents.length - importableCount;
+
+                      return (
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                          <div className="flex flex-col text-xs text-slate-500 font-semibold">
+                            <span className="text-slate-800">
+                              {`Target: ${importableCount} new student profile(s) ready to enroll`}
+                            </span>
+                            {skippedCount > 0 && (
+                              <span className="text-[11px] text-amber-700 font-normal">
+                                {`🛡️ ${skippedCount} duplicate student(s) will be automatically skipped`}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowAddModal(false)}
+                              className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
+                            >
+                              {'Cancel'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleBulkImportSubmit}
+                              disabled={bulkImporting || importableCount === 0}
+                              className="px-5 py-2.5 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-2"
+                            >
+                              <FileSpreadsheet className="w-4 h-4" />
+                              <span>
+                                {bulkImporting
+                                  ? 'Importing...'
+                                  : importableCount === 0
+                                  ? '0 New Students (All Duplicates Skipped)'
+                                  : `Import ${importableCount} New Students into KAPLA`}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="p-6 text-center text-slate-400 border border-slate-200 rounded-xl bg-slate-50/50">

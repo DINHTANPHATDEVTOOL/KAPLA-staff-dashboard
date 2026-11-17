@@ -164,6 +164,73 @@ function runTests() {
   const allClasses = MockStorageService.getClasses();
   assert(allClasses.some((c) => c.name === 'PH-L6-0029'), 'Class PH-L6-0029 is now present in database');
 
+  // --- TEST 7: Anti-Duplicate Protection in Manual Add ---
+  console.log('\n--- TEST 7: Anti-Duplicate Validation for Manual Single Student Add ---');
+  let duplicateCaught = false;
+  try {
+    // Attempting to add duplicate student "Tran Thai Binh" who is already in database
+    MockStorageService.addStudent({
+      branch_id: branchId,
+      student_code: 'KAP-PH-999',
+      full_name: 'Trần Thái Bình',
+      nickname: 'Leo',
+      date_of_birth: '2018-05-15',
+      gender: 'male',
+      parent_name: 'Parent',
+      parent_phone: '0901234567',
+      tuition_expiry_date: '2026-12-31',
+      status: 'active',
+      current_class_id: targetClassId
+    });
+  } catch (err: any) {
+    duplicateCaught = true;
+    assert(err.message.includes('Duplicate Record'), `Error correctly flags duplicate: "${err.message}"`);
+  }
+  assert(duplicateCaught, 'Adding an already existing student was blocked by MockStorageService.addStudent');
+
+  // --- TEST 8: Anti-Duplicate Protection in DotB Sheet / File Bulk Import ---
+  console.log('\n--- TEST 8: Anti-Duplicate Engine in DotB Class Export & Bulk Import ---');
+  assert(parseResult.totalNew === 426, `Deduplication accurately found 426 unique students (Found: ${parseResult.totalNew})`);
+  assert(parseResult.totalDuplicates === 932, `Deduplication accurately identified 932 duplicate rows across classes (Found: ${parseResult.totalDuplicates})`);
+  
+  // Verify that duplicate rows in parseResult have is_duplicate = true
+  const duplicateRecords = parseResult.students.filter((s: any) => s.is_duplicate);
+  assert(duplicateRecords.length === 932, `All 932 duplicate items tagged with is_duplicate = true`);
+  assert(duplicateRecords[0].duplicate_reason !== undefined, `Duplicate reason provided: "${duplicateRecords[0].duplicate_reason}"`);
+
+  // Verify bulk import with deduplication ignores duplicate profiles
+  const sampleBatch = [
+    {
+      branch_id: branchId,
+      student_code: 'KAP-PH-001', // existing code
+      full_name: 'Trần Thái Bình',
+      nickname: 'Leo',
+      date_of_birth: '2018-05-15',
+      gender: 'male' as const,
+      parent_name: 'Parent',
+      parent_phone: '',
+      tuition_expiry_date: '2026-12-31',
+      status: 'active' as const,
+      current_class_id: targetClassId
+    },
+    {
+      branch_id: branchId,
+      student_code: 'KAP-PH-NEW-01',
+      full_name: 'Vũ Hoàng Nam',
+      nickname: 'Victor',
+      date_of_birth: '2019-01-10',
+      gender: 'male' as const,
+      parent_name: 'Parent',
+      parent_phone: '',
+      tuition_expiry_date: '2026-12-31',
+      status: 'active' as const,
+      current_class_id: targetClassId
+    }
+  ];
+  const bulkResult = MockStorageService.addStudentsBulk(sampleBatch);
+  assert(bulkResult.length === 1, `Bulk import skipped duplicate and only created 1 new student (Created: ${bulkResult.length})`);
+  assert(bulkResult[0].full_name === 'Vũ Hoàng Nam', `Correct new student imported: ${bulkResult[0].full_name}`);
+
   console.log('\n======================================================================');
   console.log(`  🎉 ALL ${passed}/${total} STUDENT ADD & BULK IMPORT TESTS PASSED (100%)!`);
   console.log('======================================================================\n');
