@@ -16,7 +16,6 @@ import {
   Filter,
   AlertTriangle,
   Shield,
-  Sparkles,
   ChevronRight,
   User,
   GraduationCap,

@@ -11,7 +11,6 @@ import {
   Clock,
   AlertTriangle,
   ShieldCheck,
-  Sparkles,
   RefreshCw,
   Search,
   Filter,

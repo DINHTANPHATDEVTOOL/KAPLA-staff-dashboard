@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   ClipboardCheck,
   MessageSquare,
-  Sparkles,
+  Award,
   BookOpen,
   ArrowRightLeft,
   CheckCircle2,
@@ -537,7 +537,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
         {latestAssessment && (
           <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#043264]" />
+              <Award className="w-4 h-4 text-[#043264]" />
               <span className="font-bold text-slate-800">
                 {'Latest 4-Skill Competency'} ({tDb(latestAssessment.period)} - {latestAssessment.assessment_date}):
               </span>

@@ -12,7 +12,6 @@ import {
   LogOut,
   CheckCircle2,
   Bell,
-  Sparkles,
   Mail,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';

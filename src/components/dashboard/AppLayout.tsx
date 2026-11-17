@@ -20,7 +20,7 @@ import { AutomatedEmailsView } from './AutomatedEmailsView';
 import { DashboardNavSection, UserProfile } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { MockStorageService, realSupabase } from '../../lib/supabase';
-import { Construction, Sparkles } from 'lucide-react';
+import { Construction, Shield } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const { currentBranch, refreshProfile, profile, activeRole } = useAuth();
@@ -98,7 +98,7 @@ export const AppLayout: React.FC = () => {
           onClick={() => setActiveSection('staff_roles')}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Shield className="w-3.5 h-3.5" />
           Explore Staff Roles & Permissions Module (T02)
         </button>
       </div>

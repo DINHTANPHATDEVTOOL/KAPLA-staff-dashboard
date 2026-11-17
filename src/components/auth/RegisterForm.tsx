@@ -19,7 +19,6 @@ import {
   KeyRound,
   RefreshCw,
   Send,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';

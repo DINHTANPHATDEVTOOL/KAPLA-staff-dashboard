@@ -18,7 +18,6 @@ import {
   AlertCircle,
   Building2,
   Calendar,
-  Sparkles,
   Search,
 } from 'lucide-react';
 import { Branch, ClassRoom, StaffDirectoryItem, StaffRole, ALL_STAFF_ROLES, ROLE_LABELS } from '../../types';
@@ -580,20 +579,6 @@ export const BranchesClassesView: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Whole-Class Cascading Notice */}
-            {editingClass && (
-              <div className="px-6 pt-4">
-                <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-start gap-2.5 text-xs text-blue-900">
-                  <Sparkles className="w-4 h-4 text-[#026fd7] shrink-0 mt-0.5" />
-                  <p>
-                    <span className="font-bold">Whole-Class Level Advancement:</span> Changing the
-                    class code or level automatically updates all enrolled students, cohort notes, and
-                    advances the entire cohort together.
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* Form */}
             <form onSubmit={handleSaveClass} className="p-6 space-y-4">

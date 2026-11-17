@@ -16,7 +16,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Sparkles,
   X,
   Target,
   Edit,

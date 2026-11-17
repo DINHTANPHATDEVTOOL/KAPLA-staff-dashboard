@@ -11,7 +11,6 @@ import {
   Building2,
   BookOpen,
   Cpu,
-  Sparkles,
   ZoomIn,
   X,
   Maximize2,
@@ -153,7 +152,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
         <div className="relative z-10 my-auto py-6 space-y-4 max-w-lg">
           {/* Oxford Quality Accreditation Pill */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-200 text-xs font-semibold tracking-wide backdrop-blur-md shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <Award className="w-3.5 h-3.5 text-amber-300" />
             <span>{t('brand.oxfordBadge', 'Certified Oxford Quality 2025–2028 • Oxford University Press')}</span>
           </div>
 

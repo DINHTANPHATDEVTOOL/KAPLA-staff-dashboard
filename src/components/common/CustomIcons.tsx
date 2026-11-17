@@ -11,7 +11,6 @@ import {
   HeartHandshake,
   UserCheck,
   Award,
-  Sparkles,
   LucideIcon,
 } from 'lucide-react';
 
@@ -163,7 +162,7 @@ export const RoleBadgeIcon: React.FC<RoleBadgeProps> = ({ role, size = 'sm', cla
           className={`rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-xs ring-1 ring-white/20 shrink-0 ${sizeClasses} ${className}`}
           title="TA / Teaching Assistant"
         >
-          <Sparkles className={iconSizes} />
+          <UserCheck className={iconSizes} />
         </div>
       );
     case 'supplementary_teacher':

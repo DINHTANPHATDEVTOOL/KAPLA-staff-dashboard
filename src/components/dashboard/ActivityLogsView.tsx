@@ -15,7 +15,6 @@ import {
   FileText,
   AlertTriangle,
   CheckCircle2,
-  Sparkles,
   Edit,
   X,
   Save,

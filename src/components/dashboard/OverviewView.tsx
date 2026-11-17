@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Clock,
   GraduationCap,
-  Sparkles,
+  Star,
   ArrowUpRight,
   ChevronRight,
   BookOpen,
@@ -220,7 +220,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate }) => {
                 <span>{t('overview.campusHeroAttendance', 'Attendance: 96.8%')}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-xs text-white">
-                <Sparkles className="w-3.5 h-3.5 text-sky-300" />
+                <Star className="w-3.5 h-3.5 text-amber-300" />
                 <span>{t('overview.campusHeroSatisfaction', 'Satisfaction: 4.9/5.0')}</span>
               </div>
             </div>

@@ -13,7 +13,6 @@ import {
   AlertCircle,
   PhoneCall,
   Calendar,
-  Sparkles,
   Check,
   Search,
   Filter,

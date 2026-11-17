@@ -3,7 +3,7 @@
 // ==============================================================================
 
 import React, { useState } from 'react';
-import { Clock, ShieldAlert, RefreshCw, LogOut, CheckCircle2, Building, User, Mail, Sparkles } from 'lucide-react';
+import { Clock, ShieldAlert, RefreshCw, LogOut, CheckCircle2, Building, User, Mail } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { AuthLayout } from './AuthLayout';
@@ -156,7 +156,7 @@ export const PendingApprovalScreen: React.FC = () => {
               disabled={fastApproving}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <CheckCircle2 className="w-3.5 h-3.5" />
               {fastApproving ? 'Activating...' : '⚡ Quick Approve this account as HRT [Demo Mode]'}
             </button>
           )}

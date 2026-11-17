@@ -21,7 +21,6 @@ import {
   X,
   ChevronRight,
   Shield,
-  Sparkles,
   Edit,
   Trash2,
   User,
@@ -35,6 +34,7 @@ import {
   BookOpen,
   Layers,
   Award,
+  Database,
   CalendarRange,
   ClipboardCheck,
   FileSpreadsheet,
@@ -1919,7 +1919,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                         </div>
                         {isSpecificHrt ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200 mt-0.5">
-                            <Sparkles className="w-2.5 h-2.5" />
+                            <Shield className="w-2.5 h-2.5" />
                             <span>Designated HRT</span>
                           </span>
                         ) : (
@@ -2217,18 +2217,11 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 <span className="p-2 rounded-xl bg-blue-50 text-[#043264] border border-blue-100">
                   <GraduationCap className="w-5 h-5 text-[#043264]" />
                 </span>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
-                    {addModalTab === 'bulk'
-                      ? 'Import Students from DotB Sheet / File'
-                      : 'Add New Student Record'}
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    {addModalTab === 'bulk'
-                      ? 'Parse DotB class report exports (.xls/.csv) with automatic nickname & cohort mapping'
-                      : 'Streamlined profile enrollment prioritized by Student Name & Nickname'}
-                  </p>
-                </div>
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                  {addModalTab === 'bulk'
+                    ? 'Import Students from DotB Sheet'
+                    : 'Add New Student Record'}
+                </h3>
               </div>
               <button
                 type="button"
@@ -2244,28 +2237,28 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <button
                 type="button"
                 onClick={() => setAddModalTab('single')}
-                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`pb-2.5 px-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
                   addModalTab === 'single'
-                    ? 'border-[#043264] text-[#043264]'
+                    ? 'border-[#026fd7] text-[#026fd7]'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <User className="w-4 h-4" />
-                <span>{'Single Student Profile'}</span>
+                <span>{'Single Student Record'}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setAddModalTab('bulk')}
-                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`pb-2.5 px-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
                   addModalTab === 'bulk'
-                    ? 'border-[#043264] text-[#043264]'
+                    ? 'border-[#026fd7] text-[#026fd7]'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 <span>{'Import from DotB Sheet'}</span>
                 {dotbResult.students.length > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 text-[#043264] font-semibold">
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 text-[#026fd7] font-semibold">
                     {dotbResult.students.length}
                   </span>
                 )}
@@ -2275,20 +2268,24 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
             {/* TAB 1: SINGLE STUDENT FORM */}
             {addModalTab === 'single' && (
               <form onSubmit={handleCreateStudent} className="space-y-3.5 pt-4 text-xs">
-                <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/70 text-[11px] text-blue-900 flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-[#043264] shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">{'Quick Student Profile Enrollment:'}</span>
-                    <p className="text-blue-800 mt-0.5">
-                      {'Prioritized by Student Full Name and Nickname per CM requirement. Tuition Expiry can be left blank and updated later.'}
-                    </p>
-                  </div>
-                </div>
-
+                {/* Row 1: Student Code & Full Name */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Student Full Name *'}
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Student Code <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newStudent.student_code}
+                      onChange={(e) => setNewStudent({ ...newStudent, student_code: e.target.value })}
+                      placeholder="E.g., KAP-PH-008"
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7] font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Full Name <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -2296,10 +2293,10 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                       value={newStudent.full_name}
                       onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
                       placeholder="E.g., Alexander William"
-                      className={`w-full px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 bg-white ${
+                      className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7] ${
                         singleStudentDuplicate
-                          ? 'border-amber-400 focus:ring-amber-300 ring-1 ring-amber-200'
-                          : 'border-slate-300 focus:ring-[#043264]/20'
+                          ? 'border-amber-400 ring-1 ring-amber-200'
+                          : 'border-slate-300'
                       }`}
                     />
                     {singleStudentDuplicate && (
@@ -2307,7 +2304,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                         <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
                           <span className="font-bold text-[11px] text-amber-900">
-                            {'⚠️ Duplicate Student Detected in Directory!'}
+                            {'Duplicate Student Detected in Directory'}
                           </span>
                           <p className="text-[10px] text-amber-800 leading-tight">
                             {`A student named "${singleStudentDuplicate.full_name}" is already registered in the system.`}
@@ -2331,31 +2328,60 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Row 2: Nickname & Date of Birth */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Nickname (English Name / Class Alias)'}
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Nickname / English Name
                     </label>
                     <input
                       type="text"
                       value={newStudent.nickname}
                       onChange={(e) => setNewStudent({ ...newStudent, nickname: e.target.value })}
-                      placeholder="E.g., Leo, Jenny, Alex, Tom..."
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                      placeholder="E.g., Leo, Jenny, Alex, Tom"
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      value={newStudent.date_of_birth}
+                      onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
                     />
                   </div>
                 </div>
 
+                {/* Row 3: Gender & Class Cohort */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Class Cohort'}
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Gender
+                    </label>
+                    <select
+                      value={newStudent.gender}
+                      onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Class Cohort
                     </label>
                     <select
                       value={newStudent.current_class_id}
                       onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
                     >
-                      <option value="">{'-- Unassigned --'}</option>
+                      <option value="">-- Select Class Cohort --</option>
                       {classes.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name} ({c.level})
@@ -2363,117 +2389,80 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Student Code *'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newStudent.student_code}
-                      onChange={(e) => setNewStudent({ ...newStudent, student_code: e.target.value })}
-                      placeholder="E.g., KAP-PH-010"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-mono bg-white"
-                    />
-                  </div>
                 </div>
 
+                {/* Row 4: Assigned HRT & Tuition Expiry Date */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Date of Birth'}
-                    </label>
-                    <input
-                      type="date"
-                      value={newStudent.date_of_birth}
-                      onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Gender'}
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Assigned HRT
                     </label>
                     <select
-                      value={newStudent.gender}
-                      onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                      value={newStudent.assigned_hrt_id}
+                      onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
                     >
-                      <option value="male">{'Male'}</option>
-                      <option value="female">{'Female'}</option>
+                      <option value="">Class Default HRT</option>
+                      {hrtStaffs.map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {h.full_name}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Tuition Expiry Date'}
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Tuition Expiry Date
                     </label>
                     <input
                       type="date"
                       value={newStudent.tuition_expiry_date}
                       onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                      className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
                     />
-                    <span className="text-[10px] text-slate-500 mt-0.5 block">
-                      {'Leave blank to set or update later in directory.'}
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      Optional: Leave blank to set or update later
                     </span>
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">
-                      {'Designated HRT'}
-                    </label>
-                    <select
-                      value={newStudent.assigned_hrt_id}
-                      onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                    >
-                      <option value="">{'Class Default'}</option>
-                      {hrtStaffs.map((h) => (
-                        <option key={h.id} value={h.id}>
-                          {h.full_name} (HRT)
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
 
+                {/* Row 5: Academic Notes */}
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Academic Notes'}
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Notes
                   </label>
                   <textarea
                     rows={2}
                     value={newStudent.notes}
                     onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
-                    placeholder={'Student characteristics, learning goals, parent expectations...'}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                    placeholder="Student characteristics, learning goals..."
+                    className="w-full px-3.5 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-[#026fd7] focus:ring-1 focus:ring-[#026fd7]"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                {/* Footer Buttons */}
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
+                    className="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
                   >
-                    {'Cancel'}
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting || Boolean(singleStudentDuplicate)}
-                    className={`px-4 py-2 rounded-xl text-white font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-1.5 ${
+                    className={`px-5 py-2 text-xs font-semibold text-white rounded-xl transition-all shadow-sm cursor-pointer ${
                       singleStudentDuplicate
-                        ? 'bg-amber-600 hover:bg-amber-700 cursor-not-allowed'
-                        : 'bg-[#043264] hover:bg-[#012147]'
+                        ? 'bg-amber-600 hover:bg-amber-700 cursor-not-allowed opacity-80'
+                        : 'bg-[#026fd7] hover:bg-[#025cb3]'
                     }`}
                   >
                     {singleStudentDuplicate ? (
-                      <>
+                      <span className="flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 text-white" />
-                        <span>{'Duplicate Exists in Directory'}</span>
-                      </>
+                        Duplicate Exists
+                      </span>
                     ) : submitting ? (
                       'Saving...'
                     ) : (
@@ -2492,14 +2481,14 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   <div className="md:col-span-2 p-4 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/30 flex flex-col items-center justify-center text-center hover:bg-blue-50/60 transition-colors">
                     <FileSpreadsheet className="w-8 h-8 text-[#043264] mb-2" />
                     <span className="font-bold text-slate-800 text-xs sm:text-sm">
-                      {'Upload DotB Student List Export (.xls / .xlsx / .csv)'}
+                      Upload DotB Student List Export (.xls / .xlsx / .csv)
                     </span>
                     <p className="text-[11px] text-slate-500 mt-1 max-w-md">
-                      {'Select the exported Excel/HTML file from DotB. Cohorts, student names, English nicknames, and birthdates are automatically recognized.'}
+                      Select the exported Excel file from DotB. Cohorts, student names, English nicknames, and birthdates are automatically recognized.
                     </p>
-                    <label className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#043264] hover:bg-[#012147] text-white font-semibold rounded-xl text-xs cursor-pointer shadow-xs">
+                    <label className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#026fd7] hover:bg-[#025cb3] text-white font-semibold rounded-xl text-xs cursor-pointer shadow-xs">
                       <Upload className="w-4 h-4" />
-                      <span>{'Choose Exported File'}</span>
+                      <span>Choose Exported File</span>
                       <input
                         type="file"
                         accept=".xls,.xlsx,.csv,.txt,.html"
@@ -2512,11 +2501,11 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between">
                     <div>
                       <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-amber-500" />
-                        {'Current Branch Export'}
+                        <Database className="w-4 h-4 text-[#026fd7]" />
+                        Official DotB Master
                       </span>
                       <p className="text-[11px] text-slate-500 mt-1">
-                        {'Load the official DotB master sheet (1,358 students across 131 cohorts) with 1 click.'}
+                        Load the official DotB master export (1,358 students across 131 cohorts) with 1 click.
                       </p>
                     </div>
                     <button

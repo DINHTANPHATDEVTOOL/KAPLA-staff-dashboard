@@ -14,7 +14,6 @@ import {
   Mail,
   User,
   Settings,
-  Sparkles,
   X,
   Send,
   AlertCircle,

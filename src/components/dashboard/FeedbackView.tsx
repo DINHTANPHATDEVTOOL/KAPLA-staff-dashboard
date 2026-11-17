@@ -16,7 +16,7 @@ import {
   User,
   Building2,
   Calendar,
-  Sparkles,
+  Smartphone,
   X,
   Send,
   MessageCircle,
@@ -65,7 +65,7 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
     phone: { label: 'Phone Call', icon: Phone },
     zalo: { label: 'Zalo', icon: MessageCircle },
     in_person: { label: 'In-Person Meeting', icon: User },
-    app: { label: 'Parent App', icon: Sparkles },
+    app: { label: 'Parent App', icon: Smartphone },
     email: { label: 'Email', icon: Mail },
   }), [language]);
 

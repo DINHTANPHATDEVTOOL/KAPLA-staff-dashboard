@@ -13,7 +13,6 @@ import {
   UserCheck,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   ArrowRight,
   X,
   FileCheck2,
