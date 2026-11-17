@@ -1717,7 +1717,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                   </th>
                   <th className="py-3 px-3">Tuition Expiry</th>
                   <th className="py-3 px-3">Assigned HRT</th>
-                  {(canEditStudent || canDeleteStudent) && <th className="py-3 px-3 text-right">Actions</th>}
+                  <th className="py-3 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

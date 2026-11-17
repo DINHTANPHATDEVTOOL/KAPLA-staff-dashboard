@@ -47,6 +47,13 @@ interface AutomatedEmailsViewProps {
 
 export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavigate }) => {
   const { profile, activeRole } = useAuth();
+  const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isSOO = (activeRole as string) === 'SOO';
+  const canManageEmailConfig = isSysAdmin || isCM;
+  const canSendTestEmail = isSysAdmin || isCM || isHT || isSOO;
+
   const [logs, setLogs] = useState<EmailDispatchLogEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -302,9 +309,11 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
       </div>
 
       {/* Two Column Layout: Configuration & Live Test Sender */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Column 1: Multi-Provider Dispatcher Settings */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
+      {(canManageEmailConfig || canSendTestEmail) && (
+        <div className={`grid grid-cols-1 ${canManageEmailConfig && canSendTestEmail ? 'lg:grid-cols-2' : ''} gap-6`}>
+          {/* Column 1: Multi-Provider Dispatcher Settings */}
+          {canManageEmailConfig && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
           {/* Engine Selector Tabs */}
           <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl border border-slate-200/60">
             <button
@@ -513,9 +522,11 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
             </form>
           )}
         </div>
+        )}
 
         {/* Column 2: Send Live Test Notification */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
+        {canSendTestEmail && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-emerald-50 text-emerald-700">
@@ -587,7 +598,9 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
             </div>
           </form>
         </div>
+        )}
       </div>
+      )}
 
       {/* Dispatched Emails Outbox History */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">

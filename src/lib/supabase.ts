@@ -57,12 +57,53 @@ if (typeof globalThis.localStorage === 'undefined') {
   };
 }
 
+if (typeof (globalThis as any).WebSocket === 'undefined') {
+  class NodeDummyWebSocket {
+    static CONNECTING = 0;
+    static OPEN = 1;
+    static CLOSING = 2;
+    static CLOSED = 3;
+    readyState = 3;
+    onopen: any = null;
+    onclose: any = null;
+    onerror: any = null;
+    onmessage: any = null;
+    constructor(_url?: string) {}
+    send() {}
+    close() {}
+    addEventListener() {}
+    removeEventListener() {}
+  }
+  (globalThis as any).WebSocket = NodeDummyWebSocket;
+}
+
 const isDev = Boolean(env.DEV || env.NODE_ENV !== 'production');
-const rawSupabaseUrl = String(env.VITE_SUPABASE_URL || '')
-  .trim()
+export const DEFAULT_CLOUD_SUPABASE_URL = 'https://kzyrpbuoehwtlffelpxs.supabase.co';
+export const DEFAULT_CLOUD_SUPABASE_ANON_KEY = 'sb_publishable_WTt5wBZDemqTJu74efq1Uw_FZREcmKe';
+
+let candidateUrl = String(env.VITE_SUPABASE_URL || '').trim();
+let candidateKey = String(env.VITE_SUPABASE_ANON_KEY || '').trim();
+
+// In production or when env vars are missing/placeholder/localhost, fallback to the live Cloud Supabase
+const isRemoteHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+const isCandidatePlaceholder =
+  !candidateUrl ||
+  candidateUrl.includes('PROJECT_REF') ||
+  candidateUrl.includes('your-project') ||
+  candidateUrl.includes('dummy');
+const isCandidateLocalhost = candidateUrl.includes('127.0.0.1') || candidateUrl.includes('localhost');
+
+if (isCandidatePlaceholder || (isRemoteHttps && isCandidateLocalhost)) {
+  candidateUrl = DEFAULT_CLOUD_SUPABASE_URL;
+  if (!candidateKey || candidateKey.includes('KHOA_PUBLISHABLE_HOAC_ANON') || candidateKey.includes('dummy')) {
+    candidateKey = DEFAULT_CLOUD_SUPABASE_ANON_KEY;
+  }
+}
+
+const rawSupabaseUrl = candidateUrl
   .replace(/\/rest\/v1\/?$/, '')
   .replace(/\/+$/, '');
-const rawSupabaseAnonKey = String(env.VITE_SUPABASE_ANON_KEY || '').trim();
+const rawSupabaseAnonKey = candidateKey;
 
 // Check if credentials are placeholders or dummy values
 export const isPlaceholderUrl =
@@ -78,7 +119,6 @@ export const isPlaceholderKey =
   rawSupabaseAnonKey.includes('your_actual_anon_public_key');
 
 // In production hosted over HTTPS (e.g. Netlify), http://127.0.0.1 or localhost is blocked as Mixed Content
-const isRemoteHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
 const isLocalhostUrl = rawSupabaseUrl.includes('127.0.0.1') || rawSupabaseUrl.includes('localhost');
 const isBlockedLocalhostOnHttps = isRemoteHttps && isLocalhostUrl;
 
@@ -2972,14 +3012,21 @@ export const StudentService = {
 
       const { data, error } = await query;
       if (!error && data) {
-        return data.map((s: any) => ({
-          ...s,
-          effective_hrt_name: s.assigned_hrt
-            ? `${s.assigned_hrt.full_name} (Dedicated HRT)`
-            : s.current_class?.default_hrt_name
-              ? `${s.current_class.default_hrt_name} (Class Default)`
-              : 'Unassigned',
-        }));
+        return data.map((s: any) => {
+          const nickMatch = (s.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
+          const nickname = s.nickname || (nickMatch ? nickMatch[1].trim() : undefined);
+          const tuitionExpiry = s.tuition_expiry_date === '1970-01-01' ? '' : (s.tuition_expiry_date || '');
+          return {
+            ...s,
+            nickname,
+            tuition_expiry_date: tuitionExpiry,
+            effective_hrt_name: s.assigned_hrt
+              ? `${s.assigned_hrt.full_name} (Dedicated HRT)`
+              : s.current_class?.default_hrt_name
+                ? `${s.current_class.default_hrt_name} (Class Default)`
+                : 'Unassigned',
+          };
+        });
       }
     }
     return MockStorageService.getStudentsForCaller(callerId, branchId, isSysAdmin, isCm);
@@ -2987,23 +3034,27 @@ export const StudentService = {
 
   async createStudent(payload: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> {
     if (realSupabase) {
+      let enrichedNotes = payload.notes || '';
+      if (payload.nickname && !enrichedNotes.includes('[Nickname:')) {
+        enrichedNotes = `[Nickname: ${payload.nickname}] ${enrichedNotes}`.trim();
+      }
+
       const { data, error } = await realSupabase
         .from('students')
         .insert({
           branch_id: payload.branch_id,
           student_code: payload.student_code,
           full_name: payload.full_name,
-          nickname: payload.nickname,
-          date_of_birth: payload.date_of_birth,
-          gender: payload.gender,
-          parent_name: payload.parent_name || 'N/A',
+          date_of_birth: payload.date_of_birth || null,
+          gender: payload.gender || 'male',
+          parent_name: payload.parent_name || '',
           parent_phone: payload.parent_phone || '',
-          parent_email: payload.parent_email,
-          tuition_expiry_date: payload.tuition_expiry_date,
+          parent_email: payload.parent_email || null,
+          tuition_expiry_date: payload.tuition_expiry_date?.trim() ? payload.tuition_expiry_date.trim() : '1970-01-01',
           status: payload.status || 'active',
-          current_class_id: payload.current_class_id,
-          assigned_hrt_id: payload.assigned_hrt_id,
-          notes: payload.notes,
+          current_class_id: payload.current_class_id || null,
+          assigned_hrt_id: payload.assigned_hrt_id || null,
+          notes: enrichedNotes || null,
         })
         .select('*, branch:branches(*), current_class:classes(*)')
         .single();
@@ -3017,32 +3068,43 @@ export const StudentService = {
           status: 'active',
         });
       }
-      return data;
+      const nickMatch = (data.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
+      return {
+        ...data,
+        nickname: data.nickname || (nickMatch ? nickMatch[1].trim() : payload.nickname),
+        tuition_expiry_date: data.tuition_expiry_date === '1970-01-01' ? '' : data.tuition_expiry_date,
+      };
     }
     return MockStorageService.addStudent(payload);
   },
 
   async createStudentsBulk(payloads: Omit<Student, 'id' | 'created_at' | 'updated_at'>[]): Promise<Student[]> {
     if (realSupabase) {
-      const toInsert = payloads.map((p) => ({
-        branch_id: p.branch_id,
-        student_code: p.student_code,
-        full_name: p.full_name,
-        nickname: p.nickname,
-        date_of_birth: p.date_of_birth,
-        gender: p.gender,
-        parent_name: p.parent_name || 'N/A',
-        parent_phone: p.parent_phone || '',
-        parent_email: p.parent_email,
-        tuition_expiry_date: p.tuition_expiry_date,
-        status: p.status || 'active',
-        current_class_id: p.current_class_id,
-        assigned_hrt_id: p.assigned_hrt_id,
-        notes: p.notes,
-      }));
+      const toInsert = payloads.map((p) => {
+        let enrichedNotes = p.notes || '';
+        if (p.nickname && !enrichedNotes.includes('[Nickname:')) {
+          enrichedNotes = `[Nickname: ${p.nickname}] ${enrichedNotes}`.trim();
+        }
+        return {
+          branch_id: p.branch_id,
+          student_code: p.student_code,
+          full_name: p.full_name,
+          date_of_birth: p.date_of_birth || null,
+          gender: p.gender || 'male',
+          parent_name: p.parent_name || '',
+          parent_phone: p.parent_phone || '',
+          parent_email: p.parent_email || null,
+          tuition_expiry_date: p.tuition_expiry_date?.trim() ? p.tuition_expiry_date.trim() : '1970-01-01',
+          status: p.status || 'active',
+          current_class_id: p.current_class_id || null,
+          assigned_hrt_id: p.assigned_hrt_id || null,
+          notes: enrichedNotes || null,
+        };
+      });
+
       const { data, error } = await realSupabase
         .from('students')
-        .insert(toInsert)
+        .upsert(toInsert, { onConflict: 'branch_id,student_code' })
         .select('*, branch:branches(*), current_class:classes(*)');
       if (error) throw error;
 
@@ -3057,7 +3119,14 @@ export const StudentService = {
       if (enrollmentsToInsert.length > 0) {
         await realSupabase.from('enrollments').insert(enrollmentsToInsert);
       }
-      return data || [];
+      return (data || []).map((s: any) => {
+        const nickMatch = (s.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
+        return {
+          ...s,
+          nickname: s.nickname || (nickMatch ? nickMatch[1].trim() : undefined),
+          tuition_expiry_date: s.tuition_expiry_date === '1970-01-01' ? '' : s.tuition_expiry_date,
+        };
+      });
     }
     return MockStorageService.addStudentsBulk(payloads);
   },
@@ -3090,16 +3159,26 @@ export const StudentService = {
   async createClassesBatch(
     payloads: { branch_id: string; name: string; level?: string }[]
   ): Promise<ClassRoom[]> {
+    if (!payloads || payloads.length === 0) return [];
     if (realSupabase) {
+      const seen = new Set<string>();
+      const uniquePayloads = payloads.filter((p) => {
+        const key = `${p.branch_id}:${p.name.trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
       const { data, error } = await realSupabase
         .from('classes')
-        .insert(
-          payloads.map((p) => ({
+        .upsert(
+          uniquePayloads.map((p) => ({
             branch_id: p.branch_id,
-            name: p.name,
+            name: p.name.trim(),
             level: p.level || 'Standard',
             status: 'active',
-          }))
+          })),
+          { onConflict: 'branch_id,name' }
         )
         .select();
       if (error) throw error;
@@ -3211,17 +3290,37 @@ export const StudentService = {
 
   async updateStudent(studentId: string, updates: Partial<Student>): Promise<Student> {
     if (realSupabase) {
+      const dbUpdates: any = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+      if ('nickname' in dbUpdates) {
+        delete dbUpdates.nickname;
+        if (updates.nickname) {
+          const currentNotes = updates.notes || '';
+          const cleaned = currentNotes.replace(/\[Nickname:\s*[^\]]+\]/gi, '').trim();
+          dbUpdates.notes = `[Nickname: ${updates.nickname}] ${cleaned}`.trim();
+        }
+      }
+      if ('tuition_expiry_date' in dbUpdates) {
+        dbUpdates.tuition_expiry_date = updates.tuition_expiry_date?.trim()
+          ? updates.tuition_expiry_date.trim()
+          : '1970-01-01';
+      }
+
       const { data, error } = await realSupabase
         .from('students')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
+        .update(dbUpdates)
         .eq('id', studentId)
         .select('*, branch:branches(*), current_class:classes(*)')
         .single();
       if (error) throw error;
-      return data;
+      const nickMatch = (data.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
+      return {
+        ...data,
+        nickname: data.nickname || (nickMatch ? nickMatch[1].trim() : updates.nickname),
+        tuition_expiry_date: data.tuition_expiry_date === '1970-01-01' ? '' : data.tuition_expiry_date,
+      };
     }
     return MockStorageService.updateStudent(studentId, updates);
   },

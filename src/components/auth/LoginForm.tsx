@@ -153,11 +153,64 @@ export const LoginForm: React.FC = () => {
             <button
               type="button"
               onClick={() => setAuthScreen('register')}
-              className="font-semibold text-[#026fd7] hover:text-[#043264] underline underline-offset-2 transition-colors"
+              className="font-semibold text-[#026fd7] hover:text-[#043264] underline underline-offset-2 transition-colors cursor-pointer"
             >
               {t('auth.registerNow', 'Register Account Now')}
             </button>
           </p>
+        </div>
+
+        {/* Quick Role Fill for Fast Multi-Account Testing */}
+        <div className="pt-3 border-t border-slate-100">
+          <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">
+            {t('auth.quickLogin', 'Quick Test Login by Role')}
+          </span>
+          <div className="grid grid-cols-2 gap-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@kapla.edu.vn');
+                setPassword('Kapla@2026');
+              }}
+              className="p-2 rounded-xl bg-blue-50/70 hover:bg-blue-100 text-[#043264] border border-blue-200/60 font-medium text-left truncate transition-colors cursor-pointer"
+            >
+              <span className="font-bold block text-[11px]">System Admin</span>
+              <span className="text-[10px] text-slate-500 truncate block font-mono">admin@kapla.edu.vn</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('cm.nhi@kapla.edu.vn');
+                setPassword('Kapla@2026');
+              }}
+              className="p-2 rounded-xl bg-emerald-50/70 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/60 font-medium text-left truncate transition-colors cursor-pointer"
+            >
+              <span className="font-bold block text-[11px]">Center Manager (CM)</span>
+              <span className="text-[10px] text-slate-500 truncate block font-mono">cm.nhi@kapla.edu.vn</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('ht.jamie@kapla.edu.vn');
+                setPassword('Kapla@2026');
+              }}
+              className="p-2 rounded-xl bg-purple-50/70 hover:bg-purple-100 text-purple-800 border border-purple-200/60 font-medium text-left truncate transition-colors cursor-pointer"
+            >
+              <span className="font-bold block text-[11px]">Head Teacher (HT)</span>
+              <span className="text-[10px] text-slate-500 truncate block font-mono">ht.jamie@kapla.edu.vn</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('hrt.minh@kapla.edu.vn');
+                setPassword('Kapla@2026');
+              }}
+              className="p-2 rounded-xl bg-amber-50/70 hover:bg-amber-100 text-amber-800 border border-amber-200/60 font-medium text-left truncate transition-colors cursor-pointer"
+            >
+              <span className="font-bold block text-[11px]">Homeroom Teacher</span>
+              <span className="text-[10px] text-slate-500 truncate block font-mono">hrt.minh@kapla.edu.vn</span>
+            </button>
+          </div>
         </div>
       </form>
     </AuthLayout>

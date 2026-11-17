@@ -8,6 +8,8 @@
 // 5. Searching students by English nickname
 // ==============================================================================
 
+import ws from 'ws';
+(globalThis as any).WebSocket = ws;
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

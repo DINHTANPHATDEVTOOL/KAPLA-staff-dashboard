@@ -779,19 +779,16 @@ export const StaffApprovalView: React.FC = () => {
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
-                                <button
-                                  type="button"
-                                  disabled={staff.id === profile?.id}
-                                  onClick={() => setDeletingStaff(staff)}
-                                  className="p-1 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-                                  title={
-                                    staff.id === profile?.id
-                                      ? 'Cannot delete yourself'
-                                      : 'Delete Account'
-                                  }
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                {staff.id !== profile?.id && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeletingStaff(staff)}
+                                    className="p-1 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                                    title={'Delete Account'}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </>
                             )}
                           </div>
