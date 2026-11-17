@@ -63,9 +63,14 @@ const getRiskConfig = (lang: 'vi' | 'en'): Record<RenewalRisk, { label: string; 
 };
 
 export const RenewalView: React.FC = () => {
-  const { currentBranch, profile } = useAuth();
+  const { currentBranch, profile, activeRole } = useAuth();
   const { t, tDb, language } = useLanguage();
   const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isSOO = (activeRole as string) === 'SOO';
+  const isHRT = activeRole === 'HRT';
+  const isEC = (activeRole as string) === 'EC' || activeRole === 'CSKH';
+  const canUpdateRenewal = isSysAdmin || isCM || isSOO || isHRT || isEC;
 
   const [records, setRecords] = useState<RenewalRecord[]>([]);
   const [config, setConfig] = useState<SystemConfig>({
@@ -614,19 +619,21 @@ export const RenewalView: React.FC = () => {
                       </td>
 
                       <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedRecord(r);
-                            setEditStatus(r.status);
-                            setEditNotes(r.notes || '');
-                            setEditPackage(r.tuition_package || '');
-                            setEditNewExpiry(r.new_expiry_date || '');
-                          }}
-                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
-                        >
-                          {'Update'}
-                        </button>
+                        {canUpdateRenewal && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRecord(r);
+                              setEditStatus(r.status);
+                              setEditNotes(r.notes || '');
+                              setEditPackage(r.tuition_package || '');
+                              setEditNewExpiry(r.new_expiry_date || '');
+                            }}
+                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                          >
+                            {'Update'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

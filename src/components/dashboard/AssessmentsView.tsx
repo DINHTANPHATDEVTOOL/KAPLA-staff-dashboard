@@ -47,8 +47,15 @@ interface AssessmentsViewProps {
 }
 
 export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIntervention }) => {
-  const { currentBranch, profile } = useAuth();
+  const { currentBranch, profile, activeRole } = useAuth();
   const { t, tDb, language } = useLanguage();
+
+  const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isHRT = activeRole === 'HRT';
+  const isTeacher = activeRole === 'Main Teacher' || activeRole === 'Supplementary Teacher';
+  const canCreateAssessment = isSysAdmin || isCM || isHT || isHRT || isTeacher;
 
   const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -387,25 +394,27 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              // Pre-select first student if available
-              if (!form.student_id && students.length > 0) {
-                const s = students[0];
-                setForm((prev) => ({
-                  ...prev,
-                  student_id: s.id,
-                  class_id: s.current_class_id || '',
-                }));
-              }
-              setShowModal(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            {t('assessments.addBtn', 'Add 4-Skill Assessment')}
-          </button>
+          {canCreateAssessment && (
+            <button
+              type="button"
+              onClick={() => {
+                // Pre-select first student if available
+                if (!form.student_id && students.length > 0) {
+                  const s = students[0];
+                  setForm((prev) => ({
+                    ...prev,
+                    student_id: s.id,
+                    class_id: s.current_class_id || '',
+                  }));
+                }
+                setShowModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              {t('assessments.addBtn', 'Add 4-Skill Assessment')}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1406,14 +1415,18 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
         student={selectedStudentForProfile}
         isOpen={Boolean(selectedStudentForProfile)}
         onClose={() => setSelectedStudentForProfile(null)}
-        onOpenAddAssessment={(stu) => {
-          setForm((prev) => ({
-            ...prev,
-            student_id: stu.id,
-            class_id: stu.current_class_id || '',
-          }));
-          setShowModal(true);
-        }}
+        onOpenAddAssessment={
+          canCreateAssessment
+            ? (stu) => {
+                setForm((prev) => ({
+                  ...prev,
+                  student_id: stu.id,
+                  class_id: stu.current_class_id || '',
+                }));
+                setShowModal(true);
+              }
+            : undefined
+        }
       />
     </div>
   );

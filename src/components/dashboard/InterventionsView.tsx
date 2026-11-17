@@ -101,6 +101,14 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
   const isHeadTeacher = activeRole === 'Head Teacher';
   const isCM = activeRole === 'CM';
   const canVerify = isSysAdmin || isHeadTeacher || isCM;
+  const canCreateIntervention =
+    isSysAdmin ||
+    isCM ||
+    isHeadTeacher ||
+    activeRole === 'HRT' ||
+    activeRole === 'Main Teacher' ||
+    activeRole === 'Supplementary Teacher' ||
+    (activeRole as string) === 'SOO';
 
   const [interventions, setInterventions] = useState<InterventionTicket[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -313,14 +321,16 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          {'Create Intervention Ticket'}
-        </button>
+        {canCreateIntervention && (
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            {'Create Intervention Ticket'}
+          </button>
+        )}
       </div>
 
       {actionAlert && (
@@ -858,14 +868,18 @@ export const InterventionsView: React.FC<InterventionsViewProps> = ({ onNavigate
         student={selectedStudentForProfile}
         isOpen={Boolean(selectedStudentForProfile)}
         onClose={() => setSelectedStudentForProfile(null)}
-        onOpenIntervention={(stu) => {
-          setNewForm((prev) => ({
-            ...prev,
-            student_id: stu.id,
-            class_id: stu.current_class_id || '',
-          }));
-          setShowCreateModal(true);
-        }}
+        onOpenIntervention={
+          canCreateIntervention
+            ? (stu) => {
+                setNewForm((prev) => ({
+                  ...prev,
+                  student_id: stu.id,
+                  class_id: stu.current_class_id || '',
+                }));
+                setShowCreateModal(true);
+              }
+            : undefined
+        }
         onOpenAddAssessment={() => onNavigate?.('assessments')}
         onOpenAddFeedback={() => onNavigate?.('feedback')}
       />

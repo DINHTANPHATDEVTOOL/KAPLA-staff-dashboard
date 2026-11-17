@@ -42,8 +42,16 @@ interface FeedbackViewProps {
 }
 
 export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
-  const { currentBranch, profile } = useAuth();
+  const { currentBranch, profile, activeRole } = useAuth();
   const { language, t, tDb } = useLanguage();
+
+  const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isHRT = activeRole === 'HRT';
+  const isSOO = (activeRole as string) === 'SOO';
+  const isEC = (activeRole as string) === 'EC' || activeRole === 'CSKH';
+  const canResolveFeedback = isSysAdmin || isCM || isHT || isHRT || isSOO || isEC;
 
   const TYPE_CONFIG: Record<FeedbackType, { label: string; icon: any; color: string }> = useMemo(() => ({
     academic_concern: { label: 'Academic Concern', icon: HelpCircle, color: 'text-amber-700 bg-amber-50 border-amber-200' },
@@ -759,18 +767,20 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                                 )}
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedFeedbackForResolve(f);
-                                  setResolveStatus(f.status === 'open' ? 'in_progress' : 'resolved');
-                                  setResolutionNotes(f.resolution_notes || '');
-                                }}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 self-start sm:self-auto cursor-pointer"
-                              >
-                                <Clock className="w-3.5 h-3.5 text-slate-500" />
-                                <span>{'Update Progress'}</span>
-                              </button>
+                              {canResolveFeedback && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedFeedbackForResolve(f);
+                                    setResolveStatus(f.status === 'open' ? 'in_progress' : 'resolved');
+                                    setResolutionNotes(f.resolution_notes || '');
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+                                >
+                                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                                  <span>{'Update Progress'}</span>
+                                </button>
+                              )}
                             </div>
 
                             <p className="text-xs text-slate-800 bg-slate-50/80 p-2.5 rounded-lg border border-slate-100 leading-relaxed">
@@ -932,20 +942,22 @@ export const FeedbackView: React.FC<FeedbackViewProps> = ({ onNavigate }) => {
                       </div>
                     </div>
 
-                    <div className="shrink-0 flex sm:flex-col gap-2 justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedFeedbackForResolve(f);
-                          setResolveStatus(f.status === 'open' ? 'in_progress' : 'resolved');
-                          setResolutionNotes(f.resolution_notes || '');
-                        }}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Clock className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{'Update Progress'}</span>
-                      </button>
-                    </div>
+                    {canResolveFeedback && (
+                      <div className="shrink-0 flex sm:flex-col gap-2 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFeedbackForResolve(f);
+                            setResolveStatus(f.status === 'open' ? 'in_progress' : 'resolved');
+                            setResolutionNotes(f.resolution_notes || '');
+                          }}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Clock className="w-3.5 h-3.5 text-slate-500" />
+                          <span>{'Update Progress'}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

@@ -31,6 +31,13 @@ export const SupplementaryView: React.FC = () => {
   const { currentBranch, profile, activeRole } = useAuth();
   const { t, tDb, language } = useLanguage();
 
+  const isSysAdmin = profile?.system_role === 'system_admin';
+  const isCM = activeRole === 'CM';
+  const isHT = activeRole === 'Head Teacher' || (activeRole as string) === 'HT';
+  const isHRT = activeRole === 'HRT';
+  const isTeacher = activeRole === 'Main Teacher' || activeRole === 'Supplementary Teacher';
+  const canScheduleSupplementary = isSysAdmin || isCM || isHT || isHRT || isTeacher;
+
   const STATUS_CONFIG: Record<SessionStatus, { label: string; color: string; badge: string }> = useMemo(() => ({
     scheduled: { label: 'Upcoming', color: 'text-blue-700', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
     completed: { label: 'Completed', color: 'text-emerald-700', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -301,14 +308,16 @@ export const SupplementaryView: React.FC = () => {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAddModal(true)}
-          className="w-full md:w-auto px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{'Schedule Tutoring Session'}</span>
-        </button>
+        {canScheduleSupplementary && (
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="w-full md:w-auto px-4 py-2 bg-[#043264] hover:bg-[#032042] text-white text-sm font-semibold rounded-lg shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{'Schedule Tutoring Session'}</span>
+          </button>
+        )}
       </div>
 
       {/* Sessions Cards Grid */}
