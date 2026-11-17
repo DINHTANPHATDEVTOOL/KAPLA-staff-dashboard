@@ -889,7 +889,7 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
                 <div>
                   <h3 className="font-bold text-slate-900 text-base">DNS Verification Guide (kapla.io.vn)</h3>
                   <p className="text-xs text-slate-500">
-                    Cấu hình 3 bản ghi DNS sau tại nhà quản lý tên miền (Cloudflare / TenTen / PA Vietnam) để kích hoạt no-reply@kapla.io.vn
+                    Configure the 3 DNS records below in your domain DNS manager (Cloudflare / Namecheap / Google Domains) to authenticate no-reply@kapla.io.vn
                   </p>
                 </div>
               </div>
@@ -906,25 +906,25 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
               <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-blue-900 text-xs leading-relaxed space-y-1">
                 <div className="font-bold flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-blue-600" />
-                  <span>Tại sao cần cài đặt các bản ghi DNS này?</span>
+                  <span>Why are these DNS records required?</span>
                 </div>
                 <p>
-                  Các bản ghi này xác minh với các máy chủ nhận mail toàn cầu (Google Workspace, Microsoft 365, iCloud) rằng hệ thống KAPLA có quyền hợp pháp phát thư từ tên miền <strong>kapla.io.vn</strong>, giúp thư vào thẳng Inbox 100% và không bao giờ bị đánh dấu là Spam.
+                  These records verify with global mail servers (Google Workspace, Microsoft 365, iCloud) that KAPLA is authorized to send emails from <strong>kapla.io.vn</strong>, guaranteeing inbox delivery and avoiding spam filters.
                 </p>
               </div>
 
               {/* DNS Records Table */}
               <div className="space-y-3">
-                <h4 className="font-bold text-slate-900 text-sm">3 Bản ghi DNS cần thêm vào tên miền kapla.io.vn:</h4>
+                <h4 className="font-bold text-slate-900 text-sm">3 DNS records to add for kapla.io.vn:</h4>
 
                 {/* Record 1: DKIM */}
                 <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 flex items-center gap-1.5">
                       <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-100 text-purple-800 border border-purple-200">TXT</span>
-                      1. DKIM Record (Chữ ký mật mã chống sửa đổi thư)
+                      1. DKIM Record (Cryptographic signature against tampering)
                     </span>
-                    <span className="text-[11px] text-emerald-700 font-semibold">Bắt buộc</span>
+                    <span className="text-[11px] text-emerald-700 font-semibold">Required</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-[11px]">
                     <div>
@@ -969,9 +969,9 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 flex items-center gap-1.5">
                       <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 text-blue-800 border border-blue-200">MX</span>
-                      2. SPF Return-Path Record (Xác thực máy chủ phát thư)
+                      2. SPF / Return-Path Record (Mail server authorization)
                     </span>
-                    <span className="text-[11px] text-emerald-700 font-semibold">Bắt buộc</span>
+                    <span className="text-[11px] text-emerald-700 font-semibold">Required</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-[11px]">
                     <div>
@@ -1016,9 +1016,9 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800 flex items-center gap-1.5">
                       <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200">TXT</span>
-                      3. DMARC Policy (Chính sách phòng chống mạo danh)
+                      3. DMARC Policy (Anti-spoofing policy)
                     </span>
-                    <span className="text-[11px] text-emerald-700 font-semibold">Khuyến nghị</span>
+                    <span className="text-[11px] text-emerald-700 font-semibold">Recommended</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-[11px]">
                     <div>
@@ -1061,26 +1061,26 @@ export const AutomatedEmailsView: React.FC<AutomatedEmailsViewProps> = ({ onNavi
 
               {/* 4 Step Deployment Walkthrough */}
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <h5 className="font-bold text-slate-800 text-xs">Các bước tiến hành 4 bước đơn giản:</h5>
+                <h5 className="font-bold text-slate-800 text-xs">4 Easy Setup Steps:</h5>
                 <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-700">
-                  <li>Truy cập <a href="https://resend.com/signup" target="_blank" rel="noreferrer" className="text-blue-600 underline font-semibold">resend.com/signup</a> và tạo tài khoản miễn phí.</li>
-                  <li>Vào mục <strong>Domains</strong> &rarr; Bấm <strong>Add Domain</strong> &rarr; Nhập <strong>kapla.io.vn</strong> &rarr; Chọn Region <strong>Singapore (ap-southeast-1)</strong>.</li>
-                  <li>Copy các giá trị DNS chính xác mà Resend cấp vào bảng quản lý DNS tên miền (Cloudflare / TenTen / PA Vietnam) &rarr; Bấm <strong>Verify Domain</strong> trên Resend.</li>
-                  <li>Tạo 1 <strong>API Key</strong> trên Resend (bắt đầu bằng <span className="font-mono">re_</span>) và dán vào ô cấu hình trên Dashboard KAPLA.</li>
+                  <li>Visit <a href="https://resend.com/signup" target="_blank" rel="noreferrer" className="text-blue-600 underline font-semibold">resend.com/signup</a> and create a free account.</li>
+                  <li>Navigate to <strong>Domains</strong> &rarr; Click <strong>Add Domain</strong> &rarr; Enter <strong>kapla.io.vn</strong> &rarr; Select Region <strong>Singapore (ap-southeast-1)</strong>.</li>
+                  <li>Copy the exact DNS values provided by Resend into your domain DNS manager (Cloudflare / Namecheap / Google Domains) &rarr; Click <strong>Verify Domain</strong> in Resend.</li>
+                  <li>Generate an <strong>API Key</strong> in Resend (starting with <span className="font-mono">re_</span>) and paste it into the KAPLA Dashboard settings.</li>
                 </ol>
               </div>
             </div>
 
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
               <span className="text-[11px] text-slate-500">
-                Resend Free Tier: 3,000 emails/tháng &bull; Tốc độ phát &lt; 1 giây
+                Resend Free Tier: 3,000 emails/month &bull; Dispatch latency &lt; 1 second
               </span>
               <button
                 type="button"
                 onClick={() => setShowDnsModal(false)}
                 className="px-4 py-2 bg-[#043264] hover:bg-[#032347] text-white font-semibold rounded-xl text-xs cursor-pointer"
               >
-                Đã Hiểu & Đóng Hướng Dẫn
+                Understood & Close Guide
               </button>
             </div>
           </div>

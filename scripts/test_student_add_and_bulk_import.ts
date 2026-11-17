@@ -8,8 +8,15 @@
 // 5. Searching students by English nickname
 // ==============================================================================
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { MockStorageService, StudentService } from '../src/lib/supabase';
 import { Student } from '../src/types';
+import { parseDotbExport } from '../src/utils/dotbParser';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function runTests() {
   console.log('======================================================================');
@@ -127,6 +134,35 @@ function runTests() {
 
   assert(matched.length >= 1, `Found ${matched.length} student(s) matching query "chloe"`);
   assert(matched.some((s) => s.nickname === 'Chloe'), 'Matched student contains nickname "Chloe"');
+
+  // --- TEST 5: DotB Official Export Parsing (Student list by class (2).xls) ---
+  console.log('\n--- TEST 5: Real DotB Export (.xls) Parsing Verification ---');
+  const dotbPath = path.resolve(__dirname, '../Student list by class (2).xls');
+  assert(fs.existsSync(dotbPath), 'Student list by class (2).xls exists in project root');
+
+  const dotbRaw = fs.readFileSync(dotbPath, 'utf-8');
+  const parseResult = parseDotbExport(dotbRaw, 'PH', []);
+
+  assert(parseResult.students.length >= 1300, `Successfully parsed ${parseResult.students.length} students from DotB report`);
+  assert(parseResult.classes.length >= 130, `Successfully detected ${parseResult.classes.length} classes / cohorts`);
+  assert(parseResult.totalWithNicknames >= 600, `Successfully extracted ${parseResult.totalWithNicknames} students with English nicknames`);
+  assert(parseResult.totalWithBirthdate >= 1300, `Successfully formatted ${parseResult.totalWithBirthdate} birthdates to ISO YYYY-MM-DD`);
+
+  // Verify sample student record structure
+  const sampleDoris = parseResult.students.find((s: any) => s.nickname === 'Doris');
+  assert(Boolean(sampleDoris), 'Found student with nickname "Doris" (Tran Ha An)');
+  assert(sampleDoris.date_of_birth === '2020-03-22', `Doris birthdate correctly converted from 22/03/2020 to ${sampleDoris.date_of_birth}`);
+
+  // --- TEST 6: Batch Creation of Missing Classes ---
+  console.log('\n--- TEST 6: Auto-Creation of Missing Classes in Database ---');
+  const newClassesPayload = [
+    { branch_id: branchId, name: 'PH-L6-0029', level: 'Level 6' },
+    { branch_id: branchId, name: 'PH-KPOG02-0001 (L6-8 | 6-8 tuổi)', level: 'Level 6-8' }
+  ];
+  const createdClasses = MockStorageService.createClassesBatch(newClassesPayload);
+  assert(createdClasses.length === 2, `Created/verified 2 batch classes in database`);
+  const allClasses = MockStorageService.getClasses();
+  assert(allClasses.some((c) => c.name === 'PH-L6-0029'), 'Class PH-L6-0029 is now present in database');
 
   console.log('\n======================================================================');
   console.log(`  🎉 ALL ${passed}/${total} STUDENT ADD & BULK IMPORT TESTS PASSED (100%)!`);

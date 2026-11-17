@@ -1476,6 +1476,69 @@ export class MockStorageService {
     return JSON.parse(raw);
   }
 
+  static createClass(payload: {
+    branch_id: string;
+    name: string;
+    level?: string;
+    default_hrt_id?: string;
+    default_hrt_name?: string;
+  }): ClassRoom {
+    this.ensureDevOnly();
+    const classes = this.getClasses();
+    const existing = classes.find(
+      (c) => c.name.toLowerCase() === payload.name.toLowerCase() && c.branch_id === payload.branch_id
+    );
+    if (existing) return existing;
+
+    const newClass: ClassRoom = {
+      id: 'c' + Math.random().toString(36).substring(2, 9),
+      branch_id: payload.branch_id,
+      name: payload.name,
+      level: payload.level || 'Standard',
+      default_hrt_id: payload.default_hrt_id,
+      default_hrt_name: payload.default_hrt_name,
+      status: 'active',
+      schedule: 'Standard Class Schedule',
+    };
+    classes.push(newClass);
+    localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+    this.notifyChange(STORAGE_KEYS.CLASSES);
+    return newClass;
+  }
+
+  static createClassesBatch(
+    payloads: { branch_id: string; name: string; level?: string }[]
+  ): ClassRoom[] {
+    this.ensureDevOnly();
+    if (!payloads || payloads.length === 0) return [];
+    const classes = this.getClasses();
+    const createdList: ClassRoom[] = [];
+
+    for (const p of payloads) {
+      const existing = classes.find(
+        (c) => c.name.toLowerCase() === p.name.toLowerCase() && c.branch_id === p.branch_id
+      );
+      if (existing) {
+        createdList.push(existing);
+      } else {
+        const newClass: ClassRoom = {
+          id: 'c' + Math.random().toString(36).substring(2, 9),
+          branch_id: p.branch_id,
+          name: p.name,
+          level: p.level || 'Standard',
+          status: 'active',
+          schedule: 'Standard Class Schedule',
+        };
+        classes.push(newClass);
+        createdList.push(newClass);
+      }
+    }
+
+    localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+    this.notifyChange(STORAGE_KEYS.CLASSES);
+    return createdList;
+  }
+
   static notifyChange(key?: string): void {
     if (typeof window !== 'undefined') {
       try {
@@ -2940,6 +3003,52 @@ export const StudentService = {
       return data || [];
     }
     return MockStorageService.addStudentsBulk(payloads);
+  },
+
+  async createClass(payload: {
+    branch_id: string;
+    name: string;
+    level?: string;
+    default_hrt_id?: string;
+    default_hrt_name?: string;
+  }): Promise<ClassRoom> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('classes')
+        .insert({
+          branch_id: payload.branch_id,
+          name: payload.name,
+          level: payload.level || 'Standard',
+          default_hrt_id: payload.default_hrt_id,
+          status: 'active',
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+    return MockStorageService.createClass(payload);
+  },
+
+  async createClassesBatch(
+    payloads: { branch_id: string; name: string; level?: string }[]
+  ): Promise<ClassRoom[]> {
+    if (realSupabase) {
+      const { data, error } = await realSupabase
+        .from('classes')
+        .insert(
+          payloads.map((p) => ({
+            branch_id: p.branch_id,
+            name: p.name,
+            level: p.level || 'Standard',
+            status: 'active',
+          }))
+        )
+        .select();
+      if (error) throw error;
+      return data || [];
+    }
+    return MockStorageService.createClassesBatch(payloads);
   },
 
   async transferClass(studentId: string, toClassId: string, reason: string): Promise<void> {

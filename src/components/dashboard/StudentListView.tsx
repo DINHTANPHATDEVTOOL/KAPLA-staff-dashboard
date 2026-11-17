@@ -71,6 +71,12 @@ import {
   EmailNotificationService,
 } from '../../lib/supabase';
 import { StudentProfileModal } from './StudentProfileModal';
+import {
+  parseDotbExport,
+  inferClassLevel,
+  ParsedDotbStudent,
+  DotbParseResult,
+} from '../../utils/dotbParser';
 
 interface ParsedBulkStudent {
   id: string;
@@ -321,11 +327,25 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   // Add Student Modal & Bulk Import states (Optimized per CM Phương Nhi feedback)
   const [addModalTab, setAddModalTab] = useState<'single' | 'bulk'>('single');
   const [showParentInfoSection, setShowParentInfoSection] = useState<boolean>(false);
-  const [bulkTargetClassId, setBulkTargetClassId] = useState<string>('');
+  const [showRawPasteSection, setShowRawPasteSection] = useState<boolean>(false);
   const [bulkRawText, setBulkRawText] = useState<string>('');
-  const [bulkParsed, setBulkParsed] = useState<ParsedBulkStudent[]>([]);
+  const [dotbResult, setDotbResult] = useState<DotbParseResult>({
+    students: [],
+    classes: [],
+    totalWithNicknames: 0,
+    totalWithBirthdate: 0,
+  });
+  const [bulkPreviewFilterClass, setBulkPreviewFilterClass] = useState<string>('all');
   const [bulkTuitionMonths, setBulkTuitionMonths] = useState<number>(6);
   const [bulkImporting, setBulkImporting] = useState<boolean>(false);
+  const [autoCreateMissingClasses, setAutoCreateMissingClasses] = useState<boolean>(true);
+
+  const previewStudents = useMemo(() => {
+    if (bulkPreviewFilterClass === 'all') {
+      return dotbResult.students;
+    }
+    return dotbResult.students.filter((s) => s.class_name === bulkPreviewFilterClass);
+  }, [dotbResult.students, bulkPreviewFilterClass]);
 
   // Form states
   const [newStudent, setNewStudent] = useState({
@@ -733,7 +753,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   }, [students, academicRiskStudentIds, interventions, parentPerceptionRiskStudentIds, feedbacks, renewalRiskStudentIds]);
 
   // Handlers
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = (initialTab: 'single' | 'bulk' = 'single') => {
     const nextCodes = getNextStudentCodes('PH', students, 1);
     const defaultClassId = classFilter !== 'all' ? classFilter : classes[0]?.id || '';
     setNewStudent({
@@ -750,12 +770,18 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       assigned_hrt_id: '',
       notes: '',
     });
-    setBulkTargetClassId(defaultClassId);
     setBulkRawText('');
-    setBulkParsed([]);
+    setDotbResult({
+      students: [],
+      classes: [],
+      totalWithNicknames: 0,
+      totalWithBirthdate: 0,
+    });
+    setBulkPreviewFilterClass('all');
     setBulkTuitionMonths(6);
-    setAddModalTab('single');
+    setAddModalTab(initialTab);
     setShowParentInfoSection(false);
+    setShowRawPasteSection(false);
     setShowAddModal(true);
   };
 
@@ -799,68 +825,158 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
   const handleBulkTextChange = (text: string) => {
     setBulkRawText(text);
-    const parsed = parseBulkStudentText(text, students, 'PH');
-    setBulkParsed(parsed);
+    const existingCodes = students.map((s) => s.student_code);
+    const parsed = parseDotbExport(text, 'PH', existingCodes);
+    setDotbResult(parsed);
+    setBulkPreviewFilterClass('all');
   };
 
-  const handleLoadSampleBulkData = () => {
-    const sample = `Nguyễn Minh Khôi\tLeo
-Trần Gia Hân\tJenny
-Lê Bảo Long\tAlex
-Phạm Thảo My\tChloe
-Đặng Gia Huy\tTom`;
-    setBulkRawText(sample);
-    const parsed = parseBulkStudentText(sample, students, 'PH');
-    setBulkParsed(parsed);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setBulkImporting(true);
+      const text = await file.text();
+      const existingCodes = students.map((s) => s.student_code);
+      const res = parseDotbExport(text, 'PH', existingCodes);
+      setDotbResult(res);
+      setBulkPreviewFilterClass('all');
+      setActionMessage({
+        type: 'success',
+        text: `Extracted ${res.students.length} students across ${res.classes.length} cohorts from "${file.name}"!`,
+      });
+    } catch (err: any) {
+      console.error('File parsing error:', err);
+      setActionMessage({
+        type: 'error',
+        text: `Failed to parse file: ${err.message || 'Invalid format'}`,
+      });
+    } finally {
+      setBulkImporting(false);
+      e.target.value = '';
+    }
   };
 
-  const handleRemoveParsedRow = (index: number) => {
-    setBulkParsed((prev) => prev.filter((_, i) => i !== index));
+  const handleLoadSampleDotbExport = async () => {
+    try {
+      setBulkImporting(true);
+      const resp = await fetch('/sample-dotb-export.xls');
+      if (!resp.ok) throw new Error('Could not fetch sample DotB export file');
+      const text = await resp.text();
+      const existingCodes = students.map((s) => s.student_code);
+      const res = parseDotbExport(text, 'PH', existingCodes);
+      setDotbResult(res);
+      setBulkPreviewFilterClass('all');
+      setActionMessage({
+        type: 'success',
+        text: `Loaded official DotB export: ${res.students.length} students across ${res.classes.length} cohorts detected!`,
+      });
+    } catch (err: any) {
+      console.error('Load sample error:', err);
+      setActionMessage({
+        type: 'error',
+        text: `Failed to load sample export: ${err.message || 'Unknown error'}`,
+      });
+    } finally {
+      setBulkImporting(false);
+    }
+  };
+
+  const handleRemoveParsedRow = (id: string) => {
+    setDotbResult((prev) => {
+      const remaining = prev.students.filter((s) => s.id !== id);
+      const remainingClasses = prev.classes
+        .map((c) => ({
+          ...c,
+          studentCount: remaining.filter((s) => s.class_name === c.name).length,
+        }))
+        .filter((c) => c.studentCount > 0);
+
+      return {
+        ...prev,
+        students: remaining,
+        classes: remainingClasses,
+        totalWithNicknames: remaining.filter((s) => s.nickname).length,
+        totalWithBirthdate: remaining.filter((s) => s.date_of_birth).length,
+      };
+    });
   };
 
   const handleBulkImportSubmit = async () => {
-    if (!currentBranch || bulkParsed.length === 0 || !bulkTargetClassId) return;
+    if (!currentBranch || previewStudents.length === 0) return;
     setBulkImporting(true);
     setActionMessage(null);
 
     try {
-      const targetClass = classes.find((c) => c.id === bulkTargetClassId);
+      let currentClasses = [...classes];
+      const uniqueClassNames = Array.from(new Set(previewStudents.map((s) => s.class_name)));
+
+      if (autoCreateMissingClasses) {
+        const missingClasses = uniqueClassNames.filter(
+          (name) => !currentClasses.some((c) => c.name.toLowerCase() === name.toLowerCase())
+        );
+
+        if (missingClasses.length > 0) {
+          const newClassesPayload = missingClasses.map((name) => ({
+            branch_id: currentBranch.id,
+            name,
+            level: inferClassLevel(name),
+          }));
+          const createdClasses = await StudentService.createClassesBatch(newClassesPayload);
+          currentClasses = [...currentClasses, ...createdClasses];
+          setClasses(currentClasses);
+        }
+      }
+
       const defaultExpiry = new Date(Date.now() + bulkTuitionMonths * 30 * 86400000)
         .toISOString()
         .split('T')[0];
 
-      const payloads = bulkParsed.map((item) => ({
-        branch_id: currentBranch.id,
-        student_code: item.student_code.trim(),
-        full_name: item.full_name.trim(),
-        nickname: item.nickname?.trim() || undefined,
-        gender: item.gender || 'male',
-        parent_name: item.parent_name || 'N/A',
-        parent_phone: item.parent_phone || '',
-        parent_email: undefined,
-        tuition_expiry_date: defaultExpiry,
-        status: 'active' as StudentStatus,
-        current_class_id: bulkTargetClassId,
-        assigned_hrt_id: targetClass?.default_hrt_id || undefined,
-        notes: `Imported from class sheet (${targetClass?.name || 'Class'}) on ${new Date().toLocaleDateString('vi-VN')}`,
-      }));
+      const payloads = previewStudents.map((item) => {
+        const matchedClass = currentClasses.find(
+          (c) => c.name.toLowerCase() === item.class_name.toLowerCase()
+        );
+
+        return {
+          branch_id: currentBranch.id,
+          student_code: item.student_code.trim(),
+          full_name: item.full_name.trim(),
+          nickname: item.nickname?.trim() || undefined,
+          date_of_birth: item.date_of_birth,
+          gender: item.gender || 'male',
+          parent_name: 'N/A',
+          parent_phone: '',
+          parent_email: undefined,
+          tuition_expiry_date: defaultExpiry,
+          status: 'active' as StudentStatus,
+          current_class_id: matchedClass?.id || '',
+          assigned_hrt_id: matchedClass?.default_hrt_id || undefined,
+          notes: `Imported from DotB class export [Cohort: ${item.class_name}] on ${new Date().toLocaleDateString('en-US')}`,
+        };
+      });
 
       await StudentService.createStudentsBulk(payloads);
 
       setActionMessage({
         type: 'success',
-        text: `Successfully imported ${payloads.length} students into class ${targetClass?.name || 'Class'}!`,
+        text: `Successfully imported ${payloads.length} students across ${uniqueClassNames.length} cohorts into KAPLA!`,
       });
 
       setShowAddModal(false);
-      // Auto-filter by this class so user sees the newly imported students immediately
-      setClassFilter(bulkTargetClassId);
+      if (bulkPreviewFilterClass !== 'all') {
+        const matchedClass = currentClasses.find(
+          (c) => c.name.toLowerCase() === bulkPreviewFilterClass.toLowerCase()
+        );
+        if (matchedClass) {
+          setClassFilter(matchedClass.id);
+        }
+      }
       await loadData();
     } catch (err: any) {
       console.error('Bulk import error:', err);
       setActionMessage({
         type: 'error',
-        text: err.message || 'Failed to import bulk students.',
+        text: err.message || 'Failed to import students.',
       });
     } finally {
       setBulkImporting(false);
@@ -1138,24 +1254,33 @@ Phạm Thảo My\tChloe
         </div>
 
         {canCreateStudent && (
-          <button
-            type="button"
-            onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{'Add New Student'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleOpenAddModal('bulk')}
+              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-[#043264] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors shadow-2xs cursor-pointer"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-[#043264]" />
+              <span>{'Import from DotB Sheet'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOpenAddModal('single')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-[#043264] hover:bg-[#012147] transition-colors shadow-xs cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{'Add New Student'}</span>
+            </button>
+          </div>
         )}
       </div>
 
       {actionMessage && (
         <div
-          className={`p-4 rounded-xl border flex items-center justify-between text-xs font-medium ${
-            actionMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border-rose-200'
-          }`}
+          className={`p-4 rounded-xl border flex items-center justify-between text-xs font-medium ${actionMessage.type === 'success'
+            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
         >
           <span>{actionMessage.text}</span>
           <button type="button" onClick={() => setActionMessage(null)} className="text-slate-400 hover:text-slate-600">
@@ -1235,11 +1360,10 @@ Phạm Thảo My\tChloe
             <button
               type="button"
               onClick={() => setShowDateDropdown(!showDateDropdown)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-all ${
-                dateRangeFrom || dateRangeTo || dateFieldType !== 'assessment_date'
-                  ? 'bg-blue-50 text-[#043264] border-blue-300 ring-2 ring-blue-100'
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-all ${dateRangeFrom || dateRangeTo || dateFieldType !== 'assessment_date'
+                ? 'bg-blue-50 text-[#043264] border-blue-300 ring-2 ring-blue-100'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
             >
               <Filter className="w-3.5 h-3.5 text-[#043264]" />
               <span>
@@ -1276,9 +1400,8 @@ Phạm Thảo My\tChloe
                         setDateFieldType(opt.id);
                         setShowDateDropdown(false);
                       }}
-                      className={`w-full text-left px-2.5 py-2 rounded-lg text-xs flex flex-col transition-colors ${
-                        dateFieldType === opt.id ? 'bg-blue-50 text-[#043264] font-semibold' : 'hover:bg-slate-50 text-slate-700'
-                      }`}
+                      className={`w-full text-left px-2.5 py-2 rounded-lg text-xs flex flex-col transition-colors ${dateFieldType === opt.id ? 'bg-blue-50 text-[#043264] font-semibold' : 'hover:bg-slate-50 text-slate-700'
+                        }`}
                     >
                       <span>{opt.label}</span>
                       <span className="text-[10px] text-slate-400 font-normal">{opt.desc}</span>
@@ -1399,11 +1522,10 @@ Phạm Thảo My\tChloe
           <button
             type="button"
             onClick={() => setAssessmentStatusFilter('all')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-              assessmentStatusFilter === 'all'
-                ? 'bg-[#043264] text-white shadow-2xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${assessmentStatusFilter === 'all'
+              ? 'bg-[#043264] text-white shadow-2xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
           >
             All Students ({students.length})
           </button>
@@ -1411,11 +1533,10 @@ Phạm Thảo My\tChloe
           <button
             type="button"
             onClick={() => setAssessmentStatusFilter('pending')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              assessmentStatusFilter === 'pending'
-                ? 'bg-amber-500 text-white shadow-2xs ring-2 ring-amber-300'
-                : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${assessmentStatusFilter === 'pending'
+              ? 'bg-amber-500 text-white shadow-2xs ring-2 ring-amber-300'
+              : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+              }`}
           >
             <AlertCircle className="w-3.5 h-3.5" />
             <span>⚠️ Not Evaluated Yet ({monthlyStats.pendingCount})</span>
@@ -1424,11 +1545,10 @@ Phạm Thảo My\tChloe
           <button
             type="button"
             onClick={() => setAssessmentStatusFilter('evaluated')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              assessmentStatusFilter === 'evaluated'
-                ? 'bg-emerald-600 text-white shadow-2xs'
-                : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${assessmentStatusFilter === 'evaluated'
+              ? 'bg-emerald-600 text-white shadow-2xs'
+              : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+              }`}
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>✅ Evaluated ({monthlyStats.evaluatedCount})</span>
@@ -1437,11 +1557,10 @@ Phạm Thảo My\tChloe
           <button
             type="button"
             onClick={() => setAssessmentStatusFilter('risk')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              assessmentStatusFilter === 'risk'
-                ? 'bg-rose-600 text-white shadow-2xs'
-                : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${assessmentStatusFilter === 'risk'
+              ? 'bg-rose-600 text-white shadow-2xs'
+              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+              }`}
           >
             <AlertTriangle className="w-3.5 h-3.5" />
             <span>Academic Risk ({stats.highAcademicRiskCount})</span>
@@ -1883,15 +2002,14 @@ Phạm Thảo My\tChloe
                               key={lvl}
                               type="button"
                               onClick={() => setQuickAssessForm({ ...quickAssessForm, [`${skill}_level`]: lvl })}
-                              className={`py-1 px-1.5 text-[10px] font-semibold rounded-md border text-center transition-all cursor-pointer ${
-                                isSel
-                                  ? lvl === 'Below Level'
-                                    ? 'bg-rose-500 text-white border-rose-600 shadow-2xs'
-                                    : lvl === 'Above Level'
+                              className={`py-1 px-1.5 text-[10px] font-semibold rounded-md border text-center transition-all cursor-pointer ${isSel
+                                ? lvl === 'Below Level'
+                                  ? 'bg-rose-500 text-white border-rose-600 shadow-2xs'
+                                  : lvl === 'Above Level'
                                     ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
                                     : 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-                                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                              }`}
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
                             >
                               {lvl}
                             </button>
@@ -1914,13 +2032,12 @@ Phạm Thảo My\tChloe
                       key={status}
                       type="button"
                       onClick={() => setQuickAssessForm({ ...quickAssessForm, progress_status: status })}
-                      className={`p-2 rounded-lg text-xs font-semibold border text-center transition-all cursor-pointer ${
-                        quickAssessForm.progress_status === status
-                          ? status === 'Needs Attention'
-                            ? 'bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-200'
-                            : 'bg-blue-50 text-[#043264] border-blue-300 ring-2 ring-blue-200'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                      }`}
+                      className={`p-2 rounded-lg text-xs font-semibold border text-center transition-all cursor-pointer ${quickAssessForm.progress_status === status
+                        ? status === 'Needs Attention'
+                          ? 'bg-rose-50 text-rose-700 border-rose-300 ring-2 ring-rose-200'
+                          : 'bg-blue-50 text-[#043264] border-blue-300 ring-2 ring-blue-200'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
                     >
                       {status}
                     </button>
@@ -1978,11 +2095,15 @@ Phạm Thảo My\tChloe
       )}
 
       {/* =========================================================================
-          MODAL: ADD NEW STUDENT (Streamlined 100% English per customer requirement)
+          MODAL: ADD NEW STUDENT & BULK IMPORT FROM DOTB SHEET
       ========================================================================= */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-xl border border-slate-200 max-h-[92vh] overflow-y-auto">
+          <div
+            className={`bg-white rounded-2xl w-full p-5 sm:p-6 shadow-xl border border-slate-200 max-h-[92vh] overflow-y-auto transition-all ${
+              addModalTab === 'bulk' ? 'max-w-4xl' : 'max-w-lg'
+            }`}
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
@@ -1991,10 +2112,14 @@ Phạm Thảo My\tChloe
                 </span>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
-                    {'Add New Student Record'}
+                    {addModalTab === 'bulk'
+                      ? 'Import Students from DotB Sheet / File'
+                      : 'Add New Student Record'}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    {'Streamlined profile enrollment prioritized by Student Name & Nickname'}
+                    {addModalTab === 'bulk'
+                      ? 'Parse DotB class report exports (.xls/.csv) with automatic nickname & cohort mapping'
+                      : 'Streamlined profile enrollment prioritized by Student Name & Nickname'}
                   </p>
                 </div>
               </div>
@@ -2007,214 +2132,533 @@ Phạm Thảo My\tChloe
               </button>
             </div>
 
-            {/* Single Student Add Form */}
-            <form onSubmit={handleCreateStudent} className="space-y-3.5 pt-4 text-xs">
-              <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-2">
-                <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold">{'Streamlined Student Profile Form:'}</span>
-                  <p className="text-amber-800 mt-0.5">
-                    {'Student Full Name and Nickname are prioritized. Parent contact information is optional.'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Student Full Name *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newStudent.full_name}
-                    onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
-                    placeholder="E.g., Alexander William"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Nickname (English Name / Class Alias)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={newStudent.nickname}
-                    onChange={(e) => setNewStudent({ ...newStudent, nickname: e.target.value })}
-                    placeholder="E.g., Leo, Jenny, Alex, Tom..."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Class Cohort'}
-                  </label>
-                  <select
-                    value={newStudent.current_class_id}
-                    onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                  >
-                    <option value="">{'-- Unassigned --'}</option>
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.level})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Student Code *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newStudent.student_code}
-                    onChange={(e) => setNewStudent({ ...newStudent, student_code: e.target.value })}
-                    placeholder="E.g., KAP-PH-010"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-mono bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Date of Birth'}
-                  </label>
-                  <input
-                    type="date"
-                    value={newStudent.date_of_birth}
-                    onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Gender'}
-                  </label>
-                  <select
-                    value={newStudent.gender}
-                    onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                  >
-                    <option value="male">{'Male'}</option>
-                    <option value="female">{'Female'}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {'Tuition Expiry Date *'}
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={newStudent.tuition_expiry_date}
-                    onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                  />
-                  <span className="text-[10px] text-slate-500 mt-0.5 block">
-                    {'Used for automatic retention alerts and tuition tracking.'}
+            {/* Mode Switcher Tabs */}
+            <div className="flex items-center gap-2 border-b border-slate-200 pt-3 pb-1">
+              <button
+                type="button"
+                onClick={() => setAddModalTab('single')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+                  addModalTab === 'single'
+                    ? 'border-[#043264] text-[#043264]'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span>{'Single Student Profile'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddModalTab('bulk')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+                  addModalTab === 'bulk'
+                    ? 'border-[#043264] text-[#043264]'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>{'Import from DotB Sheet'}</span>
+                {dotbResult.students.length > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 text-[#043264] font-semibold">
+                    {dotbResult.students.length}
                   </span>
+                )}
+              </button>
+            </div>
+
+            {/* TAB 1: SINGLE STUDENT FORM */}
+            {addModalTab === 'single' && (
+              <form onSubmit={handleCreateStudent} className="space-y-3.5 pt-4 text-xs">
+                <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold">{'Streamlined Student Profile Form:'}</span>
+                    <p className="text-amber-800 mt-0.5">
+                      {'Student Full Name and Nickname are prioritized. Parent contact information is optional.'}
+                    </p>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Student Full Name *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newStudent.full_name}
+                      onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
+                      placeholder="E.g., Alexander William"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Nickname (English Name / Class Alias)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={newStudent.nickname}
+                      onChange={(e) => setNewStudent({ ...newStudent, nickname: e.target.value })}
+                      placeholder="E.g., Leo, Jenny, Alex, Tom..."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Class Cohort'}
+                    </label>
+                    <select
+                      value={newStudent.current_class_id}
+                      onChange={(e) => setNewStudent({ ...newStudent, current_class_id: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                    >
+                      <option value="">{'-- Unassigned --'}</option>
+                      {classes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.level})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Student Code *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newStudent.student_code}
+                      onChange={(e) => setNewStudent({ ...newStudent, student_code: e.target.value })}
+                      placeholder="E.g., KAP-PH-010"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 font-mono bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Date of Birth'}
+                    </label>
+                    <input
+                      type="date"
+                      value={newStudent.date_of_birth}
+                      onChange={(e) => setNewStudent({ ...newStudent, date_of_birth: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Gender'}
+                    </label>
+                    <select
+                      value={newStudent.gender}
+                      onChange={(e) => setNewStudent({ ...newStudent, gender: e.target.value as any })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                    >
+                      <option value="male">{'Male'}</option>
+                      <option value="female">{'Female'}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Tuition Expiry Date *'}
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newStudent.tuition_expiry_date}
+                      onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-0.5 block">
+                      {'Used for automatic retention alerts and tuition tracking.'}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      {'Designated HRT'}
+                    </label>
+                    <select
+                      value={newStudent.assigned_hrt_id}
+                      onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
+                    >
+                      <option value="">{'Class Default'}</option>
+                      {hrtStaffs.map((h) => (
+                        <option key={h.id} value={h.id}>
+                          {h.full_name} (HRT)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">
-                    {'Designated HRT'}
+                    {'Academic Notes'}
                   </label>
-                  <select
-                    value={newStudent.assigned_hrt_id}
-                    onChange={(e) => setNewStudent({ ...newStudent, assigned_hrt_id: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white"
-                  >
-                    <option value="">{'Class Default'}</option>
-                    {hrtStaffs.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.full_name} (HRT)
-                      </option>
-                    ))}
-                  </select>
+                  <textarea
+                    rows={2}
+                    value={newStudent.notes}
+                    onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
+                    placeholder={'Student characteristics, learning goals, parent expectations...'}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
+                  />
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  {'Academic Notes'}
-                </label>
-                <textarea
-                  rows={2}
-                  value={newStudent.notes}
-                  onChange={(e) => setNewStudent({ ...newStudent, notes: e.target.value })}
-                  placeholder={'Student characteristics, learning goals, parent expectations...'}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
-                />
-              </div>
+                {/* Collapsible Optional Parent Information */}
+                <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
+                  <button
+                    type="button"
+                    onClick={() => setShowParentInfoSection(!showParentInfoSection)}
+                    className="w-full px-3.5 py-2.5 text-left font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5 text-xs text-slate-700">
+                      <Phone className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{'Optional Parent Contact (Skipped by default)'}</span>
+                    </span>
+                    {showParentInfoSection ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                  </button>
+                  {showParentInfoSection && (
+                    <div className="p-3.5 border-t border-slate-200 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-semibold text-slate-700 mb-1">
+                          {'Parent Full Name'}
+                        </label>
+                        <input
+                          type="text"
+                          value={newStudent.parent_name}
+                          onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
+                          placeholder="E.g., Mr. Nam (Father)"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-slate-700 mb-1">
+                          {'Parent Phone Number'}
+                        </label>
+                        <input
+                          type="tel"
+                          value={newStudent.parent_phone}
+                          onChange={(e) => setNewStudent({ ...newStudent, parent_phone: e.target.value })}
+                          placeholder="E.g., 0901234567"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {/* Collapsible Optional Parent Information */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
-                <button
-                  type="button"
-                  onClick={() => setShowParentInfoSection(!showParentInfoSection)}
-                  className="w-full px-3.5 py-2.5 text-left font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  <span className="flex items-center gap-1.5 text-xs text-slate-700">
-                    <Phone className="w-3.5 h-3.5 text-slate-500" />
-                    <span>{'Parent Information (Optional)'}</span>
-                  </span>
-                  {showParentInfoSection ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                </button>
-                {showParentInfoSection && (
-                  <div className="p-3.5 border-t border-slate-200 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">
-                        {'Parent Full Name'}
-                      </label>
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
+                  >
+                    {'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
+                  >
+                    {submitting ? 'Saving...' : 'Save Student Record'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 2: BULK IMPORT FROM DOTB SHEET / FILE */}
+            {addModalTab === 'bulk' && (
+              <div className="space-y-4 pt-4 text-xs">
+                {/* Upload & Preset Options */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="md:col-span-2 p-4 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/30 flex flex-col items-center justify-center text-center hover:bg-blue-50/60 transition-colors">
+                    <FileSpreadsheet className="w-8 h-8 text-[#043264] mb-2" />
+                    <span className="font-bold text-slate-800 text-xs sm:text-sm">
+                      {'Upload DotB Student List Export (.xls / .xlsx / .csv)'}
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-1 max-w-md">
+                      {'Select the exported Excel/HTML file from DotB. Cohorts, student names, English nicknames, and birthdates are automatically recognized.'}
+                    </p>
+                    <label className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#043264] hover:bg-[#012147] text-white font-semibold rounded-xl text-xs cursor-pointer shadow-xs">
+                      <Upload className="w-4 h-4" />
+                      <span>{'Choose Exported File'}</span>
                       <input
-                        type="text"
-                        value={newStudent.parent_name}
-                        onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
-                        placeholder="E.g., Mr. Nam (Father)"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
+                        type="file"
+                        accept=".xls,.xlsx,.csv,.txt,.html"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between">
+                    <div>
+                      <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        {'Current Branch Export'}
+                      </span>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        {'Load the official DotB master sheet (1,358 students across 131 cohorts) with 1 click.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLoadSampleDotbExport}
+                      disabled={bulkImporting}
+                      className="mt-3 w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-xl border border-slate-300 text-xs shadow-2xs cursor-pointer disabled:opacity-50"
+                    >
+                      <Table className="w-4 h-4 text-[#043264]" />
+                      <span>{bulkImporting ? 'Loading Sheet...' : 'Load DotB Sheet (1,358)'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expandable Manual Text Paste */}
+                <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/40">
+                  <button
+                    type="button"
+                    onClick={() => setShowRawPasteSection(!showRawPasteSection)}
+                    className="w-full px-3.5 py-2 text-left font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors cursor-pointer text-xs"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{'Or Paste Rows from Google Sheets / Excel Directly'}</span>
+                    </span>
+                    {showRawPasteSection ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                  </button>
+                  {showRawPasteSection && (
+                    <div className="p-3 border-t border-slate-200 bg-white space-y-2">
+                      <textarea
+                        rows={4}
+                        value={bulkRawText}
+                        onChange={(e) => handleBulkTextChange(e.target.value)}
+                        placeholder={`Paste tabular rows here, for example:\nTrần Hạ An\tDoris\t22/03/2020\nĐỗ Phú Nhật Anh\tTaro\t18/09/2022`}
+                        className="w-full p-2.5 rounded-lg border border-slate-200 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
                       />
                     </div>
-                    <div>
-                      <label className="block font-semibold text-slate-700 mb-1">
-                        {'Parent Phone Number'}
-                      </label>
-                      <input
-                        type="tel"
-                        value={newStudent.parent_phone}
-                        onChange={(e) => setNewStudent({ ...newStudent, parent_phone: e.target.value })}
-                        placeholder="E.g., 0901234567"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
-                      />
+                  )}
+                </div>
+
+                {/* Parsed Results Overview & Configuration */}
+                {dotbResult.students.length > 0 ? (
+                  <div className="space-y-3 pt-2">
+                    {/* Summary KPI Badges */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-xl">
+                        <span className="text-[10px] uppercase font-bold text-[#043264]">Total Extracted</span>
+                        <div className="text-xl font-bold text-slate-900 mt-0.5">
+                          {dotbResult.students.length}
+                        </div>
+                        <span className="text-[10px] text-slate-500">Students parsed</span>
+                      </div>
+                      <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl">
+                        <span className="text-[10px] uppercase font-bold text-indigo-700">Cohorts / Classes</span>
+                        <div className="text-xl font-bold text-slate-900 mt-0.5">
+                          {dotbResult.classes.length}
+                        </div>
+                        <span className="text-[10px] text-slate-500">Cohorts identified</span>
+                      </div>
+                      <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+                        <span className="text-[10px] uppercase font-bold text-emerald-700">English Nicknames</span>
+                        <div className="text-xl font-bold text-slate-900 mt-0.5">
+                          {dotbResult.totalWithNicknames}
+                        </div>
+                        <span className="text-[10px] text-slate-500">With aliases</span>
+                      </div>
+                      <div className="p-3 bg-purple-50/60 border border-purple-200 rounded-xl">
+                        <span className="text-[10px] uppercase font-bold text-purple-700">Birthdates Parsed</span>
+                        <div className="text-xl font-bold text-slate-900 mt-0.5">
+                          {dotbResult.totalWithBirthdate}
+                        </div>
+                        <span className="text-[10px] text-slate-500">ISO converted</span>
+                      </div>
                     </div>
+
+                    {/* Class Filter & Enrollment Options */}
+                    <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                      <div className="sm:col-span-2">
+                        <label className="block font-bold text-slate-700 mb-1">
+                          {'Select Cohort to Import (CM Filter by Class)'}
+                        </label>
+                        <select
+                          value={bulkPreviewFilterClass}
+                          onChange={(e) => setBulkPreviewFilterClass(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium text-xs text-slate-800"
+                        >
+                          <option value="all">
+                            {`All Cohorts (${dotbResult.students.length} students across ${dotbResult.classes.length} classes)`}
+                          </option>
+                          {dotbResult.classes.map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {`${c.name} (${c.studentCount} students - ${c.inferredLevel})`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          {'Tuition Validity'}
+                        </label>
+                        <select
+                          value={bulkTuitionMonths}
+                          onChange={(e) => setBulkTuitionMonths(Number(e.target.value))}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-800"
+                        >
+                          <option value={3}>{'3 Months'}</option>
+                          <option value={6}>{'6 Months (Standard)'}</option>
+                          <option value={12}>{'12 Months'}</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-3 flex items-center justify-between pt-1 border-t border-slate-200/60">
+                        <label className="inline-flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={autoCreateMissingClasses}
+                            onChange={(e) => setAutoCreateMissingClasses(e.target.checked)}
+                            className="rounded border-slate-300 text-[#043264] focus:ring-[#043264]"
+                          />
+                          <span className="text-[11px] font-medium text-slate-700">
+                            {'Automatically register any missing classes in the database'}
+                          </span>
+                        </label>
+                        <span className="text-[11px] text-slate-500 font-semibold">
+                          {`Ready to import: ${previewStudents.length} students`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Preview Table */}
+                    <div className="border border-slate-200 rounded-xl overflow-hidden">
+                      <div className="max-h-64 overflow-y-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="bg-slate-100/80 sticky top-0 border-b border-slate-200 font-bold text-slate-700 text-[11px]">
+                            <tr>
+                              <th className="py-2 px-2.5 w-12 text-center">#</th>
+                              <th className="py-2 px-2.5">Cohort / Class</th>
+                              <th className="py-2 px-2.5">Student Full Name</th>
+                              <th className="py-2 px-2.5">Nickname</th>
+                              <th className="py-2 px-2.5">Birthdate</th>
+                              <th className="py-2 px-2.5">Status</th>
+                              <th className="py-2 px-2.5">Auto Code</th>
+                              <th className="py-2 px-2 text-center w-12">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-[11px]">
+                            {previewStudents.slice(0, 50).map((item, idx) => (
+                              <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                                <td className="py-2 px-2.5 text-center text-slate-400 font-mono">
+                                  {idx + 1}
+                                </td>
+                                <td className="py-2 px-2.5 font-medium text-slate-700 truncate max-w-[160px]">
+                                  {item.class_name}
+                                </td>
+                                <td className="py-2 px-2.5 font-bold text-slate-900">
+                                  {item.full_name}
+                                </td>
+                                <td className="py-2 px-2.5">
+                                  {item.nickname ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#043264] border border-blue-200">
+                                      {item.nickname}
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-300">—</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2.5 font-mono text-slate-600">
+                                  {item.date_of_birth || '—'}
+                                </td>
+                                <td className="py-2 px-2.5">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                      item.status === 'In Progress'
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : item.status === 'Delayed'
+                                        ? 'bg-amber-50 text-amber-700'
+                                        : 'bg-slate-100 text-slate-600'
+                                    }`}
+                                  >
+                                    {item.status}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-2.5 font-mono text-[#043264] font-semibold">
+                                  {item.student_code}
+                                </td>
+                                <td className="py-2 px-2 text-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveParsedRow(item.id)}
+                                    className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
+                                    title="Remove from import"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {previewStudents.length > 50 && (
+                        <div className="p-2.5 bg-slate-50 border-t border-slate-200 text-center text-[11px] text-slate-500 font-medium">
+                          {`Showing first 50 rows of ${previewStudents.length} students. All ${previewStudents.length} records will be imported.`}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Actions */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                      <span className="text-xs text-slate-500 font-semibold">
+                        {`Target: ${previewStudents.length} students ready to enroll`}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddModal(false)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
+                        >
+                          {'Cancel'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBulkImportSubmit}
+                          disabled={bulkImporting || previewStudents.length === 0}
+                          className="px-5 py-2.5 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs flex items-center gap-2"
+                        >
+                          <FileSpreadsheet className="w-4 h-4" />
+                          <span>
+                            {bulkImporting
+                              ? 'Importing...'
+                              : `Import ${previewStudents.length} Students into KAPLA`}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-slate-400 border border-slate-200 rounded-xl bg-slate-50/50">
+                    <FileSpreadsheet className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p className="font-semibold text-xs text-slate-600">
+                      {'No student file loaded yet'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {'Upload an exported file from DotB or click "Load DotB Sheet" above to preview data.'}
+                    </p>
                   </div>
                 )}
               </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium cursor-pointer"
-                >
-                  {'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 rounded-xl text-white bg-[#043264] hover:bg-[#012147] font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
-                >
-                  {submitting ? 'Saving...' : 'Save Student Record'}
-                </button>
-              </div>
-            </form>
+            )}
           </div>
         </div>
       )}
@@ -2757,11 +3201,10 @@ Phạm Thảo My\tChloe
                   ].map((cat) => (
                     <label
                       key={cat.id}
-                      className={`flex flex-col p-2.5 rounded-xl border cursor-pointer transition-all ${
-                        reminderForm.task_type === cat.id
-                          ? 'bg-blue-50/70 border-blue-400 ring-1 ring-blue-300'
-                          : 'border-slate-200 hover:bg-slate-50'
-                      }`}
+                      className={`flex flex-col p-2.5 rounded-xl border cursor-pointer transition-all ${reminderForm.task_type === cat.id
+                        ? 'bg-blue-50/70 border-blue-400 ring-1 ring-blue-300'
+                        : 'border-slate-200 hover:bg-slate-50'
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <input
