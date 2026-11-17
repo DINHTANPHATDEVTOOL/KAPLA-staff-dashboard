@@ -135,7 +135,7 @@ export interface Student {
   parent_name?: string;
   parent_phone?: string;
   parent_email?: string;
-  tuition_expiry_date: string;
+  tuition_expiry_date?: string;
   status: StudentStatus;
   current_class_id?: string;
   assigned_hrt_id?: string;

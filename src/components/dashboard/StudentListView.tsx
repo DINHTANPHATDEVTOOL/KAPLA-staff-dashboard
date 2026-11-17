@@ -356,7 +356,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     parent_name: '',
     parent_phone: '',
     parent_email: '',
-    tuition_expiry_date: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+    tuition_expiry_date: '',
     current_class_id: '',
     assigned_hrt_id: '',
     notes: '',
@@ -458,7 +458,16 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   }, [currentBranch?.id, profile?.id, isSysAdmin, isCM]);
 
   // Calculate tuition days remaining and badge
-  const getTuitionStatus = (expiryDateStr: string) => {
+  const getTuitionStatus = (expiryDateStr?: string) => {
+    if (!expiryDateStr || expiryDateStr.trim() === '') {
+      return {
+        days: 0,
+        label: 'Not set (Pending)',
+        status: 'active' as const,
+        color: 'bg-slate-50 text-slate-500 border-slate-200',
+        badge: 'bg-slate-300',
+      };
+    }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const expiry = new Date(expiryDateStr);
@@ -791,7 +800,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       parent_name: '',
       parent_phone: '',
       parent_email: '',
-      tuition_expiry_date: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+      tuition_expiry_date: '',
       current_class_id: defaultClassId,
       assigned_hrt_id: '',
       notes: '',
@@ -838,10 +847,10 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         nickname: newStudent.nickname.trim() || undefined,
         date_of_birth: newStudent.date_of_birth || undefined,
         gender: newStudent.gender,
-        parent_name: newStudent.parent_name.trim() || 'N/A',
-        parent_phone: newStudent.parent_phone.trim() || '',
-        parent_email: newStudent.parent_email.trim() || undefined,
-        tuition_expiry_date: newStudent.tuition_expiry_date || new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+        parent_name: undefined,
+        parent_phone: undefined,
+        parent_email: undefined,
+        tuition_expiry_date: newStudent.tuition_expiry_date.trim() || undefined,
         status: 'active',
         current_class_id: newStudent.current_class_id || undefined,
         assigned_hrt_id: newStudent.assigned_hrt_id || undefined,
@@ -980,10 +989,6 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         }
       }
 
-      const defaultExpiry = new Date(Date.now() + bulkTuitionMonths * 30 * 86400000)
-        .toISOString()
-        .split('T')[0];
-
       const payloads = studentsToImport.map((item) => {
         const matchedClass = currentClasses.find(
           (c) => c.name.toLowerCase() === item.class_name.toLowerCase()
@@ -996,10 +1001,10 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
           nickname: item.nickname?.trim() || undefined,
           date_of_birth: item.date_of_birth,
           gender: item.gender || 'male',
-          parent_name: 'N/A',
-          parent_phone: '',
+          parent_name: undefined,
+          parent_phone: undefined,
           parent_email: undefined,
-          tuition_expiry_date: defaultExpiry,
+          tuition_expiry_date: '',
           status: 'active' as StudentStatus,
           current_class_id: matchedClass?.id || '',
           assigned_hrt_id: matchedClass?.default_hrt_id || undefined,
@@ -1099,7 +1104,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
       parent_name: student.parent_name || '',
       parent_phone: student.parent_phone || '',
       parent_email: student.parent_email || '',
-      tuition_expiry_date: student.tuition_expiry_date,
+      tuition_expiry_date: student.tuition_expiry_date || '',
       current_class_id: student.current_class_id || '',
       assigned_hrt_id: student.assigned_hrt_id || '',
       status: student.status,
@@ -1849,13 +1854,21 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                       {/* Tuition Expiry Date */}
                       <td className="py-3 px-3">
-                        <div className="font-mono text-slate-800 font-medium">{student.tuition_expiry_date}</div>
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border mt-0.5 ${tuition.color}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${tuition.badge}`} />
-                          {tuition.label}
-                        </span>
+                        {student.tuition_expiry_date ? (
+                          <>
+                            <div className="font-mono text-slate-800 font-medium">{student.tuition_expiry_date}</div>
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border mt-0.5 ${tuition.color}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${tuition.badge}`} />
+                              {tuition.label}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                            {'Not set (Pending)'}
+                          </span>
+                        )}
                       </td>
 
                       {/* Assigned HRT */}
@@ -2223,12 +2236,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
             {/* TAB 1: SINGLE STUDENT FORM */}
             {addModalTab === 'single' && (
               <form onSubmit={handleCreateStudent} className="space-y-3.5 pt-4 text-xs">
-                <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/70 text-[11px] text-blue-900 flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-[#043264] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">{'Streamlined Student Profile Form:'}</span>
-                    <p className="text-amber-800 mt-0.5">
-                      {'Student Full Name and Nickname are prioritized. Parent contact information is optional.'}
+                    <span className="font-bold">{'Quick Student Profile Enrollment:'}</span>
+                    <p className="text-blue-800 mt-0.5">
+                      {'Prioritized by Student Full Name and Nickname per CM requirement. Tuition Expiry can be left blank and updated later.'}
                     </p>
                   </div>
                 </div>
@@ -2356,17 +2369,16 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
-                      {'Tuition Expiry Date *'}
+                      {'Tuition Expiry Date'}
                     </label>
                     <input
                       type="date"
-                      required
                       value={newStudent.tuition_expiry_date}
                       onChange={(e) => setNewStudent({ ...newStudent, tuition_expiry_date: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
                     />
                     <span className="text-[10px] text-slate-500 mt-0.5 block">
-                      {'Used for automatic retention alerts and tuition tracking.'}
+                      {'Leave blank to set or update later in directory.'}
                     </span>
                   </div>
                   <div>
@@ -2399,49 +2411,6 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                     placeholder={'Student characteristics, learning goals, parent expectations...'}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#043264]/20 bg-white"
                   />
-                </div>
-
-                {/* Collapsible Optional Parent Information */}
-                <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
-                  <button
-                    type="button"
-                    onClick={() => setShowParentInfoSection(!showParentInfoSection)}
-                    className="w-full px-3.5 py-2.5 text-left font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors cursor-pointer"
-                  >
-                    <span className="flex items-center gap-1.5 text-xs text-slate-700">
-                      <Phone className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{'Optional Parent Contact (Skipped by default)'}</span>
-                    </span>
-                    {showParentInfoSection ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                  </button>
-                  {showParentInfoSection && (
-                    <div className="p-3.5 border-t border-slate-200 bg-white grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-semibold text-slate-700 mb-1">
-                          {'Parent Full Name'}
-                        </label>
-                        <input
-                          type="text"
-                          value={newStudent.parent_name}
-                          onChange={(e) => setNewStudent({ ...newStudent, parent_name: e.target.value })}
-                          placeholder="E.g., Mr. Nam (Father)"
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-semibold text-slate-700 mb-1">
-                          {'Parent Phone Number'}
-                        </label>
-                        <input
-                          type="tel"
-                          value={newStudent.parent_phone}
-                          onChange={(e) => setNewStudent({ ...newStudent, parent_phone: e.target.value })}
-                          placeholder="E.g., 0901234567"
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -2629,17 +2598,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          {'Tuition Validity'}
+                          {'Tuition Expiry Date'}
                         </label>
-                        <select
-                          value={bulkTuitionMonths}
-                          onChange={(e) => setBulkTuitionMonths(Number(e.target.value))}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs text-slate-800"
-                        >
-                          <option value={3}>{'3 Months'}</option>
-                          <option value={6}>{'6 Months (Standard)'}</option>
-                          <option value={12}>{'12 Months'}</option>
-                        </select>
+                        <div className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-100/70 text-slate-600 text-xs flex items-center gap-1.5 font-medium">
+                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>{'Blank / Not Set (Can be added & edited later)'}</span>
+                        </div>
                       </div>
 
                       <div className="sm:col-span-3 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60">
@@ -3253,15 +3217,17 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {'Tuition Expiry Date *'}
+                    {'Tuition Expiry Date'}
                   </label>
                   <input
                     type="date"
-                    required
                     value={editStudentForm.tuition_expiry_date}
                     onChange={(e) => setEditStudentForm({ ...editStudentForm, tuition_expiry_date: e.target.value })}
                     className="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white font-mono"
                   />
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {'Leave empty or pick a date to configure tuition renewal.'}
+                  </span>
                 </div>
 
                 <div>

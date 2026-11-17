@@ -142,7 +142,9 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
   // Tuition calculation
   const tuitionInfo = useMemo(() => {
-    if (!student) return { days: 0, status: 'safe', label: '', color: '' };
+    if (!student || !student.tuition_expiry_date) {
+      return { days: 0, status: 'safe', label: 'Not Set', color: 'bg-slate-50 text-slate-600 border-slate-200' };
+    }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const expiry = new Date(student.tuition_expiry_date);
@@ -507,7 +509,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 {'Tuition Expiry'}
               </span>
               <span className="font-semibold text-white font-mono block">
-                {student.tuition_expiry_date} ({tuitionInfo.label})
+                {student.tuition_expiry_date ? `${student.tuition_expiry_date} (${tuitionInfo.label})` : 'Not Set (Pending)'}
               </span>
             </div>
             <div className="bg-white/10 rounded-xl px-3 py-1.5 backdrop-blur-xs">

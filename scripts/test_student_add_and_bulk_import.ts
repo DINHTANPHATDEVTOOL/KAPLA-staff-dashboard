@@ -231,6 +231,32 @@ function runTests() {
   assert(bulkResult.length === 1, `Bulk import skipped duplicate and only created 1 new student (Created: ${bulkResult.length})`);
   assert(bulkResult[0].full_name === 'Vũ Hoàng Nam', `Correct new student imported: ${bulkResult[0].full_name}`);
 
+  // --- TEST 9: Student Enrollment with Omitted Parent Info & Blank Tuition Expiry (Editable Later) ---
+  console.log('\n--- TEST 9: Omitted Parent Info & Blank Tuition Expiry (Add & Edit Later) ---');
+  const blankStudent = MockStorageService.addStudent({
+    branch_id: branchId,
+    student_code: 'KAP-PH-BLANK-01',
+    full_name: 'Đặng Ngọc Mai',
+    nickname: 'Daisy',
+    date_of_birth: '2019-09-12',
+    gender: 'female',
+    parent_name: undefined,
+    parent_phone: undefined,
+    tuition_expiry_date: '',
+    status: 'active',
+    current_class_id: targetClassId,
+  });
+
+  assert(blankStudent.parent_name === undefined, 'Parent name is completely omitted (not auto-filled with "N/A")');
+  assert(blankStudent.parent_phone === undefined, 'Parent phone is completely omitted');
+  assert(blankStudent.tuition_expiry_date === '', 'Tuition expiry date is left completely blank upon creation');
+
+  // Verify updating the tuition expiry date later (Chỉnh sửa sau)
+  const updatedStudent = MockStorageService.updateStudent(blankStudent.id, {
+    tuition_expiry_date: '2027-01-31',
+  });
+  assert(updatedStudent.tuition_expiry_date === '2027-01-31', `Tuition expiry successfully updated later to ${updatedStudent.tuition_expiry_date}`);
+
   console.log('\n======================================================================');
   console.log(`  🎉 ALL ${passed}/${total} STUDENT ADD & BULK IMPORT TESTS PASSED (100%)!`);
   console.log('======================================================================\n');

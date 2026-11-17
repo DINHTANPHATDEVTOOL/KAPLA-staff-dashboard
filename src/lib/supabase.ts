@@ -1899,6 +1899,24 @@ export class MockStorageService {
           }
           renList[renIdx].updated_at = new Date().toISOString();
           localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renList));
+        } else if (updates.tuition_expiry_date) {
+          const diffDays = Math.ceil(
+            (new Date(updates.tuition_expiry_date).getTime() - Date.now()) / 86400000
+          );
+          renList.push({
+            id: 'ren-' + Math.random().toString(36).substring(2, 9),
+            student_id: updated.id,
+            branch_id: updated.branch_id,
+            current_expiry_date: updates.tuition_expiry_date,
+            days_remaining: diffDays,
+            risk_level: diffDays <= 0 ? 'high' : diffDays <= 14 ? 'high' : diffDays <= 30 ? 'medium' : 'low',
+            status: 'monitoring',
+            assigned_hrt_id: updated.assigned_hrt_id,
+            contact_count: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+          localStorage.setItem(STORAGE_KEYS.RENEWAL, JSON.stringify(renList));
         }
       }
     }
@@ -3764,6 +3782,7 @@ export const SystemConfigService = {
 
     return students
       .filter((s) => {
+        if (!s.tuition_expiry_date) return false;
         const diff = Math.ceil((new Date(s.tuition_expiry_date).getTime() - now.getTime()) / 86400000);
         return diff <= threshold;
       })
