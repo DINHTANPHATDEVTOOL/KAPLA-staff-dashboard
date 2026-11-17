@@ -3567,6 +3567,13 @@ export class MockStorageService {
 }
 
 // ==============================================================================
+// Helper to validate and sanitize PostgreSQL UUIDs
+function sanitizeUUID(id?: string | null): string | null {
+  if (!id) return null;
+  const trimmed = id.trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed) ? trimmed : null;
+}
+
 // Unified StudentService Layer (Supports Live Supabase & Dev Mock)
 // ==============================================================================
 
@@ -3594,7 +3601,24 @@ export const StudentService = {
 
       const { data, error } = await query;
       if (!error && data) {
-        return data.map((s: any) => {
+        // Teacher scoping in live Supabase mode:
+        // If caller is a classroom teacher, only return students in their assigned classes
+        let scopedData = data;
+        if (callerId && !isSysAdmin && !isCm) {
+          const staffMembers = await this.getStaffList(branchId);
+          const teacher = staffMembers.find((s) => s.user_id === callerId || s.id === callerId);
+          if (teacher && (teacher.role === 'Main Teacher' || teacher.role === 'Supplementary Teacher' || teacher.role === 'TA')) {
+            const assigned = teacher.assigned_classes || [];
+            scopedData = data.filter((s: any) => {
+              const className = s.current_class?.name;
+              const matchesCohort = (s.notes || '').match(/\[Cohort:\s*([^\]]+)\]/i);
+              const cohortName = matchesCohort ? matchesCohort[1].trim() : undefined;
+              return (className && assigned.includes(className)) || (cohortName && assigned.includes(cohortName));
+            });
+          }
+        }
+
+        return scopedData.map((s: any) => {
           const nickMatch = (s.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
           const nickname = s.nickname || (nickMatch ? nickMatch[1].trim() : undefined);
           const tuitionExpiry = s.tuition_expiry_date === '1970-01-01' ? '' : (s.tuition_expiry_date || '');
@@ -3621,6 +3645,9 @@ export const StudentService = {
         enrichedNotes = `[Nickname: ${payload.nickname}] ${enrichedNotes}`.trim();
       }
 
+      const cleanClassId = sanitizeUUID(payload.current_class_id);
+      const cleanHrtId = sanitizeUUID(payload.assigned_hrt_id);
+
       const { data, error } = await realSupabase
         .from('students')
         .insert({
@@ -3634,21 +3661,25 @@ export const StudentService = {
           parent_email: payload.parent_email || null,
           tuition_expiry_date: payload.tuition_expiry_date?.trim() ? payload.tuition_expiry_date.trim() : '1970-01-01',
           status: payload.status || 'active',
-          current_class_id: payload.current_class_id || null,
-          assigned_hrt_id: payload.assigned_hrt_id || null,
+          current_class_id: cleanClassId,
+          assigned_hrt_id: cleanHrtId,
           notes: enrichedNotes || null,
         })
         .select('*, branch:branches(*), current_class:classes(*)')
         .single();
       if (error) throw error;
 
-      if (payload.current_class_id) {
-        await realSupabase.from('enrollments').insert({
-          student_id: data.id,
-          class_id: payload.current_class_id,
-          branch_id: payload.branch_id,
-          status: 'active',
-        });
+      if (cleanClassId) {
+        try {
+          await realSupabase.from('enrollments').upsert({
+            student_id: data.id,
+            class_id: cleanClassId,
+            branch_id: payload.branch_id,
+            status: 'active',
+          }, { onConflict: 'student_id,class_id' });
+        } catch {
+          // non-blocking
+        }
       }
       const nickMatch = (data.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
       return {
@@ -3678,8 +3709,8 @@ export const StudentService = {
           parent_email: p.parent_email || null,
           tuition_expiry_date: p.tuition_expiry_date?.trim() ? p.tuition_expiry_date.trim() : '1970-01-01',
           status: p.status || 'active',
-          current_class_id: p.current_class_id || null,
-          assigned_hrt_id: p.assigned_hrt_id || null,
+          current_class_id: sanitizeUUID(p.current_class_id),
+          assigned_hrt_id: sanitizeUUID(p.assigned_hrt_id),
           notes: enrichedNotes || null,
         };
       });
@@ -3691,7 +3722,7 @@ export const StudentService = {
       if (error) throw error;
 
       const enrollmentsToInsert = (data || [])
-        .filter((s: any) => s.current_class_id)
+        .filter((s: any) => s.current_class_id && sanitizeUUID(s.current_class_id))
         .map((s: any) => ({
           student_id: s.id,
           class_id: s.current_class_id,
@@ -3699,7 +3730,11 @@ export const StudentService = {
           status: 'active',
         }));
       if (enrollmentsToInsert.length > 0) {
-        await realSupabase.from('enrollments').insert(enrollmentsToInsert);
+        try {
+          await realSupabase.from('enrollments').upsert(enrollmentsToInsert, { onConflict: 'student_id,class_id' });
+        } catch {
+          // non-blocking
+        }
       }
       return (data || []).map((s: any) => {
         const nickMatch = (s.notes || '').match(/\[(?:Nickname|Alias):\s*([^\]]+)\]/i);
@@ -3857,6 +3892,46 @@ export const StudentService = {
   },
 
   async getStaffList(branchId?: string): Promise<StaffDirectoryItem[]> {
+    if (realSupabase) {
+      try {
+        const { data: pData } = await realSupabase.from('profiles').select('*');
+        const { data: mData } = await realSupabase.from('branch_memberships').select('*');
+        const { data: cData } = await realSupabase.from('classes').select('*');
+
+        if (pData && pData.length > 0) {
+          const mockStaff = MockStorageService.getStaffList(branchId);
+          const map = new Map<string, StaffDirectoryItem>();
+
+          for (const s of mockStaff) {
+            map.set(s.email.toLowerCase(), s);
+          }
+
+          for (const p of pData) {
+            if (p.status !== 'active') continue;
+            const mem = (mData || []).find((m: any) => m.user_id === p.id);
+            const role = mem?.role || (p.system_role === 'system_admin' ? 'System Administrator' : 'HRT');
+            const assignedClasses: string[] = (cData || [])
+              .filter((c: any) => c.main_teacher_id === p.id || c.default_hrt_id === p.id || c.ta_id === p.id)
+              .map((c: any) => c.name);
+
+            const existing = map.get(p.email.toLowerCase());
+            map.set(p.email.toLowerCase(), {
+              id: p.id,
+              user_id: p.id,
+              full_name: p.full_name || existing?.full_name || 'Staff Member',
+              role: (role as StaffRole) || existing?.role || 'Main Teacher',
+              email: p.email,
+              phone: p.phone || existing?.phone || '',
+              assigned_classes: assignedClasses.length > 0 ? assignedClasses : (existing?.assigned_classes || []),
+              status: p.status || 'active',
+            });
+          }
+          return Array.from(map.values());
+        }
+      } catch (err) {
+        console.warn('[StaffList] Live sync fallback:', err);
+      }
+    }
     return MockStorageService.getStaffList(branchId);
   },
 
@@ -4003,6 +4078,12 @@ export const StudentService = {
         dbUpdates.tuition_expiry_date = updates.tuition_expiry_date?.trim()
           ? updates.tuition_expiry_date.trim()
           : '1970-01-01';
+      }
+      if ('current_class_id' in dbUpdates) {
+        dbUpdates.current_class_id = sanitizeUUID(dbUpdates.current_class_id);
+      }
+      if ('assigned_hrt_id' in dbUpdates) {
+        dbUpdates.assigned_hrt_id = sanitizeUUID(dbUpdates.assigned_hrt_id);
       }
 
       const { data, error } = await realSupabase
