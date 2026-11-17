@@ -29,6 +29,7 @@
     "test:resend": "tsx scripts/test_resend_transactional_setup.ts",
     "test:onboarding": "tsx scripts/test_onboarding_notification_flow.ts",
     "test:students": "tsx scripts/test_student_add_and_bulk_import.ts",
+    "test:teachers": "tsx scripts/test_teacher_permissions_and_cascading_classes.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

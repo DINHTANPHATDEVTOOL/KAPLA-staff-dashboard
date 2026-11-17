@@ -98,8 +98,8 @@ export const TopBar: React.FC<TopBarProps> = ({
         };
       case 'branches_classes':
         return {
-          title: t('topbar.branchesClassesTitle', 'Campuses & Classrooms'),
-          subtitle: t('topbar.branchesClassesSub', 'Manage campus locations, classrooms, and schedules.'),
+          title: t('topbar.branchesClassesTitle', 'Staff & Classes · Roles & Assignments'),
+          subtitle: t('topbar.branchesClassesSub', 'Manage faculty roles, assigned teaching cohorts, and whole-class level advancement.'),
         };
       case 'automated_emails':
         return {

@@ -33,6 +33,7 @@ import {
   SystemRole,
   AccountStatus,
   EmailDispatchLogEntry,
+  StaffDirectoryItem,
 } from '../types';
 import { buildKaplaEmailHtml, StaffApplicantInfo } from './emailTemplate';
 import { findDuplicateStudent, isSameStudent } from '../utils/dotbParser';
@@ -232,6 +233,10 @@ const DEFAULT_BRANCHES: Branch[] = [
   },
 ];
 
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const DEFAULT_PROFILES: UserProfile[] = [
   {
     id: 'u0000000-0000-0000-0000-000000000001',
@@ -255,8 +260,8 @@ const DEFAULT_PROFILES: UserProfile[] = [
   },
   {
     id: 'u0000000-0000-0000-0000-000000000003',
-    email: 'ht.jamie@kapla.edu.vn',
-    full_name: 'Jamie',
+    email: 'wallis.jamie@kapla.edu.vn',
+    full_name: 'Jamie Ross Wallis',
     phone: '0913 456 789',
     preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
     system_role: 'staff',
@@ -265,8 +270,8 @@ const DEFAULT_PROFILES: UserProfile[] = [
   },
   {
     id: 'u0000000-0000-0000-0000-000000000004',
-    email: 'hrt.minh@kapla.edu.vn',
-    full_name: 'Minh',
+    email: 'minh.trieu@kapla.edu.vn',
+    full_name: 'Triệu Thị Tiểu Minh',
     phone: '0914 567 890',
     preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
     system_role: 'staff',
@@ -275,8 +280,8 @@ const DEFAULT_PROFILES: UserProfile[] = [
   },
   {
     id: 'u0000000-0000-0000-0000-000000000005',
-    email: 'hrt.tram@kapla.edu.vn',
-    full_name: 'Tram',
+    email: 'tram.huynh@kapla.edu.vn',
+    full_name: 'Huỳnh Thị Ngọc Trâm',
     phone: '0915 678 901',
     preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
     system_role: 'staff',
@@ -285,13 +290,63 @@ const DEFAULT_PROFILES: UserProfile[] = [
   },
   {
     id: 'u0000000-0000-0000-0000-000000000006',
-    email: 'hrt.vy@kapla.edu.vn',
-    full_name: 'Vy',
+    email: 'vy.le@kapla.edu.vn',
+    full_name: 'Lê Ngọc Khánh Vy',
     phone: '0916 789 012',
     preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
     system_role: 'staff',
     status: 'active',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: 'u0000000-0000-0000-0000-000000000007',
+    email: 'zandile.hlomayi@kapla.edu.vn',
+    full_name: 'Zandile Tanaka Hlomayi',
+    phone: '0917 123 456',
+    preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
+    system_role: 'staff',
+    status: 'active',
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: 'u0000000-0000-0000-0000-000000000008',
+    email: 'magriet.we@kapla.edu.vn',
+    full_name: 'Magriet De Wet',
+    phone: '0918 234 567',
+    preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
+    system_role: 'staff',
+    status: 'active',
+    created_at: new Date(Date.now() - 9 * 86400000).toISOString(),
+  },
+  {
+    id: 'u0000000-0000-0000-0000-000000000009',
+    email: 'leonid.formin@kapla.edu.vn',
+    full_name: 'Leonid Formin',
+    phone: '0919 345 678',
+    preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
+    system_role: 'staff',
+    status: 'active',
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+  {
+    id: 'u0000000-0000-0000-0000-000000000010',
+    email: 'malakai.meadows@kapla.edu.vn',
+    full_name: 'Malakai Meadows',
+    phone: '0920 456 789',
+    preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
+    system_role: 'staff',
+    status: 'active',
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+  {
+    id: 'u0000000-0000-0000-0000-000000000011',
+    email: 'emma.herron@kapla.edu.vn',
+    full_name: 'Emma Herron',
+    phone: '0921 567 890',
+    preferred_branch_id: 'a0000000-0000-0000-0000-000000000001',
+    system_role: 'staff',
+    status: 'active',
+    created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
   },
 ];
 
@@ -344,61 +399,221 @@ const DEFAULT_MEMBERSHIPS: BranchMembership[] = [
     is_primary: true,
     status: 'active',
   },
+  {
+    id: 'm0000000-0000-0000-0000-000000000007',
+    user_id: 'u0000000-0000-0000-0000-000000000007',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    role: 'Main Teacher',
+    is_primary: true,
+    status: 'active',
+  },
+  {
+    id: 'm0000000-0000-0000-0000-000000000008',
+    user_id: 'u0000000-0000-0000-0000-000000000008',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    role: 'Main Teacher',
+    is_primary: true,
+    status: 'active',
+  },
+  {
+    id: 'm0000000-0000-0000-0000-000000000009',
+    user_id: 'u0000000-0000-0000-0000-000000000009',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    role: 'Main Teacher',
+    is_primary: true,
+    status: 'active',
+  },
+  {
+    id: 'm0000000-0000-0000-0000-000000000010',
+    user_id: 'u0000000-0000-0000-0000-000000000010',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    role: 'Main Teacher',
+    is_primary: true,
+    status: 'active',
+  },
+  {
+    id: 'm0000000-0000-0000-0000-000000000011',
+    user_id: 'u0000000-0000-0000-0000-000000000011',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    role: 'Main Teacher',
+    is_primary: true,
+    status: 'active',
+  },
 ];
 
 const DEFAULT_CLASSES: ClassRoom[] = [
   {
     id: 'c0000000-0000-0000-0000-000000000001',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    name: 'PH-Starters-01',
-    level: 'Starters',
-    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
-    default_hrt_name: 'Minh',
-    main_teacher_name: 'Jamie',
-    schedule: 'Mon & Wed (17:30 - 19:00)',
+    name: 'PH-L9-0003',
+    level: 'Level 9',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000009',
+    main_teacher_name: 'Leonid Formin',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000006',
+    default_hrt_name: 'Lê Ngọc Khánh Vy',
+    schedule: 'Tue - Thu 19:00 - 20:50',
     status: 'active',
   },
   {
     id: 'c0000000-0000-0000-0000-000000000002',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    name: 'PH-Movers-02',
-    level: 'Movers',
+    name: 'PH-L9-0014',
+    level: 'Level 9',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000007',
+    main_teacher_name: 'Zandile Tanaka Hlomayi',
     default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
-    default_hrt_name: 'Minh',
-    main_teacher_name: 'Jamie',
-    schedule: 'Tue & Thu (17:30 - 19:00)',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    schedule: 'Tue - Thu 19:00 - 20:50',
     status: 'active',
   },
   {
     id: 'c0000000-0000-0000-0000-000000000003',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    name: 'PH-Flyers-01',
-    level: 'Flyers',
-    default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
-    default_hrt_name: 'Tram',
-    main_teacher_name: 'Jamie',
-    schedule: 'Sat & Sun (09:00 - 10:30)',
+    name: 'PH-L8-0011',
+    level: 'Level 8',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000008',
+    main_teacher_name: 'Magriet De Wet',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    schedule: 'Tue - Thu 17:00 - 18:50',
     status: 'active',
   },
   {
     id: 'c0000000-0000-0000-0000-000000000004',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
-    name: 'PH-Kangaroo-01',
-    level: 'Movers',
-    default_hrt_id: 'u0000000-0000-0000-0000-000000000006',
-    default_hrt_name: 'Vy',
-    main_teacher_name: 'Jamie',
-    schedule: 'Sat & Sun (14:30 - 16:00)',
+    name: 'PH-L7-0024',
+    level: 'Level 7',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000010',
+    main_teacher_name: 'Malakai Meadows',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
+    default_hrt_name: 'Huỳnh Thị Ngọc Trâm',
+    schedule: 'Mon - Wed 17:00 - 18:50',
     status: 'active',
   },
   {
     id: 'c0000000-0000-0000-0000-000000000005',
     branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L7-0017',
+    level: 'Level 7',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000007',
+    main_teacher_name: 'Zandile Tanaka Hlomayi',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    schedule: 'Mon - Wed 19:00 - 20:50',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000006',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L7-0008',
+    level: 'Level 7',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000008',
+    main_teacher_name: 'Magriet De Wet',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    schedule: 'Mon - Wed 17:00 - 18:50',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000007',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L7-0032',
+    level: 'Level 7',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000011',
+    main_teacher_name: 'Emma Herron',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
+    default_hrt_name: 'Huỳnh Thị Ngọc Trâm',
+    schedule: 'Tue - Thu 19:00 - 20:50',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000008',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L6-0006',
+    level: 'Level 6',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000010',
+    main_teacher_name: 'Malakai Meadows',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
+    default_hrt_name: 'Huỳnh Thị Ngọc Trâm',
+    schedule: 'Tue - Thu 19:00 - 20:50',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000009',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L6-0016',
+    level: 'Level 6',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000007',
+    main_teacher_name: 'Zandile Tanaka Hlomayi',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    schedule: 'Tue - Thu 17:00 - 18:50',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000010',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-L3-0012',
+    level: 'Level 3',
+    main_teacher_id: 'u0000000-0000-0000-0000-000000000007',
+    main_teacher_name: 'Zandile Tanaka Hlomayi',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
+    default_hrt_name: 'Huỳnh Thị Ngọc Trâm',
+    schedule: 'Sat - Sun 09:00 - 10:50',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000011',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-Starters-01',
+    level: 'Starters',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    main_teacher_name: 'Jamie Ross Wallis',
+    schedule: 'Mon & Wed (17:30 - 19:00)',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000012',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-Movers-02',
+    level: 'Movers',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    main_teacher_name: 'Jamie Ross Wallis',
+    schedule: 'Tue & Thu (17:30 - 19:00)',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000013',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-Flyers-01',
+    level: 'Flyers',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000005',
+    default_hrt_name: 'Huỳnh Thị Ngọc Trâm',
+    main_teacher_name: 'Jamie Ross Wallis',
+    schedule: 'Sat & Sun (09:00 - 10:30)',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000014',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
+    name: 'PH-Kangaroo-01',
+    level: 'Movers',
+    default_hrt_id: 'u0000000-0000-0000-0000-000000000006',
+    default_hrt_name: 'Lê Ngọc Khánh Vy',
+    main_teacher_name: 'Jamie Ross Wallis',
+    schedule: 'Sat & Sun (14:30 - 16:00)',
+    status: 'active',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000015',
+    branch_id: 'a0000000-0000-0000-0000-000000000001',
     name: 'PH-L6-0030',
     level: 'Level 6',
     default_hrt_id: 'u0000000-0000-0000-0000-000000000004',
-    default_hrt_name: 'Minh',
-    main_teacher_name: 'Jamie William',
+    default_hrt_name: 'Triệu Thị Tiểu Minh',
+    main_teacher_name: 'Jamie Ross Wallis',
     schedule: 'Tue & Fri (18:00 - 19:30)',
     status: 'active',
   },
@@ -439,7 +654,7 @@ const DEFAULT_STUDENTS: Student[] = [
     status: 'active',
     current_class_id: 'c0000000-0000-0000-0000-000000000001',
     assigned_hrt_id: 'u0000000-0000-0000-0000-000000000006', // Designated HRT Vy
-    notes: 'Talented communicator, confident conversing with native teachers, currently receiving sentence writing tutoring.',
+    notes: '[Cohort: PH-L9-0003] Talented communicator, confident conversing with native teachers, currently receiving sentence writing tutoring.',
     created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
   },
   {
@@ -455,9 +670,9 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'ha.tran@gmail.com',
     tuition_expiry_date: '2026-11-20', // Due soon
     status: 'warning',
-    current_class_id: 'c0000000-0000-0000-0000-000000000001',
+    current_class_id: 'c0000000-0000-0000-0000-000000000002',
     assigned_hrt_id: undefined, // Class default -> Minh
-    notes: 'Parents interested in Oxford standard progress; HRT Minh has reached out regarding the 6-month Starters 2 package.',
+    notes: '[Cohort: PH-L9-0014] Parents interested in Oxford standard progress; HRT Minh has reached out regarding the 6-month Starters 2 package.',
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
   },
   {
@@ -473,9 +688,9 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'sang.le@gmail.com',
     tuition_expiry_date: '2027-02-28',
     status: 'active',
-    current_class_id: 'c0000000-0000-0000-0000-000000000002',
+    current_class_id: 'c0000000-0000-0000-0000-000000000003',
     assigned_hrt_id: undefined, // Class default -> Minh
-    notes: 'Outstanding academic performance, authentic Oxford pronunciation, preparing for Cambridge Movers examination.',
+    notes: '[Cohort: PH-L8-0011] Outstanding academic performance, authentic Oxford pronunciation, preparing for Cambridge Movers examination.',
     created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
   },
   {
@@ -491,9 +706,9 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'tuan.dang@gmail.com',
     tuition_expiry_date: '2026-11-10', // Overdue
     status: 'expired',
-    current_class_id: 'c0000000-0000-0000-0000-000000000001',
+    current_class_id: 'c0000000-0000-0000-0000-000000000003',
     assigned_hrt_id: undefined, // Class default -> Minh
-    notes: 'Tuition overdue; HRT Minh has contacted parents to arrange fee payment.',
+    notes: '[Cohort: PH-L8-0011] Tuition overdue; HRT Minh has contacted parents to arrange fee payment.',
     created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
   },
   {
@@ -509,9 +724,9 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'dang.pham@gmail.com',
     tuition_expiry_date: '2026-11-25', // Due soon
     status: 'warning',
-    current_class_id: 'c0000000-0000-0000-0000-000000000003',
+    current_class_id: 'c0000000-0000-0000-0000-000000000004',
     assigned_hrt_id: undefined, // Class default -> Tram
-    notes: 'Flyers level; family aims for a perfect 15-shield Cambridge international certification.',
+    notes: '[Cohort: PH-L7-0024] Flyers level; family aims for a perfect 15-shield Cambridge international certification.',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
@@ -527,9 +742,9 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'loan.hoang@gmail.com',
     tuition_expiry_date: '2027-01-15',
     status: 'active',
-    current_class_id: 'c0000000-0000-0000-0000-000000000002',
+    current_class_id: 'c0000000-0000-0000-0000-000000000005',
     assigned_hrt_id: undefined, // Class default -> Minh
-    notes: 'Highly participatory in class, consistently completes all homework assignments.',
+    notes: '[Cohort: PH-L7-0017] Highly participatory in class, consistently completes all homework assignments.',
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
@@ -545,10 +760,10 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'bao.vu@gmail.com',
     tuition_expiry_date: '2026-12-25',
     status: 'active',
-    current_class_id: 'c0000000-0000-0000-0000-000000000004',
-    assigned_hrt_id: undefined, // Class default -> Vy
-    notes: 'Fast learner, passionate about STEAM Robotics and coding.',
-    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+    current_class_id: 'c0000000-0000-0000-0000-000000000009',
+    assigned_hrt_id: undefined, // Class default -> Minh
+    notes: '[Cohort: PH-L6-0016] Fast learner, passionate about STEAM Robotics and coding.',
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
   },
   {
     id: 'b0000000-0000-0000-0000-000000000008',
@@ -565,7 +780,7 @@ const DEFAULT_STUDENTS: Student[] = [
     status: 'warning',
     current_class_id: 'c0000000-0000-0000-0000-000000000003',
     assigned_hrt_id: 'u0000000-0000-0000-0000-000000000005', // Designated HRT Tram
-    notes: 'Reading skills need improvement; HRT Tram is closely monitoring.',
+    notes: '[Cohort: PH-L8-0011] Reading skills need improvement; HRT Tram is closely monitoring.',
     created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
   },
   {
@@ -581,9 +796,9 @@ const DEFAULT_STUDENTS: Student[] = [
     parent_email: 'hung.nguyen@gmail.com',
     tuition_expiry_date: '2027-04-30',
     status: 'active',
-    current_class_id: 'c0000000-0000-0000-0000-000000000005',
+    current_class_id: 'c0000000-0000-0000-0000-000000000003',
     assigned_hrt_id: 'u0000000-0000-0000-0000-000000000004',
-    notes: 'Strong academic performance, natural speaking skills, preparing for Cambridge Flyers.',
+    notes: '[Cohort: PH-L8-0011] Strong academic performance, natural speaking skills, preparing for Cambridge Flyers.',
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
 ];
@@ -1282,7 +1497,7 @@ export class MockStorageService {
 
   static purgeStaleMockCacheIfOutdated(): void {
     if (typeof window === 'undefined') return;
-    const currentVersion = '2026.11.16_v7_nicknames_and_bulk';
+    const currentVersion = '2026.11.17_v8_staff_classes_teachers';
     const savedVersion = localStorage.getItem('kapla_demo_data_version');
     const studentsRaw = localStorage.getItem(STORAGE_KEYS.STUDENTS) || '';
     const profilesRaw = localStorage.getItem(STORAGE_KEYS.PROFILES) || '';
@@ -1523,6 +1738,11 @@ export class MockStorageService {
     level?: string;
     default_hrt_id?: string;
     default_hrt_name?: string;
+    main_teacher_id?: string;
+    main_teacher_name?: string;
+    ta_id?: string;
+    ta_name?: string;
+    schedule?: string;
   }): ClassRoom {
     this.ensureDevOnly();
     const classes = this.getClasses();
@@ -1534,17 +1754,354 @@ export class MockStorageService {
     const newClass: ClassRoom = {
       id: 'c' + Math.random().toString(36).substring(2, 9),
       branch_id: payload.branch_id,
-      name: payload.name,
-      level: payload.level || 'Standard',
+      name: payload.name.trim(),
+      level: payload.level?.trim() || 'Standard',
       default_hrt_id: payload.default_hrt_id,
       default_hrt_name: payload.default_hrt_name,
+      main_teacher_id: payload.main_teacher_id,
+      main_teacher_name: payload.main_teacher_name,
+      ta_id: payload.ta_id,
+      ta_name: payload.ta_name,
       status: 'active',
-      schedule: 'Standard Class Schedule',
+      schedule: payload.schedule || 'Standard Class Schedule',
+      created_at: new Date().toISOString(),
     };
     classes.push(newClass);
     localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
     this.notifyChange(STORAGE_KEYS.CLASSES);
     return newClass;
+  }
+
+  /**
+   * Updates an existing classroom cohort.
+   * CASCADING RULE: Modifying class code / name or level automatically cascades
+   * across the whole class ("thay đổi nguyên lớp") updating all enrolled students.
+   */
+  static updateClass(
+    classId: string,
+    updates: {
+      name?: string;
+      level?: string;
+      main_teacher_id?: string;
+      main_teacher_name?: string;
+      default_hrt_id?: string;
+      default_hrt_name?: string;
+      ta_id?: string;
+      ta_name?: string;
+      schedule?: string;
+      status?: 'active' | 'inactive';
+    }
+  ): { updatedClass: ClassRoom; cascadedStudentsCount: number } {
+    this.ensureDevOnly();
+    const classes = this.getClasses();
+    const classIdx = classes.findIndex((c) => c.id === classId);
+    if (classIdx === -1) {
+      throw new Error(`Class with id ${classId} not found.`);
+    }
+
+    const oldClass = classes[classIdx];
+    const oldName = oldClass.name;
+    const oldLevel = oldClass.level;
+
+    const newName = updates.name !== undefined && updates.name.trim() !== '' ? updates.name.trim() : oldClass.name;
+    const newLevel = updates.level !== undefined && updates.level.trim() !== '' ? updates.level.trim() : oldClass.level;
+
+    const updatedClass: ClassRoom = {
+      ...oldClass,
+      ...updates,
+      name: newName,
+      level: newLevel,
+    };
+    classes[classIdx] = updatedClass;
+    localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+
+    // WHOLE-CLASS CASCADING UPDATE:
+    // Update all students enrolled in this class
+    const students = this.getStudents();
+    let cascadedCount = 0;
+
+    const updatedStudents = students.map((s) => {
+      const isEnrolledInThisClass = s.current_class_id === classId || s.current_class_name === oldName;
+      if (!isEnrolledInThisClass) return s;
+
+      cascadedCount++;
+      let newNotes = s.notes || '';
+      if (oldName && newName && newName !== oldName) {
+        newNotes = newNotes.replace(
+          new RegExp(`\\[Cohort:\\s*${escapeRegExp(oldName)}\\]`, 'gi'),
+          `[Cohort: ${newName}]`
+        );
+        newNotes = newNotes.replace(
+          new RegExp(`\\[Class:\\s*${escapeRegExp(oldName)}\\]`, 'gi'),
+          `[Class: ${newName}]`
+        );
+      }
+
+      let assignedHrtId = s.assigned_hrt_id;
+      if (updates.default_hrt_id !== undefined && (!s.assigned_hrt_id || s.assigned_hrt_id === oldClass.default_hrt_id)) {
+        assignedHrtId = updates.default_hrt_id;
+      }
+
+      return {
+        ...s,
+        current_class_id: classId,
+        current_class_name: newName,
+        assigned_hrt_id: assignedHrtId,
+        notes: newNotes,
+        updated_at: new Date().toISOString(),
+      };
+    });
+
+    localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(updatedStudents));
+    this.notifyChange(STORAGE_KEYS.CLASSES);
+    this.notifyChange(STORAGE_KEYS.STUDENTS);
+
+    this.appendAuditLog({
+      action: 'UPDATE_CLASS_CASCADE',
+      details: {
+        classId,
+        oldName,
+        newName,
+        oldLevel,
+        newLevel,
+        cascadedStudentsCount: cascadedCount,
+      },
+    });
+
+    return { updatedClass, cascadedStudentsCount: cascadedCount };
+  }
+
+  static getStaffList(branchId?: string): StaffDirectoryItem[] {
+    const profiles = this.getProfiles();
+    const memberships = this.getMemberships();
+    const classes = this.getClasses();
+
+    return profiles
+      .filter((p) => p.status === 'active')
+      .map((p) => {
+        const mem = memberships.find((m) => m.user_id === p.id && m.status === 'active');
+        const role: StaffRole = mem?.role || (p.system_role === 'system_admin' ? 'CM' : 'Main Teacher');
+
+        // Calculate assigned classes
+        const pNameLower = p.full_name?.toLowerCase();
+        const assigned = classes.filter((c) => {
+          if (branchId && c.branch_id !== branchId) return false;
+          const isMainTeacher = c.main_teacher_id === p.id || (pNameLower && c.main_teacher_name?.toLowerCase() === pNameLower);
+          const isHrt = c.default_hrt_id === p.id || (pNameLower && c.default_hrt_name?.toLowerCase() === pNameLower);
+          const isTa = c.ta_id === p.id || (pNameLower && c.ta_name?.toLowerCase() === pNameLower);
+          return isMainTeacher || isHrt || isTa;
+        }).map((c) => c.name);
+
+        return {
+          id: p.id,
+          user_id: p.id,
+          full_name: p.full_name,
+          role,
+          email: p.email,
+          phone: p.phone,
+          assigned_classes: assigned,
+          status: p.status,
+        };
+      });
+  }
+
+  static createStaff(payload: {
+    full_name: string;
+    email: string;
+    role: StaffRole;
+    phone?: string;
+    branch_id?: string;
+    assigned_classes?: string[];
+  }): StaffDirectoryItem {
+    this.ensureDevOnly();
+    const profiles = this.getProfiles();
+    const memberships = this.getMemberships();
+
+    const existing = profiles.find((p) => p.email.toLowerCase() === payload.email.trim().toLowerCase());
+    if (existing) {
+      throw new Error(`Account with email "${payload.email}" already exists.`);
+    }
+
+    const newId = 'u' + Math.random().toString(36).substring(2, 9);
+    const branchId = payload.branch_id || 'a0000000-0000-0000-0000-000000000001';
+
+    const newProfile: UserProfile = {
+      id: newId,
+      email: payload.email.trim(),
+      full_name: payload.full_name.trim(),
+      phone: payload.phone || '',
+      preferred_branch_id: branchId,
+      system_role: 'staff',
+      status: 'active',
+      created_at: new Date().toISOString(),
+    };
+    profiles.push(newProfile);
+    this.saveProfiles(profiles);
+
+    const newMembership: BranchMembership = {
+      id: 'm' + Math.random().toString(36).substring(2, 9),
+      user_id: newId,
+      branch_id: branchId,
+      role: payload.role,
+      is_primary: true,
+      status: 'active',
+      created_at: new Date().toISOString(),
+    };
+    memberships.push(newMembership);
+    this.saveMemberships(memberships);
+
+    // If assigned classes were specified, update those classes
+    if (payload.assigned_classes && payload.assigned_classes.length > 0) {
+      const classes = this.getClasses();
+      const targetClassSet = new Set(payload.assigned_classes.map((c) => c.toLowerCase()));
+      for (const cls of classes) {
+        if (targetClassSet.has(cls.name.toLowerCase()) || targetClassSet.has(cls.id.toLowerCase())) {
+          if (payload.role === 'Main Teacher' || payload.role === 'Supplementary Teacher') {
+            cls.main_teacher_id = newId;
+            cls.main_teacher_name = payload.full_name.trim();
+          } else if (payload.role === 'HRT') {
+            cls.default_hrt_id = newId;
+            cls.default_hrt_name = payload.full_name.trim();
+          } else if (payload.role === 'TA') {
+            cls.ta_id = newId;
+            cls.ta_name = payload.full_name.trim();
+          }
+        }
+      }
+      localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+      this.notifyChange(STORAGE_KEYS.CLASSES);
+    }
+
+    this.notifyChange(STORAGE_KEYS.PROFILES);
+    this.notifyChange(STORAGE_KEYS.MEMBERSHIPS);
+
+    this.appendAuditLog({
+      action: 'CREATE_STAFF_MEMBER',
+      details: {
+        staffId: newId,
+        full_name: payload.full_name,
+        role: payload.role,
+        email: payload.email,
+      },
+    });
+
+    return {
+      id: newId,
+      user_id: newId,
+      full_name: payload.full_name.trim(),
+      role: payload.role,
+      email: payload.email.trim(),
+      phone: payload.phone,
+      assigned_classes: payload.assigned_classes || [],
+      status: 'active',
+    };
+  }
+
+  static updateStaffDirectory(
+    staffId: string,
+    updates: {
+      full_name?: string;
+      email?: string;
+      role?: StaffRole;
+      phone?: string;
+      assigned_classes?: string[];
+    }
+  ): StaffDirectoryItem {
+    this.ensureDevOnly();
+    const profiles = this.getProfiles();
+    const memberships = this.getMemberships();
+    const classes = this.getClasses();
+
+    const pIdx = profiles.findIndex((p) => p.id === staffId);
+    if (pIdx === -1) throw new Error(`Staff member with id ${staffId} not found.`);
+
+    const profile = profiles[pIdx];
+    if (updates.full_name) profile.full_name = updates.full_name.trim();
+    if (updates.email) profile.email = updates.email.trim();
+    if (updates.phone !== undefined) profile.phone = updates.phone.trim();
+    profile.updated_at = new Date().toISOString();
+    profiles[pIdx] = profile;
+    this.saveProfiles(profiles);
+
+    const mIdx = memberships.findIndex((m) => m.user_id === staffId && m.status === 'active');
+    let effectiveRole: StaffRole = 'Main Teacher';
+    if (mIdx !== -1) {
+      if (updates.role) memberships[mIdx].role = updates.role;
+      effectiveRole = memberships[mIdx].role;
+      memberships[mIdx].updated_at = new Date().toISOString();
+      this.saveMemberships(memberships);
+    }
+
+    // Synchronize assigned classes if provided
+    if (updates.assigned_classes !== undefined) {
+      const targetSet = new Set(updates.assigned_classes.map((c) => c.toLowerCase()));
+      const staffName = profile.full_name;
+
+      for (const cls of classes) {
+        const isTarget = targetSet.has(cls.name.toLowerCase()) || targetSet.has(cls.id.toLowerCase());
+        const isCurrentlyAssigned =
+          cls.main_teacher_id === staffId ||
+          cls.main_teacher_name?.toLowerCase() === staffName.toLowerCase() ||
+          cls.default_hrt_id === staffId ||
+          cls.default_hrt_name?.toLowerCase() === staffName.toLowerCase() ||
+          cls.ta_id === staffId ||
+          cls.ta_name?.toLowerCase() === staffName.toLowerCase();
+
+        if (isTarget) {
+          if (effectiveRole === 'Main Teacher' || effectiveRole === 'Supplementary Teacher') {
+            cls.main_teacher_id = staffId;
+            cls.main_teacher_name = staffName;
+          } else if (effectiveRole === 'HRT') {
+            cls.default_hrt_id = staffId;
+            cls.default_hrt_name = staffName;
+          } else if (effectiveRole === 'TA') {
+            cls.ta_id = staffId;
+            cls.ta_name = staffName;
+          }
+        } else if (isCurrentlyAssigned) {
+          // Unassign if deselected
+          if (cls.main_teacher_id === staffId || cls.main_teacher_name?.toLowerCase() === staffName.toLowerCase()) {
+            cls.main_teacher_id = undefined;
+            cls.main_teacher_name = undefined;
+          }
+          if (cls.default_hrt_id === staffId || cls.default_hrt_name?.toLowerCase() === staffName.toLowerCase()) {
+            cls.default_hrt_id = undefined;
+            cls.default_hrt_name = undefined;
+          }
+          if (cls.ta_id === staffId || cls.ta_name?.toLowerCase() === staffName.toLowerCase()) {
+            cls.ta_id = undefined;
+            cls.ta_name = undefined;
+          }
+        }
+      }
+
+      localStorage.setItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+      this.notifyChange(STORAGE_KEYS.CLASSES);
+    }
+
+    this.notifyChange(STORAGE_KEYS.PROFILES);
+    this.notifyChange(STORAGE_KEYS.MEMBERSHIPS);
+
+    this.appendAuditLog({
+      action: 'UPDATE_STAFF_MEMBER',
+      details: {
+        staffId,
+        full_name: profile.full_name,
+        role: effectiveRole,
+        assigned_classes: updates.assigned_classes,
+      },
+    });
+
+    return {
+      id: profile.id,
+      user_id: profile.id,
+      full_name: profile.full_name,
+      role: effectiveRole,
+      email: profile.email,
+      phone: profile.phone,
+      assigned_classes: updates.assigned_classes || [],
+      status: profile.status,
+    };
   }
 
   static createClassesBatch(
@@ -1679,16 +2236,41 @@ export class MockStorageService {
     }
 
     if (!isSysAdmin && !isCm && callerId) {
-      filtered = filtered.filter((s) => {
-        // Precedence Rule:
-        // Priority 1: Specific HRT assigned
-        if (s.assigned_hrt_id) {
-          return s.assigned_hrt_id === callerId;
-        }
-        // Priority 2: Class default HRT
-        const cls = classes.find((c) => c.id === s.current_class_id);
-        return cls?.default_hrt_id === callerId;
-      });
+      const callerProfile = profiles.find((p) => p.id === callerId);
+      const callerMember = this.getMemberships().find((m) => m.user_id === callerId && m.status === 'active');
+      const callerRole = callerMember?.role;
+      const callerName = callerProfile?.full_name?.toLowerCase();
+
+      const isTeacher = callerRole === 'Main Teacher' || callerRole === 'Supplementary Teacher' || callerRole === 'TA';
+      const isGlobalViewer = callerRole === 'Head Teacher' || callerRole === 'HT' || callerRole === 'SOO' || callerRole === 'EC';
+
+      if (isGlobalViewer) {
+        // HT, SOO, EC have branch-wide academic / operational visibility
+        // Keep all students in branch
+      } else if (isTeacher) {
+        // Teacher Scoping: Only see students belonging to classes they teach
+        filtered = filtered.filter((s) => {
+          const cls = classes.find((c) => c.id === s.current_class_id);
+          if (!cls) return false;
+          const isMainTeacher = cls.main_teacher_id === callerId ||
+            (callerName && cls.main_teacher_name?.toLowerCase() === callerName);
+          const isTa = cls.ta_id === callerId ||
+            (callerName && cls.ta_name?.toLowerCase() === callerName);
+          return Boolean(isMainTeacher || isTa);
+        });
+      } else {
+        // Precedence Rule for HRT:
+        filtered = filtered.filter((s) => {
+          // Priority 1: Specific HRT assigned
+          if (s.assigned_hrt_id) {
+            return s.assigned_hrt_id === callerId;
+          }
+          // Priority 2: Class default HRT
+          const cls = classes.find((c) => c.id === s.current_class_id);
+          return cls?.default_hrt_id === callerId ||
+            (callerName && cls?.default_hrt_name?.toLowerCase() === callerName);
+        });
+      }
     }
 
     return filtered
@@ -3137,6 +3719,11 @@ export const StudentService = {
     level?: string;
     default_hrt_id?: string;
     default_hrt_name?: string;
+    main_teacher_id?: string;
+    main_teacher_name?: string;
+    ta_id?: string;
+    ta_name?: string;
+    schedule?: string;
   }): Promise<ClassRoom> {
     if (realSupabase) {
       const { data, error } = await realSupabase
@@ -3145,7 +3732,10 @@ export const StudentService = {
           branch_id: payload.branch_id,
           name: payload.name,
           level: payload.level || 'Standard',
-          default_hrt_id: payload.default_hrt_id,
+          default_hrt_id: payload.default_hrt_id || null,
+          main_teacher_id: payload.main_teacher_id || null,
+          ta_id: payload.ta_id || null,
+          schedule: payload.schedule || null,
           status: 'active',
         })
         .select()
@@ -3185,6 +3775,113 @@ export const StudentService = {
       return data || [];
     }
     return MockStorageService.createClassesBatch(payloads);
+  },
+
+  async getClasses(branchId?: string): Promise<ClassRoom[]> {
+    if (realSupabase) {
+      let query = realSupabase.from('classes').select('*').eq('status', 'active');
+      if (branchId) query = query.eq('branch_id', branchId);
+      const { data, error } = await query;
+      if (!error && data) return data;
+    }
+    const all = MockStorageService.getClasses();
+    if (branchId) return all.filter((c) => c.branch_id === branchId);
+    return all;
+  },
+
+  async updateClass(
+    classId: string,
+    updates: {
+      name?: string;
+      level?: string;
+      main_teacher_id?: string;
+      main_teacher_name?: string;
+      default_hrt_id?: string;
+      default_hrt_name?: string;
+      ta_id?: string;
+      ta_name?: string;
+      schedule?: string;
+      status?: 'active' | 'inactive';
+    }
+  ): Promise<{ updatedClass: ClassRoom; cascadedStudentsCount: number }> {
+    if (realSupabase) {
+      const { data: oldClass } = await realSupabase
+        .from('classes')
+        .select('*')
+        .eq('id', classId)
+        .single();
+
+      const oldName = oldClass?.name;
+      const newName = updates.name?.trim() || oldName;
+
+      const { data: updatedClass, error: classErr } = await realSupabase
+        .from('classes')
+        .update({
+          name: newName,
+          level: updates.level?.trim() || oldClass?.level,
+          main_teacher_id: updates.main_teacher_id || null,
+          default_hrt_id: updates.default_hrt_id || null,
+          ta_id: updates.ta_id || null,
+          schedule: updates.schedule || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', classId)
+        .select()
+        .single();
+      if (classErr) throw classErr;
+
+      let cascadedCount = 0;
+      const { data: enrolledStudents } = await realSupabase
+        .from('students')
+        .select('id, notes')
+        .eq('current_class_id', classId);
+
+      if (enrolledStudents && enrolledStudents.length > 0) {
+        cascadedCount = enrolledStudents.length;
+        if (oldName && newName && newName !== oldName) {
+          for (const s of enrolledStudents) {
+            let notes = s.notes || '';
+            const updatedNotes = notes
+              .replace(new RegExp(`\\[Cohort:\\s*${escapeRegExp(oldName)}\\]`, 'gi'), `[Cohort: ${newName}]`)
+              .replace(new RegExp(`\\[Class:\\s*${escapeRegExp(oldName)}\\]`, 'gi'), `[Class: ${newName}]`);
+            if (updatedNotes !== notes) {
+              await realSupabase.from('students').update({ notes: updatedNotes }).eq('id', s.id);
+            }
+          }
+        }
+      }
+
+      return { updatedClass: updatedClass || oldClass, cascadedStudentsCount: cascadedCount };
+    }
+    return MockStorageService.updateClass(classId, updates);
+  },
+
+  async getStaffList(branchId?: string): Promise<StaffDirectoryItem[]> {
+    return MockStorageService.getStaffList(branchId);
+  },
+
+  async createStaff(payload: {
+    full_name: string;
+    email: string;
+    role: StaffRole;
+    phone?: string;
+    branch_id?: string;
+    assigned_classes?: string[];
+  }): Promise<StaffDirectoryItem> {
+    return MockStorageService.createStaff(payload);
+  },
+
+  async updateStaffDirectory(
+    staffId: string,
+    updates: {
+      full_name?: string;
+      email?: string;
+      role?: StaffRole;
+      phone?: string;
+      assigned_classes?: string[];
+    }
+  ): Promise<StaffDirectoryItem> {
+    return MockStorageService.updateStaffDirectory(staffId, updates);
   },
 
   async transferClass(studentId: string, toClassId: string, reason: string): Promise<void> {

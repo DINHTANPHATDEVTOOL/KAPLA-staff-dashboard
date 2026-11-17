@@ -25,6 +25,7 @@ import {
   Edit,
   Trash2,
   User,
+  Users,
   Eye,
   PhoneCall,
   MessageSquare,
@@ -216,6 +217,10 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const isHRT = activeRole === 'HRT';
   const isEC = (activeRole as string) === 'EC' || activeRole === 'CSKH';
   const isSOO = (activeRole as string) === 'SOO';
+  const isTeacher =
+    activeRole === 'Main Teacher' ||
+    activeRole === 'Supplementary Teacher' ||
+    activeRole === 'TA';
 
   // Role permissions per customer specification:
   // CM and Admin have full permissions: Add, Edit, Delete
@@ -235,6 +240,20 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const [feedbacks, setFeedbacks] = useState<ParentFeedback[]>([]);
   const [renewals, setRenewals] = useState<RenewalRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Filter classes according to teacher assignment if logged in as Teacher
+  const displayedClasses = useMemo(() => {
+    if (!isTeacher) return classes;
+    const teacherName = profile?.full_name?.toLowerCase();
+    const teacherId = profile?.id;
+    return classes.filter(
+      (c) =>
+        c.main_teacher_id === teacherId ||
+        (teacherName && c.main_teacher_name?.toLowerCase() === teacherName) ||
+        c.ta_id === teacherId ||
+        (teacherName && c.ta_name?.toLowerCase() === teacherName)
+    );
+  }, [classes, isTeacher, profile]);
 
   // Filters matching customer specification
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -1350,6 +1369,25 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
         </div>
       )}
 
+      {/* Teacher Authorization Notice */}
+      {isTeacher && (
+        <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-blue-900 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <Users className="w-4 h-4 text-[#026fd7] shrink-0" />
+            <span>
+              <strong>Teacher Scope Authorized:</strong> Displaying student records for your designated teaching cohorts (
+              <span className="font-mono font-medium">
+                {displayedClasses.map((c) => c.name).join(', ') || 'No cohorts assigned'}
+              </span>
+              ).
+            </span>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-[#026fd7] border border-blue-200 self-start sm:self-auto">
+            Teacher Authorized
+          </span>
+        </div>
+      )}
+
       {/* Stats Cards — Exactly matching Customer Specification (Image 3 & 4) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Total Tracked Students */}
@@ -1531,8 +1569,8 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
             onChange={(e) => setClassFilter(e.target.value)}
             className="px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none"
           >
-            <option value="all">All Classes</option>
-            {classes.map((c) => (
+            <option value="all">{isTeacher ? 'All Assigned Classes' : 'All Classes'}</option>
+            {displayedClasses.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.level})
               </option>

@@ -78,9 +78,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       },
       {
         id: 'branches_classes',
-        label: t('nav.branches_classes', 'Campuses & Classes'),
+        label: t('nav.branches_classes', 'Staff & Classes'),
         icon: Building2,
-        adminOrCmOnly: true,
+        adminOrCmOnly: false,
       },
     ],
     [t, pendingCount]

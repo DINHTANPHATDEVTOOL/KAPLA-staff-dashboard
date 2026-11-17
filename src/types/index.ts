@@ -53,6 +53,17 @@ export interface BranchMembership {
   updated_at?: string;
 }
 
+export interface StaffDirectoryItem {
+  id: string;
+  user_id: string;
+  full_name: string;
+  role: StaffRole;
+  email: string;
+  phone?: string;
+  assigned_classes: string[];
+  status: AccountStatus;
+}
+
 export interface ClassRoom {
   id: string;
   branch_id: string;
@@ -144,6 +155,7 @@ export interface Student {
   updated_at?: string;
   branch?: Branch;
   current_class?: ClassRoom;
+  current_class_name?: string;
   assigned_hrt?: UserProfile;
   effective_hrt_name?: string;
 }

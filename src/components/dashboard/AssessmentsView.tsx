@@ -62,6 +62,20 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Filter classes according to teacher assignment if logged in as Teacher
+  const displayedClasses = useMemo(() => {
+    if (!isTeacher) return classes;
+    const teacherName = profile?.full_name?.toLowerCase();
+    const teacherId = profile?.id;
+    return classes.filter(
+      (c) =>
+        c.main_teacher_id === teacherId ||
+        (teacherName && c.main_teacher_name?.toLowerCase() === teacherName) ||
+        c.ta_id === teacherId ||
+        (teacherName && c.ta_name?.toLowerCase() === teacherName)
+    );
+  }, [classes, isTeacher, profile]);
+
   // View Mode: 'table' (Log View) or 'cards'
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
@@ -125,7 +139,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
       const branchId = currentBranch?.id;
       const [assessList, stuList] = await Promise.all([
         AssessmentService.getAssessments(branchId),
-        StudentService.getStudents(branchId, profile?.id, true, true),
+        StudentService.getStudents(branchId, profile?.id, isSysAdmin, isCM),
       ]);
       setAssessments(assessList);
       setStudents(stuList);
@@ -538,8 +552,8 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
               onChange={(e) => setClassFilter(e.target.value)}
               className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#043264]/20"
             >
-              <option value="all">{t('students.allClasses', 'All Classes')}</option>
-              {classes.map((c) => (
+              <option value="all">{isTeacher ? 'All Assigned Classes' : t('students.allClasses', 'All Classes')}</option>
+              {displayedClasses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} ({c.level})
                 </option>
@@ -1152,8 +1166,8 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({ onNavigateToIn
                         onChange={(e) => setFilterClassForSelect(e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"
                       >
-                        <option value="">{'-- All Classes --'}</option>
-                        {classes.map((c) => (
+                        <option value="">{isTeacher ? '-- All Assigned Classes --' : '-- All Classes --'}</option>
+                        {displayedClasses.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name} ({c.level})
                           </option>

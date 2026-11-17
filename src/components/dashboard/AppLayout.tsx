@@ -37,7 +37,7 @@ export const AppLayout: React.FC = () => {
 
   // Guard: if non-manager tries to access manager-only sections, redirect to overview
   useEffect(() => {
-    if (!canManageStaffAndClasses && (activeSection === 'staff_roles' || activeSection === 'branches_classes')) {
+    if (!canManageStaffAndClasses && activeSection === 'staff_roles') {
       setActiveSection('overview');
     }
   }, [canManageStaffAndClasses, activeSection]);
