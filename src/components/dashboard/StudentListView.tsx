@@ -218,11 +218,12 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
   const isSOO = (activeRole as string) === 'SOO';
 
   // Role permissions per customer specification:
-  // HRT, EC, SOO, HT, CM, Admin can create and edit students
-  const canCreateStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
+  // CM and Admin have full permissions: Add, Edit, Delete
+  // Add (Create): EC, HRT, SOO (plus CM, Admin; excluding teachers)
+  const canCreateStudent = isSysAdmin || isCM || isEC || isHRT || isSOO;
   const canEditStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
-  // ONLY Admin account can delete students
-  const canDeleteStudent = isSysAdmin;
+  // CM and System Admin can delete students
+  const canDeleteStudent = isSysAdmin || isCM;
   // Customer Specification: SOO, HT, CM, Admin can schedule reminder appointments
   const canCreateReminder = isSysAdmin || isCM || isHT || isSOO;
 
@@ -1154,7 +1155,7 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
     if (!canDeleteStudent) {
       setActionMessage({
         type: 'error',
-        text: 'Permission denied: Only System Administrator can delete student records.',
+        text: 'Permission denied: Only System Admin and Center Manager (CM) can delete student records.',
       });
       return;
     }
@@ -1935,9 +1936,9 @@ export const StudentListView: React.FC<StudentListViewProps> = ({ onNavigate }) 
                           {canDeleteStudent && (
                             <button
                               type="button"
-                              title={'Delete student (Admin Only)'}
+                              title={'Delete student (Admin & CM Only)'}
                               onClick={() => setDeletingStudent(student)}
-                              className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                              className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

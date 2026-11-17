@@ -53,21 +53,26 @@ async function runRegressionSuite() {
     const isEC = (t.role as string) === 'EC' || t.role === 'CSKH';
     const isSOO = (t.role as string) === 'SOO';
 
-    const canCreateStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
+    const canCreateStudent = isSysAdmin || isCM || isEC || isHRT || isSOO;
     const canEditStudent = isSysAdmin || isCM || isHT || isHRT || isEC || isSOO;
-    const canDeleteStudent = isSysAdmin; // ONLY System Admin!
+    const canDeleteStudent = isSysAdmin || isCM; // Admin & CM have delete permission!
 
-    if (['system_admin', 'CM', 'Head Teacher', 'SOO', 'HRT', 'EC', 'CSKH'].includes(t.role)) {
+    if (['system_admin', 'CM', 'SOO', 'HRT', 'EC', 'CSKH'].includes(t.role)) {
       assert(`${t.label}: canCreateStudent is TRUE`, canCreateStudent === true);
-      assert(`${t.label}: canEditStudent is TRUE`, canEditStudent === true);
     } else {
-      assert(`${t.label}: canCreateStudent is FALSE for classroom teachers/TA`, canCreateStudent === false);
+      assert(`${t.label}: canCreateStudent is FALSE (teachers excluded)`, canCreateStudent === false);
     }
 
-    if (t.isSysAdmin) {
-      assert(`${t.label}: ONLY System Admin can delete students`, canDeleteStudent === true);
+    if (['system_admin', 'CM', 'Head Teacher', 'SOO', 'HRT', 'EC', 'CSKH'].includes(t.role)) {
+      assert(`${t.label}: canEditStudent is TRUE`, canEditStudent === true);
     } else {
-      assert(`${t.label}: Non-admin CANNOT delete students`, canDeleteStudent === false);
+      assert(`${t.label}: canEditStudent is FALSE for classroom teachers/TA`, canEditStudent === false);
+    }
+
+    if (t.isSysAdmin || t.role === 'CM') {
+      assert(`${t.label}: System Admin & CM can delete students`, canDeleteStudent === true);
+    } else {
+      assert(`${t.label}: Non-admin & Non-CM CANNOT delete students`, canDeleteStudent === false);
     }
   }
 
